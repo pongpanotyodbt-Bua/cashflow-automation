@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:api.anthropic.com)",
+      "PowerShell($src = \"C:\\\\Users\\\\User\\\\.claude\\\\projects\\\\C--Users-User-Desktop-Cashflow-Automation\\\\e5769929-348e-4a9e-af28-e5ad3bace45e\\\\tool-results\\\\webfetch-1779006721518-rfjzp5.bin\"; $bytes = [System.IO.File]::ReadAllBytes\\($src\\); \"$\\($bytes[0].ToString\\('X2'\\)\\) $\\($bytes[1].ToString\\('X2'\\)\\) $\\($bytes[2].ToString\\('X2'\\)\\)\")",
+      "PowerShell($src = \"C:\\\\Users\\\\User\\\\.claude\\\\projects\\\\C--Users-User-Desktop-Cashflow-Automation\\\\e5769929-348e-4a9e-af28-e5ad3bace45e\\\\tool-results\\\\webfetch-1779006721518-rfjzp5.bin\"; $dst = \"C:\\\\Users\\\\User\\\\Desktop\\\\Cashflow Automation\\\\_design_extract\"; New-Item -ItemType Directory -Force -Path $dst | Out-Null; $tarPath = Join-Path $dst \"design.tar\"; $in = [System.IO.File]::OpenRead\\($src\\); $out = [System.IO.File]::Create\\($tarPath\\); $gz = New-Object System.IO.Compression.GzipStream\\($in, [System.IO.Compression.CompressionMode]::Decompress\\); $gz.CopyTo\\($out\\); $gz.Close\\(\\); $out.Close\\(\\); $in.Close\\(\\); tar -xf $tarPath -C $dst; Remove-Item $tarPath; Get-ChildItem -Recurse $dst | Select-Object FullName)",
+      "Bash(python -m http.server 8000)",
+      "mcp__Claude_in_Chrome__tabs_context_mcp",
+      "Bash(pkill -f \"http.server\")",
+      "Bash(curl -s http://localhost:8000/index.html)",
+      "PowerShell(Get-Job)",
+      "PowerShell(Receive-Job -Id 1 -ErrorAction SilentlyContinue)",
+      "Bash(chmod +x run.sh)",
+      "Bash(nohup ./run.sh)",
+      "Bash(curl -I http://localhost:8000)",
+      "PowerShell($env:PATH -split ';' | Where-Object { $_ -ne '' })",
+      "mcp__Claude_Preview__preview_start"
+    ]
+  }
+}
