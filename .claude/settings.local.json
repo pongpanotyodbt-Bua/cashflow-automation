@@ -14,7 +14,12 @@
       "Bash(nohup ./run.sh)",
       "Bash(curl -I http://localhost:8000)",
       "PowerShell($env:PATH -split ';' | Where-Object { $_ -ne '' })",
-      "mcp__Claude_Preview__preview_start"
+      "mcp__Claude_Preview__preview_start",
+      "Bash(python build_templates.py)",
+      "Bash(where python *)",
+      "Bash(where py *)",
+      "Bash(where python3 *)",
+      "Bash(powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"C:\\\\Users\\\\User\\\\Desktop\\\\Cashflow Automation\\\\templates\\\\build_templates.ps1\")"
     ]
   }
 }

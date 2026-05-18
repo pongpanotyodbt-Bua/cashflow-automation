@@ -5,6 +5,7 @@ function ReportPage({ method, onExport, companyId = "CONSO", chartStyle }) {
   const report = method === "direct" ? d.directCF : d.indirectCF;
   const [period, setPeriod] = React.useState("Q1 2569");
   const [showCompare, setShowCompare] = React.useState(true);
+  const [showFormulas, setShowFormulas] = React.useState(false);
   const [expandedRows, setExpandedRows] = React.useState(new Set());
   const activeCo = d.companies.find(c => c.id === companyId) || d.companies[0];
 
@@ -85,6 +86,12 @@ function ReportPage({ method, onExport, companyId = "CONSO", chartStyle }) {
           <input type="checkbox" checked={showCompare} onChange={(e) => setShowCompare(e.target.checked)} />
           เปรียบเทียบกับงวดก่อน
         </label>
+        {method === "indirect" && (
+          <label className="row small" style={{ gap: 6, marginLeft: 6 }}>
+            <input type="checkbox" checked={showFormulas} onChange={(e) => setShowFormulas(e.target.checked)} />
+            แสดงสูตรคำนวณ
+          </label>
+        )}
         <div className="grow" />
         <span className="small muted" style={{ alignSelf: "center" }}>
           <Ic name="chevronDown" size={11} style={{ marginRight: 4 }} />
@@ -152,7 +159,15 @@ function ReportPage({ method, onExport, companyId = "CONSO", chartStyle }) {
                               <span className={"drill-chevron" + (isExpanded ? " open" : "")}>
                                 <Ic name="chevron" size={11} />
                               </span>
-                              {it.label}
+                              <span>
+                                {it.label}
+                                {showFormulas && it.formula && (
+                                  <div className="tiny" style={{ color: "var(--accent-text)", marginTop: 2, fontStyle: "italic", fontWeight: 400 }}>
+                                    <Ic name="sparkles" size={10} style={{ marginRight: 4 }} />
+                                    สูตร: {it.formula}
+                                  </div>
+                                )}
+                              </span>
                             </span>
                           </td>
                           <td className="num">{window.fmtTHB(it.current)}</td>

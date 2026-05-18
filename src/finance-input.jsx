@@ -35,7 +35,6 @@ function FinanceInput({ toast, companyId = "CONSO" }) {
         <button className={"tab " + (tab === "bank" ? "active" : "")} onClick={() => setTab("bank")}>บัญชีธนาคาร</button>
         <button className={"tab " + (tab === "receipts" ? "active" : "")} onClick={() => setTab("receipts")}>เงินรับ (Receipts)</button>
         <button className={"tab " + (tab === "payments" ? "active" : "")} onClick={() => setTab("payments")}>เงินจ่าย (Payments)</button>
-        <button className={"tab " + (tab === "transfer" ? "active" : "")} onClick={() => setTab("transfer")}>โอนระหว่างบัญชี</button>
       </div>
 
       <div className="row" style={{ marginBottom: 14, gap: 10 }}>
@@ -52,8 +51,7 @@ function FinanceInput({ toast, companyId = "CONSO" }) {
 
       {tab === "bank" && <BankTab companyId={companyId} />}
       {tab === "receipts" && <ReceiptsTab data={filtered(d.recentTxns.filter((t) => t.amount > 0), ["desc"])} />}
-      {tab === "payments" && <PaymentsTab data={filtered(d.recentTxns.filter((t) => t.amount < 0), ["desc"])} />}
-      {tab === "transfer" && <TransferTab companyId={companyId} />}
+      {tab === "payments" && <PaymentsTab data={filtered(d.recentTxns.filter((t) => t.amount < 0), ["desc"])} companyId={companyId} />}
 
       {showAdd && <AddTxnModal companyId={companyId} onClose={() => setShowAdd(false)} onSave={() => { setShowAdd(false); toast("บันทึกรายการเรียบร้อย"); }} />}
       {showUpload && <UploadModal onClose={() => setShowUpload(false)} onDone={() => { setShowUpload(false); toast("นำเข้า 184 รายการสำเร็จ"); }} />}
@@ -150,50 +148,62 @@ function ReceiptsTab({ data }) {
   );
 }
 
-function PaymentsTab({ data }) {
+function PaymentsTab({ data, companyId }) {
   const d = window.CFData;
   const total = data.reduce((s, t) => s + t.amount, 0);
   return (
-    <div className="card">
-      <table className="tbl">
-        <thead>
-          <tr>
-            <th style={{ width: 100 }}>วันที่</th>
-            <th style={{ width: 70 }}>Entity</th>
-            <th>รายละเอียด</th>
-            <th>Segment</th>
-            <th>บัญชีจ่าย</th>
-            <th>แหล่งข้อมูล</th>
-            <th className="num" style={{ width: 140 }}>จำนวน (บาท)</th>
-            <th>สถานะ</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          {data.map((t) => (
-            <tr key={t.id}>
-              <td className="num small">{t.date}</td>
-              <td><EntityChip entity={t.entity} /></td>
-              <td>{t.desc}<div className="tiny faint">Ref: {t.id}</div></td>
-              <td><span className="tag segment-tag mono">{d.getSegmentName(t.entity, t.segmentId, "out")}</span></td>
-              <td className="mono small">{t.account}</td>
-              <td className="muted small">{t.source}</td>
-              <td className="num neg" style={{ fontWeight: 500 }}>{window.fmtTHB(t.amount)}</td>
-              <td><StatusTag s={t.status} /></td>
-              <td><button className="iconbtn"><Ic name="more" size={16} /></button></td>
+    <>
+      <div className="card">
+        <table className="tbl">
+          <thead>
+            <tr>
+              <th style={{ width: 100 }}>วันที่</th>
+              <th style={{ width: 70 }}>Entity</th>
+              <th>รายละเอียด</th>
+              <th>Segment</th>
+              <th>บัญชีจ่าย</th>
+              <th>แหล่งข้อมูล</th>
+              <th className="num" style={{ width: 140 }}>จำนวน (บาท)</th>
+              <th>สถานะ</th>
+              <th></th>
             </tr>
-          ))}
-          {data.length > 0 && (
-            <tr style={{ background: "var(--bg-subtle)", fontWeight: 600 }}>
-              <td colSpan="6" style={{ textAlign: "right" }}>รวมเงินจ่าย ({data.length} รายการ)</td>
-              <td className="num neg">{window.fmtTHB(total)}</td>
-              <td colSpan="2"></td>
-            </tr>
-          )}
-        </tbody>
-      </table>
-      <Footnote count={data.length} />
-    </div>
+          </thead>
+          <tbody>
+            {data.map((t) => (
+              <tr key={t.id}>
+                <td className="num small">{t.date}</td>
+                <td><EntityChip entity={t.entity} /></td>
+                <td>{t.desc}<div className="tiny faint">Ref: {t.id}</div></td>
+                <td><span className="tag segment-tag mono">{d.getSegmentName(t.entity, t.segmentId, "out")}</span></td>
+                <td className="mono small">{t.account}</td>
+                <td className="muted small">{t.source}</td>
+                <td className="num neg" style={{ fontWeight: 500 }}>{window.fmtTHB(t.amount)}</td>
+                <td><StatusTag s={t.status} /></td>
+                <td><button className="iconbtn"><Ic name="more" size={16} /></button></td>
+              </tr>
+            ))}
+            {data.length > 0 && (
+              <tr style={{ background: "var(--bg-subtle)", fontWeight: 600 }}>
+                <td colSpan="6" style={{ textAlign: "right" }}>รวมเงินจ่าย ({data.length} รายการ)</td>
+                <td className="num neg">{window.fmtTHB(total)}</td>
+                <td colSpan="2"></td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+        <Footnote count={data.length} />
+      </div>
+
+      {/* โอนระหว่างบัญชี — ย้ายมาอยู่ใน เงินจ่าย */}
+      <div style={{ marginTop: 14 }}>
+        <div className="card-head" style={{ padding: "10px 14px 8px", borderBottom: "1px solid var(--border)" }}>
+          <Ic name="swap" size={14} style={{ color: "var(--accent)" }} />
+          <span style={{ fontWeight: 600, marginLeft: 8 }}>โอนระหว่างบัญชี (Internal Transfer)</span>
+          <span className="small muted" style={{ marginLeft: 8 }}>— ไม่กระทบ Cash Flow สุทธิ (รายการหักล้างกัน)</span>
+        </div>
+        <TransferTab companyId={companyId} />
+      </div>
+    </>
   );
 }
 

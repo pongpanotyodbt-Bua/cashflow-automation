@@ -43,6 +43,9 @@ const Ic = ({ name, size = 16, className = "ic", style }) => {
     edit: <><path d="M4 20h4l11-11-4-4L4 16Z" /></>,
     trash: <><path d="M3 6h18" /><path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2" /><path d="m5 6 1 14a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2l1-14" /></>,
     sparkles: <><path d="m12 3 1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5Z" /><path d="M19 14v4M17 16h4" /></>,
+    users: <><circle cx="9" cy="8" r="4" /><path d="M2 21a7 7 0 0 1 14 0" /><circle cx="17" cy="9" r="3" /><path d="M22 19a5 5 0 0 0-7-4.6" /></>,
+    dollar: <><path d="M12 2v20M17 7H9.5a2.5 2.5 0 0 0 0 5h5a2.5 2.5 0 0 1 0 5H7" /></>,
+    fileText: <><path d="M14 3H6a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8z" /><path d="M14 3v5h5" /><path d="M8 13h8M8 17h8M8 9h2" /></>,
   };
   const p = paths[name];
   if (!p) return <span style={{ display: "inline-block", width: s, height: s }} />;

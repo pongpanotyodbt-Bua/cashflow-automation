@@ -1,3 +1,818 @@
+﻿<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>CashFlow Automation</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>
+/* Cash Flow Management — Minimal enterprise (Linear/Notion-inspired) */
+
+:root {
+  /* Neutral scale */
+  --bg: #FFFFFF;
+  --bg-subtle: #FAFBFC;
+  --bg-muted: #F6F7F9;
+  --bg-hover: #F1F2F4;
+  --bg-active: #EAECEF;
+  --sidebar-bg: #FAFBFC;
+
+  /* Border */
+  --border: #E6E8EB;
+  --border-strong: #D5D9DE;
+
+  /* Text */
+  --text: #1A1D21;
+  --text-secondary: #5C6470;
+  --text-tertiary: #8B95A1;
+  --text-on-accent: #FFFFFF;
+
+  /* Accent (blue) */
+  --accent: #2A6FF0;
+  --accent-hover: #1F5BD8;
+  --accent-soft: #EAF1FE;
+  --accent-soft-strong: #D6E4FD;
+  --accent-text: #1F5BD8;
+
+  /* Semantic */
+  --success: #1F9D55;
+  --success-soft: #E6F5EC;
+  --danger: #D03434;
+  --danger-soft: #FBEAEA;
+  --warning: #C97A00;
+  --warning-soft: #FBF1DD;
+
+  /* Layout */
+  --sidebar-width: 248px;
+  --topbar-h: 52px;
+  --radius-sm: 4px;
+  --radius: 6px;
+  --radius-lg: 10px;
+
+  /* Density */
+  --row-h: 36px;
+  --pad: 14px;
+  --font-base: 13.5px;
+
+  --shadow-sm: 0 1px 2px rgba(16, 24, 40, 0.04);
+  --shadow: 0 4px 12px rgba(16, 24, 40, 0.06), 0 1px 3px rgba(16, 24, 40, 0.04);
+  --shadow-lg: 0 12px 32px rgba(16, 24, 40, 0.12), 0 2px 6px rgba(16, 24, 40, 0.06);
+}
+
+[data-density="compact"] {
+  --row-h: 30px;
+  --pad: 10px;
+  --font-base: 12.5px;
+}
+[data-density="comfortable"] {
+  --row-h: 42px;
+  --pad: 18px;
+  --font-base: 14.5px;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  font-family: 'IBM Plex Sans Thai', 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  font-size: var(--font-base);
+  line-height: 1.5;
+  color: var(--text);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+button {
+  font-family: inherit;
+  font-size: inherit;
+  cursor: pointer;
+  border: none;
+  background: none;
+  color: inherit;
+}
+
+input, select, textarea {
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+}
+
+.mono, .num {
+  font-family: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- Layout ---------- */
+.app {
+  display: grid;
+  grid-template-columns: var(--sidebar-width) 1fr;
+  height: 100vh;
+  overflow: hidden;
+}
+.app[data-sidebar="right"] {
+  grid-template-columns: 1fr var(--sidebar-width);
+}
+.app[data-sidebar="right"] .sidebar {
+  order: 2;
+  border-right: none;
+  border-left: 1px solid var(--border);
+}
+
+.sidebar {
+  background: var(--sidebar-bg);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.sb-brand {
+  padding: 16px 18px 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-bottom: 1px solid var(--border);
+}
+.sb-logo {
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  background: var(--accent);
+  display: grid;
+  place-items: center;
+  color: white;
+  font-weight: 700;
+  font-size: 13px;
+  flex-shrink: 0;
+}
+.sb-brand-name {
+  font-weight: 600;
+  font-size: 13.5px;
+  line-height: 1.2;
+}
+.sb-brand-sub {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  margin-top: 1px;
+}
+
+.sb-section {
+  padding: 14px 10px 4px;
+}
+.sb-section-label {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 4px 10px 8px;
+  font-weight: 500;
+}
+.sb-item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 6px 10px;
+  margin: 1px 0;
+  border-radius: var(--radius);
+  color: var(--text-secondary);
+  font-size: 13px;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.08s;
+}
+.sb-item:hover { background: var(--bg-hover); color: var(--text); }
+.sb-item.active {
+  background: var(--bg-active);
+  color: var(--text);
+  font-weight: 500;
+}
+.sb-item .ic { flex-shrink: 0; opacity: 0.85; }
+.sb-item-badge {
+  margin-left: auto;
+  font-size: 11px;
+  background: var(--bg-hover);
+  color: var(--text-secondary);
+  padding: 1px 6px;
+  border-radius: 10px;
+  font-variant-numeric: tabular-nums;
+}
+.sb-item.active .sb-item-badge {
+  background: var(--bg);
+  color: var(--text);
+}
+
+.sb-spacer { flex: 1; }
+.sb-footer {
+  padding: 10px 14px 14px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+.sb-avatar {
+  width: 26px; height: 26px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #c7d4f0, #94a8c9);
+  color: white;
+  display: grid;
+  place-items: center;
+  font-weight: 600;
+  font-size: 11px;
+}
+
+/* ---------- Main ---------- */
+.main {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-width: 0;
+}
+.topbar {
+  height: var(--topbar-h);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  padding: 0 22px;
+  gap: 14px;
+  flex-shrink: 0;
+  background: var(--bg);
+}
+.crumbs {
+  font-size: 13px;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.crumbs .sep { color: var(--text-tertiary); }
+.crumbs .here { color: var(--text); font-weight: 500; }
+.tb-spacer { flex: 1; }
+
+.scroll-area {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+.page {
+  padding: 24px 28px 60px;
+  max-width: 1480px;
+  margin: 0 auto;
+  width: 100%;
+}
+.page-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 22px;
+}
+.page-title {
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  margin: 0 0 4px;
+}
+.page-sub {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin: 0;
+}
+.page-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ---------- Buttons ---------- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 30px;
+  padding: 0 12px;
+  font-size: 13px;
+  border-radius: var(--radius);
+  background: var(--bg);
+  border: 1px solid var(--border-strong);
+  color: var(--text);
+  font-weight: 500;
+  transition: background 0.08s, border 0.08s;
+  white-space: nowrap;
+}
+.btn:hover { background: var(--bg-hover); }
+.btn.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--text-on-accent);
+}
+.btn.primary:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
+.btn.ghost {
+  background: transparent;
+  border-color: transparent;
+}
+.btn.ghost:hover { background: var(--bg-hover); }
+.btn.sm { height: 26px; padding: 0 9px; font-size: 12px; }
+.btn.danger { color: var(--danger); }
+.btn.danger:hover { background: var(--danger-soft); border-color: var(--danger-soft); }
+.btn .ic { opacity: 0.7; }
+.btn.primary .ic { opacity: 1; }
+
+.iconbtn {
+  width: 30px;
+  height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius);
+  color: var(--text-secondary);
+  border: 1px solid transparent;
+}
+.iconbtn:hover { background: var(--bg-hover); color: var(--text); }
+
+/* ---------- Input ---------- */
+.input, .select {
+  display: inline-flex;
+  align-items: center;
+  height: 30px;
+  padding: 0 10px;
+  background: var(--bg);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  font-size: 13px;
+  outline: none;
+  min-width: 0;
+  color: var(--text);
+}
+.input:focus, .select:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+.input.search { padding-left: 30px; }
+.search-wrap { position: relative; display: inline-flex; align-items: center; }
+.search-wrap .search-ic { position: absolute; left: 9px; color: var(--text-tertiary); pointer-events: none; }
+
+label.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+label.field .input,
+label.field .select,
+label.field textarea {
+  width: 100%;
+  font-size: 13px;
+  color: var(--text);
+}
+label.field textarea {
+  min-height: 70px;
+  padding: 8px 10px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  background: var(--bg);
+  font-family: inherit;
+  resize: vertical;
+}
+
+/* ---------- Card ---------- */
+.card {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+}
+.card-pad { padding: var(--pad); }
+.card-head {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.card-title {
+  font-size: 13.5px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+}
+.card-sub {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+/* ---------- KPI cards ---------- */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+}
+.kpi {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+.kpi-label {
+  font-size: 12px;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.kpi-value {
+  font-family: 'IBM Plex Mono', ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
+  font-size: 26px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+}
+.kpi-delta {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+.kpi-delta .up { color: var(--success); font-weight: 500; }
+.kpi-delta .down { color: var(--danger); font-weight: 500; }
+
+/* ---------- Table ---------- */
+.tbl {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.tbl th {
+  text-align: left;
+  font-weight: 500;
+  font-size: 12px;
+  color: var(--text-secondary);
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-subtle);
+  white-space: nowrap;
+}
+.tbl td {
+  padding: 0 12px;
+  border-bottom: 1px solid var(--border);
+  height: var(--row-h);
+  vertical-align: middle;
+}
+.tbl tbody tr:hover { background: var(--bg-subtle); }
+.tbl .num {
+  text-align: right;
+  font-family: 'IBM Plex Mono', ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
+}
+.tbl th.num { text-align: right; }
+.tbl.dense td { height: 30px; }
+
+/* tag / badge / chip */
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 1px 7px;
+  border-radius: 10px;
+  font-size: 11.5px;
+  font-weight: 500;
+  background: var(--bg-hover);
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+.tag.success { background: var(--success-soft); color: var(--success); }
+.tag.danger { background: var(--danger-soft); color: var(--danger); }
+.tag.warning { background: var(--warning-soft); color: var(--warning); }
+.tag.accent { background: var(--accent-soft); color: var(--accent-text); }
+.tag .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+
+.pos { color: var(--success); }
+.neg { color: var(--danger); }
+
+/* Tabs */
+.tabs {
+  display: flex;
+  gap: 2px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 18px;
+}
+.tab {
+  padding: 8px 14px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  font-weight: 500;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  cursor: pointer;
+}
+.tab:hover { color: var(--text); }
+.tab.active { color: var(--text); border-bottom-color: var(--accent); }
+
+/* Segmented */
+.segmented {
+  display: inline-flex;
+  background: var(--bg-muted);
+  border-radius: var(--radius);
+  padding: 2px;
+  gap: 2px;
+}
+.segmented button {
+  height: 26px;
+  padding: 0 10px;
+  font-size: 12.5px;
+  color: var(--text-secondary);
+  border-radius: 4px;
+  font-weight: 500;
+}
+.segmented button:hover { color: var(--text); }
+.segmented button.active {
+  background: var(--bg);
+  color: var(--text);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Toast */
+.toast-host {
+  position: fixed;
+  bottom: 22px;
+  right: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 80;
+}
+.toast {
+  background: #1A1D21;
+  color: white;
+  padding: 10px 14px;
+  border-radius: var(--radius);
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: var(--shadow-lg);
+  min-width: 240px;
+  animation: toastIn 0.2s ease;
+}
+.toast.success { background: #1A1D21; }
+.toast .ic { color: var(--success); }
+@keyframes toastIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Modal */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 18, 22, 0.36);
+  display: grid;
+  place-items: center;
+  z-index: 60;
+  animation: fadeIn 0.12s;
+}
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+.modal {
+  background: var(--bg);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  width: min(620px, 92vw);
+  max-height: 86vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.modal.lg { width: min(880px, 94vw); }
+.modal-head {
+  padding: 16px 20px 14px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+}
+.modal-title { font-size: 15px; font-weight: 600; }
+.modal-body { padding: 18px 20px; overflow-y: auto; }
+.modal-foot {
+  padding: 12px 18px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+/* Misc */
+.divider { height: 1px; background: var(--border); margin: 18px 0; }
+.row { display: flex; gap: 10px; align-items: center; }
+.col { display: flex; flex-direction: column; gap: 10px; }
+.grow { flex: 1; }
+.muted { color: var(--text-secondary); }
+.faint { color: var(--text-tertiary); }
+.small { font-size: 12px; }
+.tiny { font-size: 11px; }
+.center { display: grid; place-items: center; }
+
+.legend {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+.legend .sw { width: 10px; height: 10px; border-radius: 2px; display: inline-block; margin-right: 5px; vertical-align: middle; }
+
+/* Forms grids */
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+}
+.form-grid.cols-3 { grid-template-columns: repeat(3, 1fr); }
+.full { grid-column: 1 / -1; }
+
+/* Empty state */
+.empty {
+  padding: 38px 18px;
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+/* progress bar */
+.progress {
+  height: 6px;
+  background: var(--bg-hover);
+  border-radius: 4px;
+  overflow: hidden;
+  width: 100%;
+}
+.progress > span {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+}
+
+/* scrollbar */
+.scroll-area::-webkit-scrollbar { width: 10px; height: 10px; }
+.scroll-area::-webkit-scrollbar-thumb {
+  background: #D5D9DE;
+  border-radius: 10px;
+  border: 2px solid var(--bg);
+}
+.scroll-area::-webkit-scrollbar-track { background: transparent; }
+
+/* report */
+.report-tbl {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13.5px;
+}
+.report-tbl td, .report-tbl th { padding: 7px 14px; }
+.report-tbl th { font-weight: 500; color: var(--text-secondary); font-size: 12px; border-bottom: 1px solid var(--border); text-align: right; }
+.report-tbl th:first-child { text-align: left; }
+.report-tbl td.label { padding-left: var(--ind, 14px); }
+.report-tbl td.num { text-align: right; font-variant-numeric: tabular-nums; font-family: 'IBM Plex Mono', monospace; }
+.report-tbl tr.section td { font-weight: 600; background: var(--bg-subtle); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+.report-tbl tr.total td { font-weight: 600; border-top: 1px solid var(--border-strong); }
+.report-tbl tr.grand td { font-weight: 700; background: var(--accent-soft); border-top: 2px solid var(--accent); border-bottom: 2px solid var(--accent); }
+.report-tbl tr.subtotal td { font-weight: 500; border-top: 1px solid var(--border); }
+.report-tbl td.label.indent-1 { padding-left: 32px; }
+.report-tbl td.label.indent-2 { padding-left: 52px; }
+
+/* ===== Multi-Company / Segment additions ===== */
+.co-chip {
+  display: inline-block;
+  margin-left: 10px;
+  padding: 2px 10px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #fff;
+  letter-spacing: 0.4px;
+  vertical-align: middle;
+}
+.company-picker {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 4px 0 10px;
+  border: 1px solid var(--border);
+  background: var(--bg-subtle);
+  border-radius: var(--radius);
+  color: var(--text-secondary);
+  height: 32px;
+}
+.company-picker .co-select {
+  border: none;
+  background: transparent;
+  font-weight: 500;
+  min-width: 240px;
+  padding-right: 28px;
+}
+.company-picker .co-select:focus {
+  outline: none;
+}
+.segment-tbl th, .segment-tbl td {
+  white-space: nowrap;
+}
+.segment-tbl tfoot td {
+  border-top: 2px solid var(--border-strong);
+}
+
+/* segment tag in tables */
+.segment-tag {
+  background: var(--accent-soft);
+  color: var(--accent-text);
+  font-weight: 500;
+}
+.entity-chip {
+  display: inline-block;
+  vertical-align: middle;
+}
+
+/* ===== Drill-down rows in report table ===== */
+.report-tbl tr.drill-row {
+  cursor: pointer;
+  transition: background 0.1s;
+}
+.report-tbl tr.drill-row:hover td {
+  background: var(--bg-hover);
+}
+.report-tbl tr.drill-row.drill-open td {
+  background: var(--accent-soft);
+  color: var(--text);
+}
+.drill-chevron {
+  display: inline-flex;
+  align-items: center;
+  color: var(--text-tertiary);
+  transition: transform 0.18s;
+  flex-shrink: 0;
+}
+.drill-chevron.open {
+  transform: rotate(90deg);
+  color: var(--accent);
+}
+/* Segment header row inside drill-down */
+.report-tbl tr.drill-seg-head td {
+  background: var(--accent-soft-strong);
+  padding: 5px 14px 5px 52px;
+  font-size: 12px;
+  border-top: 1px solid var(--accent-soft-strong);
+}
+/* Segment data rows */
+.report-tbl tr.drill-seg-row td {
+  background: var(--bg-subtle);
+  font-size: 12.5px;
+  border-bottom: 1px solid var(--border);
+}
+.report-tbl tr.drill-seg-row:last-of-type td {
+  border-bottom: none;
+}
+/* Segment subtotal row */
+.report-tbl tr.drill-seg-total td {
+  background: var(--bg-muted);
+  border-top: 1px solid var(--border);
+  border-bottom: 2px solid var(--border-strong);
+  font-size: 12.5px;
+}
+/* Mini % bar inside segment row */
+.drill-pct-bar {
+  display: inline-block;
+  width: 60px;
+  height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+  overflow: hidden;
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+.drill-pct-bar span {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+  border-radius: 2px;
+  transition: width 0.3s;
+}
+
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
 /* Mock data — Thai enterprise listed company, THB millions */
 /* Numbers in THB (raw baht); display helper formats them. */
 
@@ -200,12 +1015,7 @@ window.CFData = (function () {
   // when drilled down. Income lines map per-entity; expense lines map to
   // shared expense codes (F1, I1, O1–O6).
   const cfMapping = {
-    // ================================================================
-    // กิจกรรมดำเนินงาน (Operating Activities)
-    // ================================================================
-
-    // --- เงินสดรับ (Cash Inflows) ---
-    // รายรับจากลูกค้า = ยอดขาย + ลูกหนี้ต้นงวด − ลูกหนี้ปลายงวด
+    // === Operating activities — inflows ===
     "เงินสดรับจากการขายสินค้าและบริการ": {
       type: "income",
       incomeSegments: {
@@ -214,7 +1024,6 @@ window.CFData = (function () {
         CLIK: ["SVC"],
       },
     },
-    // ดอกเบี้ยรับ + เงินปันผลรับ (TAS 7: จัดเป็น Operating หรือ Investing ได้)
     "เงินสดรับจากดอกเบี้ยและเงินปันผล": {
       type: "income",
       incomeSegments: { ACG: ["OTH"], HMW: ["OTH"], CLIK: ["OTH"] },
@@ -224,129 +1033,51 @@ window.CFData = (function () {
       incomeSegments: { ACG: ["OTH"], HMW: ["OTH"], CLIK: ["OTH"] },
     },
 
-    // --- เงินสดจ่าย (Cash Outflows) ---
-    // จ่ายผู้จัดจำหน่าย = ต้นทุนขาย + สินค้าปลายงวด − สินค้าต้นงวด ± เจ้าหนี้
-    // จ่ายพนักงาน = ค่าแรง + ค่าใช้จ่าย ± ค้างจ่าย
+    // === Operating activities — outflows ===
     "เงินสดจ่ายให้แก่ผู้จัดจำหน่ายและพนักงาน": {
       type: "expense",
       expenseSegments: ["O1", "O2", "O3", "O4", "O6"],
-      // O1=Staff, O2=Inventory/COGS, O3=Sub-contract, O4=Rental&Facilities, O6=Others
     },
-    // ดอกเบี้ยจ่าย = F1 (Loan & Interest)
     "เงินสดจ่ายดอกเบี้ย": {
       type: "expense",
       expenseSegments: ["F1"],
     },
-    // ภาษีเงินได้ = O5 (Tax)
     "เงินสดจ่ายภาษีเงินได้": {
       type: "expense",
       expenseSegments: ["O5"],
     },
 
-    // ================================================================
-    // กิจกรรมดำเนินงาน — Indirect Method adjustments
-    // ================================================================
-
-    // กำไรก่อนภาษี = จุดเริ่มต้น (แสดง income ทุกประเภท)
-    "กำไรก่อนภาษีเงินได้": {
-      type: "income",
-      incomeSegments: {
-        ACG:  ["MGT_HMW", "MGT_CLIK", "OTH"],
-        HMW:  ["HONDA", "TOK", "INS", "INS_OPEN", "INS_LIM", "FIN", "RENT", "DEL", "OTH"],
-        CLIK: ["SVC", "OTH"],
-      },
-    },
-    // ค่าเสื่อมราคา = I1 (Fixed Assets — บวกกลับ เพราะไม่ใช่เงินสดออก)
-    "ค่าเสื่อมราคาและค่าตัดจำหน่าย": {
-      type: "expense",
-      expenseSegments: ["I1"],
-    },
-    // หนี้สูญ = O6 (Others — บวกกลับ เพราะไม่ใช่เงินสดออก)
-    "หนี้สูญและค่าเผื่อหนี้สงสัยจะสูญ": {
-      type: "expense",
-      expenseSegments: ["O6"],
-    },
-    // ผลต่างอัตราแลกเปลี่ยน = F1 (Financial items)
-    "ขาดทุน/(กำไร) จากอัตราแลกเปลี่ยน": {
-      type: "expense",
-      expenseSegments: ["F1"],
-    },
-    // ดอกเบี้ยจ่าย (บวกกลับใน Indirect ก่อนหัก) = F1
-    "ดอกเบี้ยจ่าย": {
-      type: "expense",
-      expenseSegments: ["F1"],
-    },
-    // Working Capital changes:
-    // ลูกหนี้เพิ่ม = เงินสดลด (ลูกค้ายังไม่จ่าย) → แสดง income segments
-    "ลูกหนี้การค้า (เพิ่มขึ้น)/ลดลง": {
-      type: "income",
-      incomeSegments: {
-        ACG:  ["MGT_HMW", "MGT_CLIK"],
-        HMW:  ["HONDA", "TOK", "INS", "INS_OPEN", "INS_LIM", "FIN", "RENT", "DEL"],
-        CLIK: ["SVC"],
-      },
-    },
-    // สินค้าเพิ่ม = เงินสดลด (ซื้อมากขึ้น) → O2 Inventory
-    "สินค้าคงเหลือ (เพิ่มขึ้น)/ลดลง": {
-      type: "expense",
-      expenseSegments: ["O2"],
-    },
-    // เจ้าหนี้เพิ่ม = เงินสดเพิ่ม (ยังไม่จ่าย) → O2, O3 (Supplier/Sub-contract)
-    "เจ้าหนี้การค้า เพิ่มขึ้น/(ลดลง)": {
-      type: "expense",
-      expenseSegments: ["O2", "O3"],
-    },
-    // ค้างจ่ายเพิ่ม = เงินสดเพิ่ม (ยังไม่จ่าย) → O1 Staff, O4 Facilities
-    "ค่าใช้จ่ายค้างจ่าย เพิ่มขึ้น/(ลดลง)": {
-      type: "expense",
-      expenseSegments: ["O1", "O4"],
-    },
-
-    // ================================================================
-    // กิจกรรมลงทุน (Investing Activities)
-    // ================================================================
-
-    // ซื้อสินทรัพย์ถาวร = จ่ายเงินสด → I1 Fixed Assets
+    // === Investing activities ===
     "ซื้อที่ดิน อาคารและอุปกรณ์": {
       type: "expense",
       expenseSegments: ["I1"],
     },
-    // ขายสินทรัพย์ถาวร = รับเงินสด → OTH (กำไรจากการขาย)
     "ขายสินทรัพย์ถาวร": {
       type: "income",
       incomeSegments: { ACG: ["OTH"], HMW: ["OTH"], CLIK: ["OTH"] },
     },
-    // เงินลงทุนระยะสั้น = I1 (ลงทุนชั่วคราว — Fixed assets bucket)
     "เงินลงทุนระยะสั้น (เพิ่ม)/ลด": {
       type: "expense",
       expenseSegments: ["I1"],
     },
-    // เงินปันผลรับจากเงินลงทุน (TAS 7: อาจเป็น Operating/Investing)
     "เงินปันผลรับจากเงินลงทุน": {
       type: "income",
       incomeSegments: { ACG: ["OTH"], HMW: ["OTH"], CLIK: ["OTH"] },
     },
 
-    // ================================================================
-    // กิจกรรมจัดหาเงิน (Financing Activities)
-    // ================================================================
-
-    // เงินกู้ระยะสั้น ลด = จ่ายคืน (F1) / เพิ่ม = รับเงินกู้
+    // === Financing activities ===
     "เงินกู้ระยะสั้นเพิ่มขึ้น/(ลดลง)": {
       type: "expense",
       expenseSegments: ["F1"],
     },
-    // รับเงินกู้ระยะยาว = inflow → OTH (รับเงิน)
     "เงินกู้ระยะยาว – รับ": {
       type: "income",
       incomeSegments: { ACG: ["OTH"], HMW: ["OTH"], CLIK: ["OTH"] },
     },
-    // ชำระคืนเงินกู้ระยะยาว = outflow → F1
     "เงินกู้ระยะยาว – ชำระคืน": {
       type: "expense",
       expenseSegments: ["F1"],
     },
-    // จ่ายเงินปันผล = outflow → F1 (financing cost)
     "จ่ายเงินปันผล": {
       type: "expense",
       expenseSegments: ["F1"],
@@ -649,169 +1380,6 @@ window.CFData = (function () {
     { code: "FN-OUT-02", name: "จ่ายเงินปันผล", method: "จัดหาเงิน", gl: "3210", direction: "out" },
   ];
 
-  // -------- Trial Balance (multi-period) for Auto-Calc --------
-  // Account_Type: Asset / Liability / Equity / Revenue / Expense
-  // Use to auto-derive: AR Change, AP Change, Inventory Change, Depreciation, PPE addition
-  const trialBalance = {
-    "2025-Q4": [  // Prior quarter (opening)
-      { code: "1010", name: "เงินสดและรายการเทียบเท่า", type: "Asset", balance: 412_400_000 },
-      { code: "1130", name: "ลูกหนี้การค้า",            type: "Asset", balance: 168_300_000 },
-      { code: "1140", name: "ค่าเผื่อหนี้สงสัยจะสูญ",        type: "Asset", balance: -8_200_000 },
-      { code: "1200", name: "สินค้าคงเหลือ",            type: "Asset", balance: 142_800_000 },
-      { code: "1500", name: "ที่ดิน อาคารและอุปกรณ์",      type: "Asset", balance: 982_400_000 },
-      { code: "1590", name: "ค่าเสื่อมราคาสะสม",          type: "Asset", balance: -286_500_000 },
-      { code: "2110", name: "เจ้าหนี้การค้า",            type: "Liability", balance: 95_400_000 },
-      { code: "2120", name: "ค่าใช้จ่ายค้างจ่าย",          type: "Liability", balance: 42_100_000 },
-      { code: "2210", name: "เงินกู้ระยะสั้น",           type: "Liability", balance: 180_000_000 },
-      { code: "2310", name: "เงินกู้ระยะยาว",            type: "Liability", balance: 240_000_000 },
-      { code: "3000", name: "ทุนจดทะเบียน",              type: "Equity", balance: 500_000_000 },
-      { code: "3100", name: "กำไรสะสม",                  type: "Equity", balance: 354_900_000 },
-    ],
-    "2026-Q1": [  // Current quarter (closing)
-      { code: "1010", name: "เงินสดและรายการเทียบเท่า", type: "Asset", balance: 465_220_000 },
-      { code: "1130", name: "ลูกหนี้การค้า",            type: "Asset", balance: 196_700_000 },  // +28.4M (AR up)
-      { code: "1140", name: "ค่าเผื่อหนี้สงสัยจะสูญ",        type: "Asset", balance: -12_400_000 }, // +4.2M (bad debt)
-      { code: "1200", name: "สินค้าคงเหลือ",            type: "Asset", balance: 157_600_000 },  // +14.8M (inv up)
-      { code: "1500", name: "ที่ดิน อาคารและอุปกรณ์",      type: "Asset", balance: 999_600_000 },  // +21.4M - 4.2M = +17.2M net
-      { code: "1590", name: "ค่าเสื่อมราคาสะสม",          type: "Asset", balance: -325_200_000 }, // +38.7M
-      { code: "2110", name: "เจ้าหนี้การค้า",            type: "Liability", balance: 114_000_000 }, // +18.6M (AP up)
-      { code: "2120", name: "ค่าใช้จ่ายค้างจ่าย",          type: "Liability", balance: 48_300_000 },  // +6.2M
-      { code: "2210", name: "เงินกู้ระยะสั้น",           type: "Liability", balance: 155_000_000 }, // -25M (paid down)
-      { code: "2310", name: "เงินกู้ระยะยาว",            type: "Liability", balance: 221_600_000 }, // -18.4M (paid down)
-      { code: "3000", name: "ทุนจดทะเบียน",              type: "Equity", balance: 500_000_000 },
-      { code: "3100", name: "กำไรสะสม",                  type: "Equity", balance: 415_700_000 },  // +94.1M (Net Income - Dividend)
-    ],
-  };
-
-  // -------- Income Statement summary (for Net Profit) --------
-  const incomeStatement = {
-    "2026-Q1": {
-      revenue:           1_242_000_000,
-      cogs:                845_000_000,
-      grossProfit:         397_000_000,
-      opEx:                182_000_000,
-      depreciation:         38_700_000,  // non-cash, added back in Indirect
-      badDebt:               4_200_000,  // non-cash, added back
-      fxLoss:               -2_400_000,
-      interestExp:          36_200_000,
-      profitBeforeTax:     142_800_000,
-      tax:                  48_700_000,
-      netProfit:            94_100_000,
-    },
-    "2025-Q4": {
-      revenue:           1_098_000_000,
-      cogs:                756_000_000,
-      grossProfit:         342_000_000,
-      opEx:                166_400_000,
-      depreciation:         35_200_000,
-      badDebt:               3_100_000,
-      fxLoss:                1_800_000,
-      interestExp:          34_800_000,
-      profitBeforeTax:     118_400_000,
-      tax:                  41_600_000,
-      netProfit:            76_800_000,
-    },
-  };
-
-  // -------- Auto-calc helpers (derive CF items from TB + IS) --------
-  // Lookup helper
-  function tbBal(period, code) {
-    const row = (trialBalance[period] || []).find(r => r.code === code);
-    return row ? row.balance : 0;
-  }
-  // Delta: closing - opening (positive = balance went up)
-  function tbDelta(curPeriod, priorPeriod, code) {
-    return tbBal(curPeriod, code) - tbBal(priorPeriod, code);
-  }
-
-  // Working capital changes (Indirect Method conventions: use sign that makes cash effect explicit)
-  // AR up → cash down → negative adjustment
-  // AP up → cash up → positive adjustment
-  // Inventory up → cash down → negative
-  function getARChange(cur, prior) {
-    // Net AR = 1130 - 1140 (allowance)
-    const arCur = tbBal(cur, "1130") + tbBal(cur, "1140");
-    const arPri = tbBal(prior, "1130") + tbBal(prior, "1140");
-    return -(arCur - arPri);  // negative if AR increased
-  }
-  function getAPChange(cur, prior) {
-    return tbDelta(cur, prior, "2110");
-  }
-  function getInventoryChange(cur, prior) {
-    return -tbDelta(cur, prior, "1200");
-  }
-  function getAccruedExpChange(cur, prior) {
-    return tbDelta(cur, prior, "2120");
-  }
-  function getDepreciation(period) {
-    return incomeStatement[period]?.depreciation || 0;
-  }
-  function getPPEAcquisition(cur, prior) {
-    // Gross PPE change minus disposals; for simplicity here, we expose net addition
-    return tbDelta(cur, prior, "1500");
-  }
-  function getShortTermLoanChange(cur, prior) {
-    return tbDelta(cur, prior, "2210");
-  }
-  function getLongTermLoanChange(cur, prior) {
-    return tbDelta(cur, prior, "2310");
-  }
-
-  // Build Indirect CF dynamically from TB + IS (returns array of section items)
-  function buildIndirectCF(curPeriod, priorPeriod) {
-    const is = incomeStatement[curPeriod] || {};
-    const isPrior = incomeStatement[priorPeriod] || {};
-
-    return {
-      sections: [
-        {
-          title: "กระแสเงินสดจากกิจกรรมดำเนินงาน (วิธีอ้อม)",
-          items: [
-            { label: "กำไรก่อนภาษีเงินได้", current: is.profitBeforeTax, prior: isPrior.profitBeforeTax, indent: 1, formula: "จาก Income Statement" },
-            { label: "ปรับด้วยรายการที่ไม่ใช่เงินสด:", current: null, prior: null, indent: 1, header: true },
-            { label: "ค่าเสื่อมราคาและค่าตัดจำหน่าย", current: is.depreciation, prior: isPrior.depreciation, indent: 2, formula: "ΔAccumulated Depreciation (1590)" },
-            { label: "หนี้สูญและค่าเผื่อหนี้สงสัยจะสูญ", current: is.badDebt, prior: isPrior.badDebt, indent: 2, formula: "ΔAllowance for Doubtful Accounts (1140)" },
-            { label: "ขาดทุน/(กำไร) จากอัตราแลกเปลี่ยน", current: is.fxLoss, prior: isPrior.fxLoss, indent: 2, formula: "จาก Income Statement" },
-            { label: "ดอกเบี้ยจ่าย", current: is.interestExp, prior: isPrior.interestExp, indent: 2, formula: "Interest Expense จาก Income Statement" },
-            { label: "การเปลี่ยนแปลงในสินทรัพย์/หนี้สินดำเนินงาน:", current: null, prior: null, indent: 1, header: true },
-            { label: "ลูกหนี้การค้า (เพิ่มขึ้น)/ลดลง", current: getARChange(curPeriod, priorPeriod), prior: getARChange(priorPeriod, "2025-Q3"), indent: 2, formula: "-(AR Cur - AR Prior)" },
-            { label: "สินค้าคงเหลือ (เพิ่มขึ้น)/ลดลง", current: getInventoryChange(curPeriod, priorPeriod), prior: getInventoryChange(priorPeriod, "2025-Q3"), indent: 2, formula: "-(Inv Cur - Inv Prior)" },
-            { label: "เจ้าหนี้การค้า เพิ่มขึ้น/(ลดลง)", current: getAPChange(curPeriod, priorPeriod), prior: getAPChange(priorPeriod, "2025-Q3"), indent: 2, formula: "AP Cur - AP Prior" },
-            { label: "ค่าใช้จ่ายค้างจ่าย เพิ่มขึ้น/(ลดลง)", current: getAccruedExpChange(curPeriod, priorPeriod), prior: getAccruedExpChange(priorPeriod, "2025-Q3"), indent: 2, formula: "ΔAccrued Expenses (2120)" },
-            { label: "เงินสดจ่ายดอกเบี้ย", current: -is.interestExp, prior: -isPrior.interestExp, indent: 1, formula: "-Interest Expense" },
-            { label: "เงินสดจ่ายภาษีเงินได้", current: -is.tax, prior: -isPrior.tax, indent: 1, formula: "-Income Tax" },
-          ],
-          subtotalLabel: "เงินสดสุทธิจากกิจกรรมดำเนินงาน",
-        },
-        {
-          title: "กระแสเงินสดจากกิจกรรมลงทุน",
-          items: [
-            { label: "ซื้อที่ดิน อาคารและอุปกรณ์", current: -21_400_000, prior: -38_900_000, indent: 1, formula: "ΔPPE Gross (1500) + Disposal" },
-            { label: "ขายสินทรัพย์ถาวร", current: 4_200_000, prior: 1_800_000, indent: 1 },
-            { label: "เงินลงทุนระยะสั้น (เพิ่ม)/ลด", current: -8_600_000, prior: 3_400_000, indent: 1 },
-            { label: "เงินปันผลรับจากเงินลงทุน", current: 6_800_000, prior: 5_900_000, indent: 1 },
-          ],
-          subtotalLabel: "เงินสดสุทธิจากกิจกรรมลงทุน",
-        },
-        {
-          title: "กระแสเงินสดจากกิจกรรมจัดหาเงิน",
-          items: [
-            { label: "เงินกู้ระยะสั้นเพิ่มขึ้น/(ลดลง)", current: getShortTermLoanChange(curPeriod, priorPeriod), prior: 12_000_000, indent: 1, formula: "ΔShort-term Loan (2210)" },
-            { label: "เงินกู้ระยะยาว – รับ", current: 0, prior: 60_000_000, indent: 1 },
-            { label: "เงินกู้ระยะยาว – ชำระคืน", current: getLongTermLoanChange(curPeriod, priorPeriod), prior: -16_200_000, indent: 1, formula: "ΔLong-term Loan (2310)" },
-            { label: "จ่ายเงินปันผล", current: -32_000_000, prior: -28_000_000, indent: 1 },
-          ],
-          subtotalLabel: "เงินสดสุทธิจากกิจกรรมจัดหาเงิน",
-        },
-      ],
-      opening: tbBal(priorPeriod, "1010"),
-      priorOpening: 412_400_000,
-    };
-  }
-
-  // Overwrite indirectCF with auto-calculated version
-  Object.assign(indirectCF, buildIndirectCF("2026-Q1", "2025-Q4"));
-
   // Totals derived
   const totalCash = bankAccounts.reduce((s, b) => s + b.balance, 0);
   const inflowQ1 = monthly.slice(3).reduce((s, m) => s + m.inflow, 0);
@@ -823,11 +1391,6 @@ window.CFData = (function () {
     arAging, apAging, glAccounts, inventory,
     forecast, reconItems, directCF, indirectCF,
     exports, categories,
-    // Auto-calc CF
-    trialBalance, incomeStatement,
-    getARChange, getAPChange, getInventoryChange, getAccruedExpChange,
-    getDepreciation, getPPEAcquisition, getShortTermLoanChange, getLongTermLoanChange,
-    buildIndirectCF, tbBal, tbDelta,
     // segment data
     incomeSegmentsByCo, expenseSegments, segmentMonths,
     incomeByCoMonth, expenseByCoMonth,
@@ -862,3 +1425,5 @@ window.fmtTHBShort = function (n) {
   else { v = n; suf = ""; }
   return v.toLocaleString("en-US", { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + suf;
 };
+
+</script>
