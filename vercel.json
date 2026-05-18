@@ -1,13 +1,20 @@
 {
-  "name": "cashflow-automation",
   "version": 2,
   "public": true,
-  "buildCommand": "echo 'Static site - no build needed'",
-  "outputDirectory": "public",
-  "rewrites": [
+  "builds": [
     {
-      "source": "/(.*)",
-      "destination": "/bundle.html"
+      "src": "public/**",
+      "use": "@vercel/static"
+    }
+  ],
+  "routes": [
+    {
+      "src": "^(?!/bundle\\.html)(.*)$",
+      "dest": "/bundle.html"
+    },
+    {
+      "src": "/bundle.html",
+      "dest": "/bundle.html"
     }
   ]
 }
