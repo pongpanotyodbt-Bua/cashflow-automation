@@ -1,14 +1,10 @@
 {
   "version": 2,
-  "public": true,
-  "cleanUrls": false,
-  "trailingSlash": false,
-  "buildCommand": "echo 'Static site'",
-  "outputDirectory": "public",
-  "routes": [
+  "public": "public",
+  "rewrites": [
     {
-      "src": "/(.*)",
-      "dest": "/bundle.html"
+      "source": "/(.*)",
+      "destination": "/bundle.html"
     }
   ]
 }
