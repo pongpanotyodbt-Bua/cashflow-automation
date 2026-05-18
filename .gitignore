@@ -1,0 +1,33 @@
+# Dependencies
+node_modules/
+.pnp
+
+# Build
+.next/
+dist/
+build/
+*.egg-info/
+__pycache__/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Local dev
+.claude/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*

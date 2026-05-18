@@ -1,0 +1,13 @@
+{
+  "name": "cashflow-automation",
+  "version": 2,
+  "public": true,
+  "buildCommand": "echo 'Static site - no build needed'",
+  "outputDirectory": "public",
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/bundle.html"
+    }
+  ]
+}
