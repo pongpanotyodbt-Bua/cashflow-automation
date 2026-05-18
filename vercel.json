@@ -1,19 +1,13 @@
 {
   "version": 2,
   "public": true,
-  "builds": [
-    {
-      "src": "public/**",
-      "use": "@vercel/static"
-    }
-  ],
+  "cleanUrls": false,
+  "trailingSlash": false,
+  "buildCommand": "echo 'Static site'",
+  "outputDirectory": "public",
   "routes": [
     {
-      "src": "^(?!/bundle\\.html)(.*)$",
-      "dest": "/bundle.html"
-    },
-    {
-      "src": "/bundle.html",
+      "src": "/(.*)",
       "dest": "/bundle.html"
     }
   ]
