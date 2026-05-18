@@ -1,10 +1,4 @@
 {
   "version": 2,
-  "public": "public",
-  "rewrites": [
-    {
-      "source": "/(.*)",
-      "destination": "/bundle.html"
-    }
-  ]
+  "public": "public"
 }
