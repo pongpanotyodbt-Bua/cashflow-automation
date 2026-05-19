@@ -47,7 +47,6 @@ function App() {
     dashboard: ["Dashboard"],
     finance: ["บันทึกข้อมูล", "ข้อมูลทางการเงิน"],
     accounting: ["บันทึกข้อมูล", "ข้อมูลทางบัญชี"],
-    reconcile: ["บันทึกข้อมูล", "Reconciliation"],
     direct: ["งบกระแสเงินสด", "วิธีตรง"],
     indirect: ["งบกระแสเงินสด", "วิธีอ้อม"],
     forecast: ["งบกระแสเงินสด", "Forecast"],
@@ -65,7 +64,6 @@ function App() {
             {active === "dashboard" && <window.Dashboard chartStyle={tweaks.chartStyle} companyId={companyId} />}
             {active === "finance" && <window.FinanceInput toast={toast} companyId={companyId} />}
             {active === "accounting" && <window.AccountingInput toast={toast} companyId={companyId} />}
-            {active === "reconcile" && <window.Reconciliation toast={toast} />}
             {active === "direct" && <window.ReportPage method="direct" companyId={companyId} chartStyle={tweaks.chartStyle} onExport={() => setShowExport(true)} />}
             {active === "indirect" && <window.ReportPage method="indirect" companyId={companyId} chartStyle={tweaks.chartStyle} onExport={() => setShowExport(true)} />}
             {active === "forecast" && <window.Forecast chartStyle={tweaks.chartStyle} />}

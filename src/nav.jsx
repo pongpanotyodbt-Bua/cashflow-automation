@@ -12,7 +12,6 @@ const NAV = [
     items: [
       { id: "finance", name: "ข้อมูลทางการเงิน", icon: "bank", badge: "12" },
       { id: "accounting", name: "ข้อมูลทางบัญชี", icon: "book", badge: "8" },
-      { id: "reconcile", name: "Reconciliation", icon: "swap", badge: "3" },
     ],
   },
   {

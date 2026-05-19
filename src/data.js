@@ -509,6 +509,127 @@ window.CFData = (function () {
     { sku: "WIP-A-101", name: "สินค้าระหว่างผลิต กลุ่ม A", uom: "ล็อต", qty: 38, unit: 412_000, value: 15_656_000 },
   ];
 
+  // ===========================================================================
+  // AP HONDA Payments — การจ่ายเงินให้ HONDA (รถยนต์/อะไหล่)
+  // ไม่อยู่ใน Payments ทั่วไป เพราะมีลักษณะพิเศษ (Stock Financing)
+  // ===========================================================================
+  const apHondaPayments = [
+    { id: "HD-2603-01", date: "2026-03-28", entity: "HMW", invoice: "HD-INV-26030145", model: "Honda Civic RS 2026", qty: 8, unit: 1_124_000, amount: 8_992_000, dueDate: "2026-04-15", status: "pending", account: "BA-002" },
+    { id: "HD-2603-02", date: "2026-03-25", entity: "HMW", invoice: "HD-INV-26030122", model: "Honda CR-V 2026", qty: 5, unit: 1_490_000, amount: 7_450_000, dueDate: "2026-04-12", status: "pending", account: "BA-002" },
+    { id: "HD-2603-03", date: "2026-03-20", entity: "HMW", invoice: "HD-INV-26030089", model: "Honda HR-V 2026", qty: 6, unit: 1_009_000, amount: 6_054_000, dueDate: "2026-04-08", status: "paid", account: "BA-002" },
+    { id: "HD-2603-04", date: "2026-03-15", entity: "HMW", invoice: "HD-INV-26030054", model: "Honda Accord 2026", qty: 3, unit: 1_790_000, amount: 5_370_000, dueDate: "2026-04-02", status: "paid", account: "BA-002" },
+    { id: "HD-2603-05", date: "2026-03-12", entity: "HMW", invoice: "HD-INV-26030041", model: "อะไหล่ Genuine Parts Q1", qty: 1, unit: 2_840_000, amount: 2_840_000, dueDate: "2026-03-30", status: "paid", account: "BA-002" },
+    { id: "HD-2602-06", date: "2026-02-28", entity: "HMW", invoice: "HD-INV-26020198", model: "Honda City 2026", qty: 10, unit: 729_000, amount: 7_290_000, dueDate: "2026-03-18", status: "paid", account: "BA-002" },
+    { id: "HD-2602-07", date: "2026-02-20", entity: "HMW", invoice: "HD-INV-26020156", model: "Honda BR-V 2026", qty: 4, unit: 894_000, amount: 3_576_000, dueDate: "2026-03-10", status: "paid", account: "BA-002" },
+  ];
+
+  // ===========================================================================
+  // PN Payments — Promissory Note Payment (ตั๋วเงินจ่าย)
+  // ใช้สำหรับการจ่ายค่ารถยนต์/อะไหล่ผ่านตั๋วเงิน
+  // ===========================================================================
+  const pnPayments = [
+    { id: "PN-2603-01", date: "2026-03-30", entity: "HMW", pnNo: "PN-HMW-26-0145", beneficiary: "Honda Automobile (Thailand)", amount: 12_500_000, issueDate: "2026-01-30", dueDate: "2026-04-30", term: "90 วัน", status: "outstanding", account: "BA-002" },
+    { id: "PN-2603-02", date: "2026-03-25", entity: "HMW", pnNo: "PN-HMW-26-0142", beneficiary: "TC Subaru Thailand", amount: 8_400_000, issueDate: "2026-01-25", dueDate: "2026-04-25", term: "90 วัน", status: "outstanding", account: "BA-002" },
+    { id: "PN-2603-03", date: "2026-03-15", entity: "HMW", pnNo: "PN-HMW-26-0138", beneficiary: "Honda Automobile (Thailand)", amount: 6_200_000, issueDate: "2025-12-15", dueDate: "2026-03-15", term: "90 วัน", status: "paid", account: "BA-002" },
+    { id: "PN-2602-04", date: "2026-02-20", entity: "CLIK", pnNo: "PN-CLIK-26-0098", beneficiary: "บจก. เครื่องจักรอุตสาหกรรม KK", amount: 4_500_000, issueDate: "2025-11-20", dueDate: "2026-02-20", term: "90 วัน", status: "paid", account: "BA-007" },
+    { id: "PN-2602-05", date: "2026-02-15", entity: "HMW", pnNo: "PN-HMW-26-0095", beneficiary: "Honda Automobile (Thailand)", amount: 9_800_000, issueDate: "2025-11-15", dueDate: "2026-02-15", term: "90 วัน", status: "paid", account: "BA-002" },
+  ];
+
+  // ===========================================================================
+  // Reconcile AR — กระทบยอดลูกหนี้สำหรับ CF Indirect Method
+  // เปิดงวด + Sales − Collection = ปิดงวด
+  // Change = WC Adjustment สำหรับ Operating CF (Indirect)
+  // ===========================================================================
+  const reconcileAR = {
+    period: "2026-Q1",
+    entities: [
+      {
+        entity: "HMW",
+        opening: 224_000_000,
+        sales: 412_400_000,
+        collection: -385_200_000,
+        adjustments: 0,
+        closing: 251_200_000,
+        change: 27_200_000,
+        impact: "Decrease Cash (AR เพิ่ม = ใช้เงิน)",
+      },
+      {
+        entity: "CLIK",
+        opening: 86_100_000,
+        sales: 165_300_000,
+        collection: -148_900_000,
+        adjustments: -1_200_000,
+        closing: 101_300_000,
+        change: 15_200_000,
+        impact: "Decrease Cash (AR เพิ่ม = ใช้เงิน)",
+      },
+      {
+        entity: "ACG",
+        opening: 14_500_000,
+        sales: 32_400_000,
+        collection: -27_100_000,
+        adjustments: 0,
+        closing: 19_800_000,
+        change: 5_300_000,
+        impact: "Decrease Cash (AR เพิ่ม = ใช้เงิน)",
+      },
+    ],
+    totalOpening: 324_600_000,
+    totalSales: 610_100_000,
+    totalCollection: -561_200_000,
+    totalAdjustments: -1_200_000,
+    totalClosing: 372_300_000,
+    totalChange: 47_700_000,
+    cfImpact: -47_700_000, // Negative = Cash Outflow
+  };
+
+  // ===========================================================================
+  // Reconcile AP — กระทบยอดเจ้าหนี้สำหรับ CF Indirect Method
+  // เปิดงวด + Purchase − Payment = ปิดงวด
+  // ===========================================================================
+  const reconcileAP = {
+    period: "2026-Q1",
+    entities: [
+      {
+        entity: "HMW",
+        opening: 98_400_000,
+        purchases: 268_900_000,
+        payment: -245_300_000,
+        adjustments: 0,
+        closing: 122_000_000,
+        change: 23_600_000,
+        impact: "Increase Cash (AP เพิ่ม = ได้เงิน)",
+      },
+      {
+        entity: "CLIK",
+        opening: 18_500_000,
+        purchases: 84_200_000,
+        payment: -78_400_000,
+        adjustments: -300_000,
+        closing: 24_000_000,
+        change: 5_500_000,
+        impact: "Increase Cash (AP เพิ่ม = ได้เงิน)",
+      },
+      {
+        entity: "ACG",
+        opening: 5_200_000,
+        purchases: 12_400_000,
+        payment: -11_100_000,
+        adjustments: 0,
+        closing: 6_500_000,
+        change: 1_300_000,
+        impact: "Increase Cash (AP เพิ่ม = ได้เงิน)",
+      },
+    ],
+    totalOpening: 122_100_000,
+    totalPurchases: 365_500_000,
+    totalPayment: -334_800_000,
+    totalAdjustments: -300_000,
+    totalClosing: 152_500_000,
+    totalChange: 30_400_000,
+    cfImpact: 30_400_000, // Positive = Cash Inflow
+  };
+
   // Forecast (next 8 weeks)
   const forecast = (() => {
     const weeks = [];
@@ -821,6 +942,8 @@ window.CFData = (function () {
     company, companies, bankAccounts, trend30, monthly,
     topInflowCats, topOutflowCats, recentTxns,
     arAging, apAging, glAccounts, inventory,
+    // Phase A additions
+    apHondaPayments, pnPayments, reconcileAR, reconcileAP,
     forecast, reconItems, directCF, indirectCF,
     exports, categories,
     // Auto-calc CF

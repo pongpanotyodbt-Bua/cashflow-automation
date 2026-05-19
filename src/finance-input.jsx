@@ -35,6 +35,10 @@ function FinanceInput({ toast, companyId = "CONSO" }) {
         <button className={"tab " + (tab === "bank" ? "active" : "")} onClick={() => setTab("bank")}>บัญชีธนาคาร</button>
         <button className={"tab " + (tab === "receipts" ? "active" : "")} onClick={() => setTab("receipts")}>เงินรับ (Receipts)</button>
         <button className={"tab " + (tab === "payments" ? "active" : "")} onClick={() => setTab("payments")}>เงินจ่าย (Payments)</button>
+        <button className={"tab " + (tab === "honda" ? "active" : "")} onClick={() => setTab("honda")}>AP HONDA Payment</button>
+        <button className={"tab " + (tab === "pn" ? "active" : "")} onClick={() => setTab("pn")}>PN Payment</button>
+        <button className={"tab " + (tab === "reconAR" ? "active" : "")} onClick={() => setTab("reconAR")}>Reconcile AR</button>
+        <button className={"tab " + (tab === "reconAP" ? "active" : "")} onClick={() => setTab("reconAP")}>Reconcile AP</button>
       </div>
 
       <div className="row" style={{ marginBottom: 14, gap: 10 }}>
@@ -52,6 +56,10 @@ function FinanceInput({ toast, companyId = "CONSO" }) {
       {tab === "bank" && <BankTab companyId={companyId} />}
       {tab === "receipts" && <ReceiptsTab data={filtered(d.recentTxns.filter((t) => t.amount > 0), ["desc"])} />}
       {tab === "payments" && <PaymentsTab data={filtered(d.recentTxns.filter((t) => t.amount < 0), ["desc"])} companyId={companyId} />}
+      {tab === "honda" && <APHondaTab companyId={companyId} />}
+      {tab === "pn" && <PNPaymentTab companyId={companyId} />}
+      {tab === "reconAR" && <ReconcileARTab companyId={companyId} />}
+      {tab === "reconAP" && <ReconcileAPTab companyId={companyId} />}
 
       {showAdd && <AddTxnModal companyId={companyId} onClose={() => setShowAdd(false)} onSave={() => { setShowAdd(false); toast("บันทึกรายการเรียบร้อย"); }} />}
       {showUpload && <UploadModal onClose={() => setShowUpload(false)} onDone={() => { setShowUpload(false); toast("นำเข้า 184 รายการสำเร็จ"); }} />}
@@ -437,6 +445,321 @@ function Stat({ label, value, color }) {
       <div className="tiny muted">{label}</div>
     </div>
   );
+}
+
+/* ============================================================================
+   AP HONDA Payment Tab — การจ่ายเงินให้ HONDA (รถยนต์/อะไหล่)
+   ============================================================================ */
+function APHondaTab({ companyId }) {
+  const d = window.CFData;
+  const rows = d.apHondaPayments.filter(r => companyId === "CONSO" || !companyId || r.entity === companyId);
+  const total = rows.reduce((s, r) => s + r.amount, 0);
+  const pending = rows.filter(r => r.status === "pending").reduce((s, r) => s + r.amount, 0);
+  const paid = rows.filter(r => r.status === "paid").reduce((s, r) => s + r.amount, 0);
+
+  return (
+    <>
+      <div className="kpi-grid" style={{ gridTemplateColumns: "repeat(4, 1fr)", marginBottom: 14 }}>
+        <Mini label="ยอด AP HONDA รวม" value={total} accent />
+        <Mini label="ค้างชำระ (Pending)" value={pending} color="var(--warning)" />
+        <Mini label="ชำระแล้ว (Paid)" value={paid} color="var(--success)" />
+        <Mini label="จำนวนรายการ" value={rows.length} isCount />
+      </div>
+
+      <div className="card">
+        <div className="card-head">
+          <div className="card-title">AP HONDA Payment</div>
+          <div className="tiny muted" style={{ marginLeft: 8 }}>การจ่ายเงินค่ารถยนต์ Honda และอะไหล่</div>
+          <div className="grow" />
+          <button className="btn sm"><Ic name="filter" size={13} /> ตัวกรอง</button>
+          <button className="btn sm"><Ic name="download" size={13} /> Export</button>
+          <button className="btn sm primary"><Ic name="plus" size={13} /> เพิ่ม</button>
+        </div>
+        <table className="tbl">
+          <thead>
+            <tr>
+              <th style={{ width: 100 }}>วันที่</th>
+              <th style={{ width: 70 }}>Entity</th>
+              <th>เลข Invoice</th>
+              <th>รุ่น / รายการ</th>
+              <th className="num">จำนวน</th>
+              <th className="num">ราคาต่อหน่วย</th>
+              <th className="num">รวม (บาท)</th>
+              <th>ครบกำหนด</th>
+              <th>บัญชีจ่าย</th>
+              <th>สถานะ</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map(r =>
+              <tr key={r.id}>
+                <td className="num small">{r.date}</td>
+                <td><EntityChip entity={r.entity} /></td>
+                <td className="mono small">{r.invoice}</td>
+                <td style={{ fontWeight: 500 }}>{r.model}</td>
+                <td className="num">{r.qty}</td>
+                <td className="num">{window.fmtTHB(r.unit)}</td>
+                <td className="num neg" style={{ fontWeight: 500 }}>{window.fmtTHB(r.amount)}</td>
+                <td className="num small">{r.dueDate}</td>
+                <td className="mono small">{r.account}</td>
+                <td><StatusTag s={r.status} /></td>
+              </tr>
+            )}
+            <tr style={{ background: "var(--bg-subtle)", fontWeight: 600 }}>
+              <td colSpan="6" style={{ textAlign: "right" }}>รวมทั้งสิ้น ({rows.length} รายการ)</td>
+              <td className="num neg">{window.fmtTHB(total)}</td>
+              <td colSpan="3"></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </>
+  );
+}
+
+/* ============================================================================
+   PN Payment Tab — Promissory Note (ตั๋วเงินจ่าย)
+   ============================================================================ */
+function PNPaymentTab({ companyId }) {
+  const d = window.CFData;
+  const rows = d.pnPayments.filter(r => companyId === "CONSO" || !companyId || r.entity === companyId);
+  const total = rows.reduce((s, r) => s + r.amount, 0);
+  const outstanding = rows.filter(r => r.status === "outstanding").reduce((s, r) => s + r.amount, 0);
+  const paid = rows.filter(r => r.status === "paid").reduce((s, r) => s + r.amount, 0);
+
+  return (
+    <>
+      <div className="kpi-grid" style={{ gridTemplateColumns: "repeat(4, 1fr)", marginBottom: 14 }}>
+        <Mini label="ยอด PN รวม" value={total} accent />
+        <Mini label="คงค้าง (Outstanding)" value={outstanding} color="var(--warning)" />
+        <Mini label="ชำระแล้ว (Paid)" value={paid} color="var(--success)" />
+        <Mini label="จำนวนตั๋ว" value={rows.length} isCount />
+      </div>
+
+      <div className="card">
+        <div className="card-head">
+          <div className="card-title">PN Payment (ตั๋วเงินจ่าย)</div>
+          <div className="tiny muted" style={{ marginLeft: 8 }}>Promissory Note สำหรับการจ่ายระยะ 30/60/90 วัน</div>
+          <div className="grow" />
+          <button className="btn sm"><Ic name="filter" size={13} /> ตัวกรอง</button>
+          <button className="btn sm"><Ic name="download" size={13} /> Export</button>
+          <button className="btn sm primary"><Ic name="plus" size={13} /> เพิ่ม PN</button>
+        </div>
+        <table className="tbl">
+          <thead>
+            <tr>
+              <th style={{ width: 100 }}>วันที่</th>
+              <th style={{ width: 70 }}>Entity</th>
+              <th>เลข PN</th>
+              <th>ผู้รับ (Beneficiary)</th>
+              <th>วันออก</th>
+              <th>ครบกำหนด</th>
+              <th>เทอม</th>
+              <th>บัญชีจ่าย</th>
+              <th className="num">จำนวน (บาท)</th>
+              <th>สถานะ</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map(r =>
+              <tr key={r.id}>
+                <td className="num small">{r.date}</td>
+                <td><EntityChip entity={r.entity} /></td>
+                <td className="mono small">{r.pnNo}</td>
+                <td style={{ fontWeight: 500 }}>{r.beneficiary}</td>
+                <td className="num small">{r.issueDate}</td>
+                <td className="num small">{r.dueDate}</td>
+                <td><span className="tag">{r.term}</span></td>
+                <td className="mono small">{r.account}</td>
+                <td className="num neg" style={{ fontWeight: 500 }}>{window.fmtTHB(r.amount)}</td>
+                <td><PNStatusTag s={r.status} /></td>
+              </tr>
+            )}
+            <tr style={{ background: "var(--bg-subtle)", fontWeight: 600 }}>
+              <td colSpan="8" style={{ textAlign: "right" }}>รวม PN ทั้งสิ้น ({rows.length} ใบ)</td>
+              <td className="num neg">{window.fmtTHB(total)}</td>
+              <td></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </>
+  );
+}
+
+/* ============================================================================
+   Reconcile AR Tab — กระทบยอดลูกหนี้ (สำหรับ CF Indirect Method)
+   ============================================================================ */
+function ReconcileARTab({ companyId }) {
+  const d = window.CFData;
+  const recon = d.reconcileAR;
+  const entities = recon.entities.filter(e => companyId === "CONSO" || !companyId || e.entity === companyId);
+
+  // Recalculate totals for filtered view
+  const sumOpening = entities.reduce((s, e) => s + e.opening, 0);
+  const sumSales = entities.reduce((s, e) => s + e.sales, 0);
+  const sumCollection = entities.reduce((s, e) => s + e.collection, 0);
+  const sumAdjustments = entities.reduce((s, e) => s + e.adjustments, 0);
+  const sumClosing = entities.reduce((s, e) => s + e.closing, 0);
+  const sumChange = entities.reduce((s, e) => s + e.change, 0);
+
+  return (
+    <>
+      <div className="kpi-grid" style={{ gridTemplateColumns: "repeat(4, 1fr)", marginBottom: 14 }}>
+        <Mini label="AR เปิดงวด" value={sumOpening} />
+        <Mini label="AR ปิดงวด" value={sumClosing} accent />
+        <Mini label="การเปลี่ยนแปลง AR" value={sumChange} color={sumChange > 0 ? "var(--warning)" : "var(--success)"} />
+        <Mini label="ผลกระทบต่อ CF" value={-sumChange} color={sumChange > 0 ? "var(--danger)" : "var(--success)"} />
+      </div>
+
+      <div className="card">
+        <div className="card-head">
+          <div className="card-title">Reconcile AR — กระทบยอดลูกหนี้การค้า</div>
+          <div className="tiny muted" style={{ marginLeft: 8 }}>งวด: {recon.period} • สำหรับ CF Indirect Method</div>
+          <div className="grow" />
+          <button className="btn sm"><Ic name="download" size={13} /> Export</button>
+        </div>
+        <table className="tbl">
+          <thead>
+            <tr>
+              <th style={{ width: 80 }}>Entity</th>
+              <th className="num">เปิดงวด (AR)</th>
+              <th className="num">+ ยอดขาย (Credit)</th>
+              <th className="num">− เก็บเงิน (Collection)</th>
+              <th className="num">± ปรับปรุง</th>
+              <th className="num">ปิดงวด (AR)</th>
+              <th className="num">Δ Change</th>
+              <th>ผลกระทบ CF</th>
+            </tr>
+          </thead>
+          <tbody>
+            {entities.map(e =>
+              <tr key={e.entity}>
+                <td><EntityChip entity={e.entity} /></td>
+                <td className="num">{window.fmtTHB(e.opening)}</td>
+                <td className="num pos">+{window.fmtTHB(e.sales)}</td>
+                <td className="num neg">{window.fmtTHB(e.collection)}</td>
+                <td className="num">{e.adjustments ? window.fmtTHB(e.adjustments) : "—"}</td>
+                <td className="num" style={{ fontWeight: 500 }}>{window.fmtTHB(e.closing)}</td>
+                <td className="num" style={{ fontWeight: 500, color: e.change > 0 ? "var(--warning)" : "var(--success)" }}>{e.change > 0 ? "+" : ""}{window.fmtTHB(e.change)}</td>
+                <td className="small muted">{e.impact}</td>
+              </tr>
+            )}
+            <tr style={{ background: "var(--bg-subtle)", fontWeight: 600 }}>
+              <td>รวม</td>
+              <td className="num">{window.fmtTHB(sumOpening)}</td>
+              <td className="num pos">+{window.fmtTHB(sumSales)}</td>
+              <td className="num neg">{window.fmtTHB(sumCollection)}</td>
+              <td className="num">{sumAdjustments ? window.fmtTHB(sumAdjustments) : "—"}</td>
+              <td className="num">{window.fmtTHB(sumClosing)}</td>
+              <td className="num">{sumChange > 0 ? "+" : ""}{window.fmtTHB(sumChange)}</td>
+              <td></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div style={{ padding: "12px 14px", background: "var(--accent-soft)", borderTop: "1px solid var(--border)" }}>
+          <div className="row" style={{ alignItems: "center", gap: 8 }}>
+            <Ic name="info" size={14} style={{ color: "var(--accent-text)" }} />
+            <div className="small">
+              <strong>สูตร CF Indirect:</strong> AR เพิ่ม = ใช้เงินสด (หักจาก Net Profit) • AR ลด = ได้เงินสด (บวกเข้า Net Profit)
+            </div>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
+
+/* ============================================================================
+   Reconcile AP Tab — กระทบยอดเจ้าหนี้ (สำหรับ CF Indirect Method)
+   ============================================================================ */
+function ReconcileAPTab({ companyId }) {
+  const d = window.CFData;
+  const recon = d.reconcileAP;
+  const entities = recon.entities.filter(e => companyId === "CONSO" || !companyId || e.entity === companyId);
+
+  const sumOpening = entities.reduce((s, e) => s + e.opening, 0);
+  const sumPurchases = entities.reduce((s, e) => s + e.purchases, 0);
+  const sumPayment = entities.reduce((s, e) => s + e.payment, 0);
+  const sumAdjustments = entities.reduce((s, e) => s + e.adjustments, 0);
+  const sumClosing = entities.reduce((s, e) => s + e.closing, 0);
+  const sumChange = entities.reduce((s, e) => s + e.change, 0);
+
+  return (
+    <>
+      <div className="kpi-grid" style={{ gridTemplateColumns: "repeat(4, 1fr)", marginBottom: 14 }}>
+        <Mini label="AP เปิดงวด" value={sumOpening} />
+        <Mini label="AP ปิดงวด" value={sumClosing} accent />
+        <Mini label="การเปลี่ยนแปลง AP" value={sumChange} color={sumChange > 0 ? "var(--success)" : "var(--warning)"} />
+        <Mini label="ผลกระทบต่อ CF" value={sumChange} color={sumChange > 0 ? "var(--success)" : "var(--danger)"} />
+      </div>
+
+      <div className="card">
+        <div className="card-head">
+          <div className="card-title">Reconcile AP — กระทบยอดเจ้าหนี้การค้า</div>
+          <div className="tiny muted" style={{ marginLeft: 8 }}>งวด: {recon.period} • สำหรับ CF Indirect Method</div>
+          <div className="grow" />
+          <button className="btn sm"><Ic name="download" size={13} /> Export</button>
+        </div>
+        <table className="tbl">
+          <thead>
+            <tr>
+              <th style={{ width: 80 }}>Entity</th>
+              <th className="num">เปิดงวด (AP)</th>
+              <th className="num">+ ซื้อ (Purchase)</th>
+              <th className="num">− จ่ายเงิน (Payment)</th>
+              <th className="num">± ปรับปรุง</th>
+              <th className="num">ปิดงวด (AP)</th>
+              <th className="num">Δ Change</th>
+              <th>ผลกระทบ CF</th>
+            </tr>
+          </thead>
+          <tbody>
+            {entities.map(e =>
+              <tr key={e.entity}>
+                <td><EntityChip entity={e.entity} /></td>
+                <td className="num">{window.fmtTHB(e.opening)}</td>
+                <td className="num pos">+{window.fmtTHB(e.purchases)}</td>
+                <td className="num neg">{window.fmtTHB(e.payment)}</td>
+                <td className="num">{e.adjustments ? window.fmtTHB(e.adjustments) : "—"}</td>
+                <td className="num" style={{ fontWeight: 500 }}>{window.fmtTHB(e.closing)}</td>
+                <td className="num" style={{ fontWeight: 500, color: e.change > 0 ? "var(--success)" : "var(--warning)" }}>{e.change > 0 ? "+" : ""}{window.fmtTHB(e.change)}</td>
+                <td className="small muted">{e.impact}</td>
+              </tr>
+            )}
+            <tr style={{ background: "var(--bg-subtle)", fontWeight: 600 }}>
+              <td>รวม</td>
+              <td className="num">{window.fmtTHB(sumOpening)}</td>
+              <td className="num pos">+{window.fmtTHB(sumPurchases)}</td>
+              <td className="num neg">{window.fmtTHB(sumPayment)}</td>
+              <td className="num">{sumAdjustments ? window.fmtTHB(sumAdjustments) : "—"}</td>
+              <td className="num">{window.fmtTHB(sumClosing)}</td>
+              <td className="num">{sumChange > 0 ? "+" : ""}{window.fmtTHB(sumChange)}</td>
+              <td></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div style={{ padding: "12px 14px", background: "var(--accent-soft)", borderTop: "1px solid var(--border)" }}>
+          <div className="row" style={{ alignItems: "center", gap: 8 }}>
+            <Ic name="info" size={14} style={{ color: "var(--accent-text)" }} />
+            <div className="small">
+              <strong>สูตร CF Indirect:</strong> AP เพิ่ม = ได้เงินสด (บวกเข้า Net Profit) • AP ลด = ใช้เงินสด (หักจาก Net Profit)
+            </div>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
+
+/* PN-specific status tag */
+function PNStatusTag({ s }) {
+  if (s === "outstanding") return <span className="tag warning"><span className="dot" />Outstanding</span>;
+  if (s === "paid") return <span className="tag success"><span className="dot" />Paid</span>;
+  if (s === "overdue") return <span className="tag danger"><span className="dot" />Overdue</span>;
+  return <span className="tag">{s}</span>;
 }
 
 window.FinanceInput = FinanceInput;
