@@ -630,6 +630,88 @@ window.CFData = (function () {
     cfImpact: 30_400_000, // Positive = Cash Inflow
   };
 
+  // ===========================================================================
+  // Reconcile AR by Segment — กระทบยอดลูกหนี้แยกตาม Income Segment
+  // Opening + Sales − Collection ± Adj = Closing (per segment per entity)
+  // ===========================================================================
+  const reconcileARBySegment = {
+    period: "2026-Q1",
+    byEntity: {
+      HMW: {
+        segments: [
+          { id: "HONDA",    name: "HONDA (ขายรถ)",  opening: 135_000_000, sales: 248_000_000, collection: -228_500_000, adjustments: 0, closing: 154_500_000, change: 19_500_000 },
+          { id: "TOK",      name: "ตอกเข็ม",         opening:  11_000_000, sales:  20_000_000, collection:  -18_500_000, adjustments: 0, closing:  12_500_000, change:  1_500_000 },
+          { id: "INS",      name: "ประกัน",           opening:  15_000_000, sales:  28_000_000, collection:  -26_000_000, adjustments: 0, closing:  17_000_000, change:  2_000_000 },
+          { id: "INS_OPEN", name: "ประกันภัยเปิด",     opening:   8_000_000, sales:  14_000_000, collection:  -13_500_000, adjustments: 0, closing:   8_500_000, change:    500_000 },
+          { id: "INS_LIM",  name: "ประวางวง",         opening:   5_000_000, sales:  10_000_000, collection:   -9_800_000, adjustments: 0, closing:   5_200_000, change:    200_000 },
+          { id: "FIN",      name: "ไฟแนนซ์",         opening:  21_000_000, sales:  38_000_000, collection:  -37_500_000, adjustments: 0, closing:  21_500_000, change:    500_000 },
+          { id: "RENT",     name: "รถเช่า",           opening:  11_000_000, sales:  20_000_000, collection:  -19_300_000, adjustments: 0, closing:  11_700_000, change:    700_000 },
+          { id: "DEL",      name: "รถส่ง",            opening:   7_000_000, sales:  12_000_000, collection:  -12_100_000, adjustments: 0, closing:   6_900_000, change:   -100_000 },
+          { id: "OTH",      name: "อื่นๆ",            opening:  11_000_000, sales:  22_400_000, collection:  -20_000_000, adjustments: 0, closing:  13_400_000, change:  2_400_000 },
+        ],
+      },
+      CLIK: {
+        segments: [
+          { id: "SVC", name: "Service", opening: 78_000_000, sales: 155_000_000, collection: -140_000_000, adjustments: -1_100_000, closing:  91_900_000, change: 13_900_000 },
+          { id: "OTH", name: "อื่นๆ",   opening:  8_100_000, sales:  10_300_000, collection:   -8_900_000, adjustments:   -100_000, closing:   9_400_000, change:  1_300_000 },
+        ],
+      },
+      ACG: {
+        segments: [
+          { id: "MGT_HMW",  name: "ค่าบริหารจัดการ HMW",  opening: 9_500_000, sales: 22_000_000, collection: -18_000_000, adjustments: 0, closing: 13_500_000, change: 4_000_000 },
+          { id: "MGT_CLIK", name: "ค่าบริหารจัดการ CLIK", opening: 4_000_000, sales:  9_000_000, collection:  -7_800_000, adjustments: 0, closing:  5_200_000, change: 1_200_000 },
+          { id: "OTH",      name: "อื่นๆ",                opening: 1_000_000, sales:  1_400_000, collection:  -1_300_000, adjustments: 0, closing:  1_100_000, change:   100_000 },
+        ],
+      },
+    },
+  };
+
+  // ===========================================================================
+  // Reconcile AP by Segment — กระทบยอดเจ้าหนี้แยกตาม Expense Segment
+  // Opening + Purchases − Payment ± Adj = Closing (per segment per entity)
+  // ===========================================================================
+  const reconcileAPBySegment = {
+    period: "2026-Q1",
+    byEntity: {
+      HMW: {
+        segments: [
+          { id: "F1", name: "Loan & Int",          opening:  6_900_000, purchases:  18_800_000, payment: -17_200_000, adjustments: 0, closing:  8_500_000, change:  1_600_000 },
+          { id: "I1", name: "Fixed assets",        opening:  4_900_000, purchases:  13_500_000, payment: -12_300_000, adjustments: 0, closing:  6_100_000, change:  1_200_000 },
+          { id: "O1", name: "Staff exp",           opening: 16_700_000, purchases:  45_700_000, payment: -41_700_000, adjustments: 0, closing: 20_700_000, change:  4_000_000 },
+          { id: "O2", name: "Inventory",           opening: 51_200_000, purchases: 139_800_000, payment:-127_600_000, adjustments: 0, closing: 63_400_000, change: 12_200_000 },
+          { id: "O3", name: "Sub contract",        opening:  3_900_000, purchases:  10_800_000, payment:  -9_800_000, adjustments: 0, closing:  4_900_000, change:  1_000_000 },
+          { id: "O4", name: "Rental & Fac.",       opening:  4_900_000, purchases:  13_400_000, payment: -12_200_000, adjustments: 0, closing:  6_100_000, change:  1_200_000 },
+          { id: "O5", name: "Tax",                 opening:  3_000_000, purchases:   8_100_000, payment:  -7_300_000, adjustments: 0, closing:  3_800_000, change:    800_000 },
+          { id: "O6", name: "Others",              opening:  6_900_000, purchases:  18_800_000, payment: -17_200_000, adjustments: 0, closing:  8_500_000, change:  1_600_000 },
+        ],
+      },
+      CLIK: {
+        segments: [
+          { id: "O1", name: "Staff exp",           opening:  7_400_000, purchases: 33_700_000, payment: -31_400_000, adjustments:         0, closing:  9_700_000, change:  2_300_000 },
+          { id: "O3", name: "Sub contract",        opening:  5_600_000, purchases: 25_300_000, payment: -23_500_000, adjustments:         0, closing:  7_400_000, change:  1_800_000 },
+          { id: "O4", name: "Rental & Fac.",       opening:  2_200_000, purchases: 10_100_000, payment:  -9_400_000, adjustments:         0, closing:  2_900_000, change:    700_000 },
+          { id: "F1", name: "Loan & Int",          opening:  1_100_000, purchases:  5_100_000, payment:  -4_700_000, adjustments:         0, closing:  1_500_000, change:    400_000 },
+          { id: "O5", name: "Tax",                 opening:    900_000, purchases:  4_200_000, payment:  -3_900_000, adjustments:         0, closing:  1_200_000, change:    300_000 },
+          { id: "O2", name: "Inventory",           opening:    600_000, purchases:  2_500_000, payment:  -2_400_000, adjustments:         0, closing:    700_000, change:    100_000 },
+          { id: "I1", name: "Fixed assets",        opening:    400_000, purchases:  1_700_000, payment:  -1_600_000, adjustments:         0, closing:    500_000, change:    100_000 },
+          { id: "O6", name: "Others",              opening:    300_000, purchases:  1_600_000, payment:  -1_500_000, adjustments:  -300_000, closing:    100_000, change:   -200_000 },
+        ],
+      },
+      ACG: {
+        segments: [
+          { id: "O1", name: "Staff exp",           opening: 2_100_000, purchases: 5_000_000, payment: -4_500_000, adjustments: 0, closing: 2_600_000, change:   500_000 },
+          { id: "F1", name: "Loan & Int",          opening:   900_000, purchases: 2_200_000, payment: -2_000_000, adjustments: 0, closing: 1_100_000, change:   200_000 },
+          { id: "O4", name: "Rental & Fac.",       opening:   800_000, purchases: 1_900_000, payment: -1_700_000, adjustments: 0, closing: 1_000_000, change:   200_000 },
+          { id: "O3", name: "Sub contract",        opening:   600_000, purchases: 1_500_000, payment: -1_300_000, adjustments: 0, closing:   800_000, change:   200_000 },
+          { id: "O5", name: "Tax",                 opening:   400_000, purchases: 1_000_000, payment:   -900_000, adjustments: 0, closing:   500_000, change:   100_000 },
+          { id: "O6", name: "Others",              opening:   300_000, purchases:   600_000, payment:   -500_000, adjustments: 0, closing:   400_000, change:   100_000 },
+          { id: "I1", name: "Fixed assets",        opening:         0, purchases:   100_000, payment:   -100_000, adjustments: 0, closing:         0, change:         0 },
+          { id: "O2", name: "Inventory",           opening:   100_000, purchases:   100_000, payment:   -100_000, adjustments: 0, closing:   100_000, change:         0 },
+        ],
+      },
+    },
+  };
+
   // Forecast (next 8 weeks)
   const forecast = (() => {
     const weeks = [];
@@ -944,6 +1026,7 @@ window.CFData = (function () {
     arAging, apAging, glAccounts, inventory,
     // Phase A additions
     apHondaPayments, pnPayments, reconcileAR, reconcileAP,
+    reconcileARBySegment, reconcileAPBySegment,
     forecast, reconItems, directCF, indirectCF,
     exports, categories,
     // Auto-calc CF

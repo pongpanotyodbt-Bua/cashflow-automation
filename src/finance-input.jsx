@@ -593,15 +593,22 @@ function PNPaymentTab({ companyId }) {
 function ReconcileARTab({ companyId }) {
   const d = window.CFData;
   const recon = d.reconcileAR;
-  const entities = recon.entities.filter(e => companyId === "CONSO" || !companyId || e.entity === companyId);
+  const reconSeg = d.reconcileARBySegment;
+  const [viewMode, setViewMode] = React.useState("entity"); // "entity" | "segment"
+  const [expanded, setExpanded] = React.useState({});
 
-  // Recalculate totals for filtered view
+  const entities = recon.entities.filter(e => companyId === "CONSO" || !companyId || e.entity === companyId);
   const sumOpening = entities.reduce((s, e) => s + e.opening, 0);
   const sumSales = entities.reduce((s, e) => s + e.sales, 0);
   const sumCollection = entities.reduce((s, e) => s + e.collection, 0);
   const sumAdjustments = entities.reduce((s, e) => s + e.adjustments, 0);
   const sumClosing = entities.reduce((s, e) => s + e.closing, 0);
   const sumChange = entities.reduce((s, e) => s + e.change, 0);
+
+  const toggleExpand = (ent) => setExpanded(prev => ({ ...prev, [ent]: !prev[ent] }));
+
+  // Segment color by id
+  const segColorMap = { HONDA: "#1F9D55", TOK: "#2A6FF0", INS: "#7C4DFF", INS_OPEN: "#0E97A0", INS_LIM: "#C97A00", FIN: "#D03434", RENT: "#8B5A2B", DEL: "#8B95A1", SVC: "#7C4DFF", MGT_HMW: "#2A6FF0", MGT_CLIK: "#7C4DFF", OTH: "#8B95A1" };
 
   return (
     <>
@@ -617,42 +624,83 @@ function ReconcileARTab({ companyId }) {
           <div className="card-title">Reconcile AR — กระทบยอดลูกหนี้การค้า</div>
           <div className="tiny muted" style={{ marginLeft: 8 }}>งวด: {recon.period} • สำหรับ CF Indirect Method</div>
           <div className="grow" />
+          {/* View toggle */}
+          <div className="row" style={{ gap: 4, marginRight: 8 }}>
+            <button className={"btn sm" + (viewMode === "entity" ? " primary" : "")} onClick={() => setViewMode("entity")}>By Entity</button>
+            <button className={"btn sm" + (viewMode === "segment" ? " primary" : "")} onClick={() => { setViewMode("segment"); setExpanded(Object.fromEntries(entities.map(e => [e.entity, true]))); }}>By Segment</button>
+          </div>
           <button className="btn sm"><Ic name="download" size={13} /> Export</button>
         </div>
         <table className="tbl">
           <thead>
             <tr>
-              <th style={{ width: 80 }}>Entity</th>
+              <th style={{ minWidth: 160 }}>Entity / Segment</th>
               <th className="num">เปิดงวด (AR)</th>
-              <th className="num">+ ยอดขาย (Credit)</th>
-              <th className="num">− เก็บเงิน (Collection)</th>
+              <th className="num">+ ยอดขาย</th>
+              <th className="num">− เก็บเงิน</th>
               <th className="num">± ปรับปรุง</th>
               <th className="num">ปิดงวด (AR)</th>
               <th className="num">Δ Change</th>
-              <th>ผลกระทบ CF</th>
+              <th style={{ width: 120 }}>ผลกระทบ CF</th>
             </tr>
           </thead>
           <tbody>
-            {entities.map(e =>
-              <tr key={e.entity}>
-                <td><EntityChip entity={e.entity} /></td>
-                <td className="num">{window.fmtTHB(e.opening)}</td>
-                <td className="num pos">+{window.fmtTHB(e.sales)}</td>
-                <td className="num neg">{window.fmtTHB(e.collection)}</td>
-                <td className="num">{e.adjustments ? window.fmtTHB(e.adjustments) : "—"}</td>
-                <td className="num" style={{ fontWeight: 500 }}>{window.fmtTHB(e.closing)}</td>
-                <td className="num" style={{ fontWeight: 500, color: e.change > 0 ? "var(--warning)" : "var(--success)" }}>{e.change > 0 ? "+" : ""}{window.fmtTHB(e.change)}</td>
-                <td className="small muted">{e.impact}</td>
-              </tr>
-            )}
+            {entities.map(e => {
+              const segs = reconSeg.byEntity[e.entity]?.segments || [];
+              const isOpen = expanded[e.entity];
+              return (
+                <React.Fragment key={e.entity}>
+                  {/* Entity row */}
+                  <tr
+                    style={{ background: isOpen && viewMode === "segment" ? "var(--accent-soft)" : undefined, cursor: viewMode === "segment" ? "pointer" : undefined }}
+                    onClick={viewMode === "segment" ? () => toggleExpand(e.entity) : undefined}
+                  >
+                    <td>
+                      <div className="row" style={{ gap: 6, alignItems: "center" }}>
+                        {viewMode === "segment" && (
+                          <span style={{ fontSize: 10, color: "var(--text-muted)", transition: "transform .15s", display: "inline-block", transform: isOpen ? "rotate(90deg)" : "rotate(0deg)" }}>▶</span>
+                        )}
+                        <EntityChip entity={e.entity} />
+                      </div>
+                    </td>
+                    <td className="num">{window.fmtTHB(e.opening)}</td>
+                    <td className="num pos">+{window.fmtTHB(e.sales)}</td>
+                    <td className="num neg">{window.fmtTHB(e.collection)}</td>
+                    <td className="num">{e.adjustments ? window.fmtTHB(e.adjustments) : "—"}</td>
+                    <td className="num" style={{ fontWeight: 500 }}>{window.fmtTHB(e.closing)}</td>
+                    <td className="num" style={{ fontWeight: 600, color: e.change > 0 ? "var(--warning)" : "var(--success)" }}>{e.change > 0 ? "+" : ""}{window.fmtTHB(e.change)}</td>
+                    <td className="small muted">{e.impact}</td>
+                  </tr>
+                  {/* Segment rows — only when expanded in segment mode */}
+                  {viewMode === "segment" && isOpen && segs.map(seg => (
+                    <tr key={seg.id} style={{ background: "var(--bg-subtle)" }}>
+                      <td style={{ paddingLeft: 32 }}>
+                        <div className="row" style={{ gap: 6, alignItems: "center" }}>
+                          <span style={{ width: 8, height: 8, borderRadius: "50%", background: segColorMap[seg.id] || "#8B95A1", flexShrink: 0 }} />
+                          <span className="small">{seg.name}</span>
+                          <span className="tag" style={{ fontSize: 10, padding: "1px 6px", marginLeft: 2 }}>{seg.id}</span>
+                        </div>
+                      </td>
+                      <td className="num tiny">{window.fmtTHB(seg.opening)}</td>
+                      <td className="num tiny pos">+{window.fmtTHB(seg.sales)}</td>
+                      <td className="num tiny neg">{window.fmtTHB(seg.collection)}</td>
+                      <td className="num tiny">{seg.adjustments ? window.fmtTHB(seg.adjustments) : "—"}</td>
+                      <td className="num tiny">{window.fmtTHB(seg.closing)}</td>
+                      <td className="num tiny" style={{ color: seg.change > 0 ? "var(--warning)" : "var(--success)" }}>{seg.change > 0 ? "+" : ""}{window.fmtTHB(seg.change)}</td>
+                      <td className="tiny muted">{seg.change > 0 ? "AR เพิ่ม ↓CF" : "AR ลด ↑CF"}</td>
+                    </tr>
+                  ))}
+                </React.Fragment>
+              );
+            })}
             <tr style={{ background: "var(--bg-subtle)", fontWeight: 600 }}>
-              <td>รวม</td>
+              <td>รวมทั้งหมด</td>
               <td className="num">{window.fmtTHB(sumOpening)}</td>
               <td className="num pos">+{window.fmtTHB(sumSales)}</td>
               <td className="num neg">{window.fmtTHB(sumCollection)}</td>
               <td className="num">{sumAdjustments ? window.fmtTHB(sumAdjustments) : "—"}</td>
               <td className="num">{window.fmtTHB(sumClosing)}</td>
-              <td className="num">{sumChange > 0 ? "+" : ""}{window.fmtTHB(sumChange)}</td>
+              <td className="num" style={{ color: sumChange > 0 ? "var(--warning)" : "var(--success)" }}>{sumChange > 0 ? "+" : ""}{window.fmtTHB(sumChange)}</td>
               <td></td>
             </tr>
           </tbody>
@@ -663,6 +711,7 @@ function ReconcileARTab({ companyId }) {
             <Ic name="info" size={14} style={{ color: "var(--accent-text)" }} />
             <div className="small">
               <strong>สูตร CF Indirect:</strong> AR เพิ่ม = ใช้เงินสด (หักจาก Net Profit) • AR ลด = ได้เงินสด (บวกเข้า Net Profit)
+              {viewMode === "segment" && <span className="muted"> • คลิกที่ Entity เพื่อ expand/collapse segments</span>}
             </div>
           </div>
         </div>
@@ -677,14 +726,22 @@ function ReconcileARTab({ companyId }) {
 function ReconcileAPTab({ companyId }) {
   const d = window.CFData;
   const recon = d.reconcileAP;
-  const entities = recon.entities.filter(e => companyId === "CONSO" || !companyId || e.entity === companyId);
+  const reconSeg = d.reconcileAPBySegment;
+  const [viewMode, setViewMode] = React.useState("entity");
+  const [expanded, setExpanded] = React.useState({});
 
+  const entities = recon.entities.filter(e => companyId === "CONSO" || !companyId || e.entity === companyId);
   const sumOpening = entities.reduce((s, e) => s + e.opening, 0);
   const sumPurchases = entities.reduce((s, e) => s + e.purchases, 0);
   const sumPayment = entities.reduce((s, e) => s + e.payment, 0);
   const sumAdjustments = entities.reduce((s, e) => s + e.adjustments, 0);
   const sumClosing = entities.reduce((s, e) => s + e.closing, 0);
   const sumChange = entities.reduce((s, e) => s + e.change, 0);
+
+  const toggleExpand = (ent) => setExpanded(prev => ({ ...prev, [ent]: !prev[ent] }));
+
+  // Expense segment colors (from expenseSegments in data)
+  const segColorMap = { F1: "#D03434", I1: "#C97A00", O1: "#2A6FF0", O2: "#1F9D55", O3: "#7C4DFF", O4: "#0E97A0", O5: "#8B5A2B", O6: "#8B95A1" };
 
   return (
     <>
@@ -700,42 +757,83 @@ function ReconcileAPTab({ companyId }) {
           <div className="card-title">Reconcile AP — กระทบยอดเจ้าหนี้การค้า</div>
           <div className="tiny muted" style={{ marginLeft: 8 }}>งวด: {recon.period} • สำหรับ CF Indirect Method</div>
           <div className="grow" />
+          {/* View toggle */}
+          <div className="row" style={{ gap: 4, marginRight: 8 }}>
+            <button className={"btn sm" + (viewMode === "entity" ? " primary" : "")} onClick={() => setViewMode("entity")}>By Entity</button>
+            <button className={"btn sm" + (viewMode === "segment" ? " primary" : "")} onClick={() => { setViewMode("segment"); setExpanded(Object.fromEntries(entities.map(e => [e.entity, true]))); }}>By Segment</button>
+          </div>
           <button className="btn sm"><Ic name="download" size={13} /> Export</button>
         </div>
         <table className="tbl">
           <thead>
             <tr>
-              <th style={{ width: 80 }}>Entity</th>
+              <th style={{ minWidth: 160 }}>Entity / Segment</th>
               <th className="num">เปิดงวด (AP)</th>
               <th className="num">+ ซื้อ (Purchase)</th>
-              <th className="num">− จ่ายเงิน (Payment)</th>
+              <th className="num">− จ่ายเงิน</th>
               <th className="num">± ปรับปรุง</th>
               <th className="num">ปิดงวด (AP)</th>
               <th className="num">Δ Change</th>
-              <th>ผลกระทบ CF</th>
+              <th style={{ width: 120 }}>ผลกระทบ CF</th>
             </tr>
           </thead>
           <tbody>
-            {entities.map(e =>
-              <tr key={e.entity}>
-                <td><EntityChip entity={e.entity} /></td>
-                <td className="num">{window.fmtTHB(e.opening)}</td>
-                <td className="num pos">+{window.fmtTHB(e.purchases)}</td>
-                <td className="num neg">{window.fmtTHB(e.payment)}</td>
-                <td className="num">{e.adjustments ? window.fmtTHB(e.adjustments) : "—"}</td>
-                <td className="num" style={{ fontWeight: 500 }}>{window.fmtTHB(e.closing)}</td>
-                <td className="num" style={{ fontWeight: 500, color: e.change > 0 ? "var(--success)" : "var(--warning)" }}>{e.change > 0 ? "+" : ""}{window.fmtTHB(e.change)}</td>
-                <td className="small muted">{e.impact}</td>
-              </tr>
-            )}
+            {entities.map(e => {
+              const segs = reconSeg.byEntity[e.entity]?.segments || [];
+              const isOpen = expanded[e.entity];
+              return (
+                <React.Fragment key={e.entity}>
+                  {/* Entity row */}
+                  <tr
+                    style={{ background: isOpen && viewMode === "segment" ? "var(--accent-soft)" : undefined, cursor: viewMode === "segment" ? "pointer" : undefined }}
+                    onClick={viewMode === "segment" ? () => toggleExpand(e.entity) : undefined}
+                  >
+                    <td>
+                      <div className="row" style={{ gap: 6, alignItems: "center" }}>
+                        {viewMode === "segment" && (
+                          <span style={{ fontSize: 10, color: "var(--text-muted)", transition: "transform .15s", display: "inline-block", transform: isOpen ? "rotate(90deg)" : "rotate(0deg)" }}>▶</span>
+                        )}
+                        <EntityChip entity={e.entity} />
+                      </div>
+                    </td>
+                    <td className="num">{window.fmtTHB(e.opening)}</td>
+                    <td className="num pos">+{window.fmtTHB(e.purchases)}</td>
+                    <td className="num neg">{window.fmtTHB(e.payment)}</td>
+                    <td className="num">{e.adjustments ? window.fmtTHB(e.adjustments) : "—"}</td>
+                    <td className="num" style={{ fontWeight: 500 }}>{window.fmtTHB(e.closing)}</td>
+                    <td className="num" style={{ fontWeight: 600, color: e.change > 0 ? "var(--success)" : "var(--warning)" }}>{e.change > 0 ? "+" : ""}{window.fmtTHB(e.change)}</td>
+                    <td className="small muted">{e.impact}</td>
+                  </tr>
+                  {/* Segment rows — only when expanded in segment mode */}
+                  {viewMode === "segment" && isOpen && segs.map(seg => (
+                    <tr key={seg.id} style={{ background: "var(--bg-subtle)" }}>
+                      <td style={{ paddingLeft: 32 }}>
+                        <div className="row" style={{ gap: 6, alignItems: "center" }}>
+                          <span style={{ width: 8, height: 8, borderRadius: "50%", background: segColorMap[seg.id] || "#8B95A1", flexShrink: 0 }} />
+                          <span className="small">{seg.name}</span>
+                          <span className="tag" style={{ fontSize: 10, padding: "1px 6px", marginLeft: 2 }}>{seg.id}</span>
+                        </div>
+                      </td>
+                      <td className="num tiny">{window.fmtTHB(seg.opening)}</td>
+                      <td className="num tiny pos">+{window.fmtTHB(seg.purchases)}</td>
+                      <td className="num tiny neg">{window.fmtTHB(seg.payment)}</td>
+                      <td className="num tiny">{seg.adjustments ? window.fmtTHB(seg.adjustments) : "—"}</td>
+                      <td className="num tiny">{window.fmtTHB(seg.closing)}</td>
+                      <td className="num tiny" style={{ color: seg.change > 0 ? "var(--success)" : "var(--warning)" }}>{seg.change > 0 ? "+" : ""}{window.fmtTHB(seg.change)}</td>
+                      <td className="tiny muted">{seg.change > 0 ? "AP เพิ่ม ↑CF" : "AP ลด ↓CF"}</td>
+                    </tr>
+                  ))}
+                </React.Fragment>
+              );
+            })}
             <tr style={{ background: "var(--bg-subtle)", fontWeight: 600 }}>
-              <td>รวม</td>
+              <td>รวมทั้งหมด</td>
               <td className="num">{window.fmtTHB(sumOpening)}</td>
               <td className="num pos">+{window.fmtTHB(sumPurchases)}</td>
               <td className="num neg">{window.fmtTHB(sumPayment)}</td>
               <td className="num">{sumAdjustments ? window.fmtTHB(sumAdjustments) : "—"}</td>
               <td className="num">{window.fmtTHB(sumClosing)}</td>
-              <td className="num">{sumChange > 0 ? "+" : ""}{window.fmtTHB(sumChange)}</td>
+              <td className="num" style={{ color: sumChange > 0 ? "var(--success)" : "var(--warning)" }}>{sumChange > 0 ? "+" : ""}{window.fmtTHB(sumChange)}</td>
               <td></td>
             </tr>
           </tbody>
@@ -746,6 +844,7 @@ function ReconcileAPTab({ companyId }) {
             <Ic name="info" size={14} style={{ color: "var(--accent-text)" }} />
             <div className="small">
               <strong>สูตร CF Indirect:</strong> AP เพิ่ม = ได้เงินสด (บวกเข้า Net Profit) • AP ลด = ใช้เงินสด (หักจาก Net Profit)
+              {viewMode === "segment" && <span className="muted"> • คลิกที่ Entity เพื่อ expand/collapse segments</span>}
             </div>
           </div>
         </div>
