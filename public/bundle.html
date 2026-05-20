@@ -1427,997 +1427,6 @@ window.fmtTHBShort = function (n) {
 };
 
 </script>
-<script type="text/javascript">
-/* Mock data — Thai enterprise listed company, THB millions */
-/* Numbers in THB (raw baht); display helper formats them. */
-
-window.CFData = (function () {
-  const company = {
-    name: "กลุ่มบริษัท ACG / HMW / CLIK",
-    short: "GROUP",
-    period: "ไตรมาส 1/2569 (ม.ค. – มี.ค. 2026)",
-    currency: "THB",
-  };
-
-  // -------- Companies in the group --------
-  const companies = [
-    { id: "CONSO", name: "งบรวมกลุ่ม (Consolidated)", short: "Conso", desc: "รวมทั้งกลุ่ม ACG + HMW + CLIK", color: "#1A1D21" },
-    { id: "ACG",   name: "ACG Holding",               short: "ACG",   desc: "บริหารจัดการกลุ่ม (รายได้หลัก: Management Fee)", color: "#2A6FF0" },
-    { id: "HMW",   name: "HMW",                       short: "HMW",   desc: "ตัวแทนจำหน่าย Honda + บริการที่เกี่ยวข้อง",       color: "#1F9D55" },
-    { id: "CLIK",  name: "CLIK",                      short: "CLIK",  desc: "ธุรกิจบริการ (Service)",                          color: "#7C4DFF" },
-  ];
-
-  // -------- Income segments per company --------
-  const incomeSegmentsByCo = {
-    ACG: [
-      { id: "MGT_HMW",  name: "ค่าบริหารจัดการ HMW" },
-      { id: "MGT_CLIK", name: "ค่าบริหารจัดการ CLIK" },
-      { id: "OTH",      name: "อื่นๆ" },
-    ],
-    HMW: [
-      { id: "HONDA",    name: "HONDA (ขายรถ)" },
-      { id: "TOK",      name: "ตอกเข็ม" },
-      { id: "INS",      name: "ประกัน" },
-      { id: "INS_OPEN", name: "ประกันภัยเปิด" },
-      { id: "INS_LIM",  name: "ประวางวง" },
-      { id: "FIN",      name: "ไฟแนนซ์" },
-      { id: "RENT",     name: "รถเช่า" },
-      { id: "DEL",      name: "รถส่ง" },
-      { id: "OTH",      name: "อื่นๆ" },
-    ],
-    CLIK: [
-      { id: "SVC",      name: "Service" },
-      { id: "OTH",      name: "อื่นๆ" },
-    ],
-  };
-
-  // -------- Expense segments (เหมือนกันทุกบริษัท) --------
-  const expenseSegments = [
-    { id: "F1", name: "Loan & Int",         group: "F", color: "#D03434" },
-    { id: "I1", name: "Fixed assets",       group: "I", color: "#C97A00" },
-    { id: "O1", name: "Staff exp",          group: "O", color: "#2A6FF0" },
-    { id: "O2", name: "Inventory",          group: "O", color: "#1F9D55" },
-    { id: "O3", name: "Sub contract",       group: "O", color: "#7C4DFF" },
-    { id: "O4", name: "Rental & Facilities",group: "O", color: "#0E97A0" },
-    { id: "O5", name: "Tax",                group: "O", color: "#8B5A2B" },
-    { id: "O6", name: "Others",             group: "O", color: "#8B95A1" },
-  ];
-
-  const segmentMonths = ["ต.ค. 68", "พ.ย. 68", "ธ.ค. 68", "ม.ค. 69", "ก.พ. 69", "มี.ค. 69"];
-
-  // Helper to generate deterministic pseudo-random monthly values
-  const seg = (base, variance, seed) => segmentMonths.map((_, i) => {
-    const v = base + Math.sin((i + seed) * 0.9) * variance + Math.cos((i + seed) * 1.3) * variance * 0.4;
-    return Math.max(Math.round(base * 0.4), Math.round(v / 100_000) * 100_000);
-  });
-
-  // -------- Per-company income breakdown (monthly × segment) --------
-  const incomeByCoMonth = {
-    ACG: {
-      MGT_HMW:  seg( 8_400_000, 1_200_000, 1),
-      MGT_CLIK: seg( 4_200_000,   600_000, 2),
-      OTH:      seg(   620_000,   180_000, 3),
-    },
-    HMW: {
-      HONDA:    seg(82_000_000, 14_000_000, 1),
-      TOK:      seg( 6_400_000,  1_200_000, 2),
-      INS:      seg( 8_900_000,  1_400_000, 3),
-      INS_OPEN: seg( 4_200_000,    900_000, 4),
-      INS_LIM:  seg( 2_600_000,    600_000, 5),
-      FIN:      seg(11_400_000,  2_100_000, 6),
-      RENT:     seg( 5_800_000,  1_400_000, 7),
-      DEL:      seg( 3_100_000,    700_000, 8),
-      OTH:      seg( 1_600_000,    400_000, 9),
-    },
-    CLIK: {
-      SVC:      seg(26_500_000,  4_200_000, 1),
-      OTH:      seg(   900_000,    200_000, 2),
-    },
-  };
-
-  // -------- Per-company expense breakdown (monthly × segment) --------
-  const expenseByCoMonth = {
-    ACG: {
-      F1: seg( 2_400_000,   400_000, 1),
-      I1: seg(   800_000,   300_000, 2),
-      O1: seg( 4_200_000,   500_000, 3),
-      O2: seg(   120_000,    50_000, 4),
-      O3: seg( 1_400_000,   300_000, 5),
-      O4: seg( 1_800_000,   200_000, 6),
-      O5: seg( 1_100_000,   200_000, 7),
-      O6: seg(   600_000,   150_000, 8),
-    },
-    HMW: {
-      F1: seg( 6_800_000, 1_100_000, 1),
-      I1: seg( 5_200_000, 2_400_000, 2),
-      O1: seg(18_400_000, 2_200_000, 3),
-      O2: seg(58_000_000, 9_000_000, 4),
-      O3: seg( 4_800_000, 1_200_000, 5),
-      O4: seg( 6_200_000,   900_000, 6),
-      O5: seg( 4_600_000,   800_000, 7),
-      O6: seg( 2_400_000,   500_000, 8),
-    },
-    CLIK: {
-      F1: seg( 1_200_000,   300_000, 1),
-      I1: seg(   900_000,   400_000, 2),
-      O1: seg( 9_600_000, 1_300_000, 3),
-      O2: seg( 1_400_000,   400_000, 4),
-      O3: seg( 6_400_000, 1_400_000, 5),
-      O4: seg( 2_800_000,   500_000, 6),
-      O5: seg( 1_800_000,   400_000, 7),
-      O6: seg( 1_100_000,   300_000, 8),
-    },
-  };
-
-  // Helper: get income/expense for a company (or consolidated)
-  function getIncomeMatrix(coId) {
-    if (coId === "CONSO" || !coId) {
-      // Build a unioned segment list across all companies (preserve company prefix)
-      const segs = [];
-      const data = {};
-      Object.entries(incomeByCoMonth).forEach(([co, map]) => {
-        const segDefs = incomeSegmentsByCo[co];
-        Object.entries(map).forEach(([sid, arr]) => {
-          const segDef = segDefs.find(s => s.id === sid);
-          const key = `${co}:${sid}`;
-          segs.push({ id: key, name: `[${co}] ${segDef ? segDef.name : sid}` });
-          data[key] = arr.slice();
-        });
-      });
-      return { months: segmentMonths, segments: segs, data };
-    }
-    const segDefs = incomeSegmentsByCo[coId] || [];
-    const map = incomeByCoMonth[coId] || {};
-    return {
-      months: segmentMonths,
-      segments: segDefs.map(s => ({ id: s.id, name: s.name })),
-      data: Object.fromEntries(segDefs.map(s => [s.id, (map[s.id] || segmentMonths.map(() => 0))])),
-    };
-  }
-
-  function getExpenseMatrix(coId) {
-    if (coId === "CONSO" || !coId) {
-      const summed = {};
-      expenseSegments.forEach(s => {
-        summed[s.id] = segmentMonths.map((_, i) =>
-          Object.values(expenseByCoMonth).reduce((sum, co) => sum + (co[s.id]?.[i] || 0), 0)
-        );
-      });
-      return {
-        months: segmentMonths,
-        segments: expenseSegments.map(s => ({ id: s.id, name: s.name, color: s.color })),
-        data: summed,
-      };
-    }
-    const map = expenseByCoMonth[coId] || {};
-    return {
-      months: segmentMonths,
-      segments: expenseSegments.map(s => ({ id: s.id, name: s.name, color: s.color })),
-      data: Object.fromEntries(expenseSegments.map(s => [s.id, (map[s.id] || segmentMonths.map(() => 0))])),
-    };
-  }
-
-  function getCompanyTotals(coId) {
-    const inc = getIncomeMatrix(coId);
-    const exp = getExpenseMatrix(coId);
-    const inflowByMonth = inc.months.map((_, i) =>
-      inc.segments.reduce((s, sg) => s + (inc.data[sg.id]?.[i] || 0), 0)
-    );
-    const outflowByMonth = exp.months.map((_, i) =>
-      exp.segments.reduce((s, sg) => s + (exp.data[sg.id]?.[i] || 0), 0)
-    );
-    // Q1 = last 3 months
-    const inflowQ1 = inflowByMonth.slice(3).reduce((s, v) => s + v, 0);
-    const outflowQ1 = outflowByMonth.slice(3).reduce((s, v) => s + v, 0);
-    return {
-      monthly: segmentMonths.map((m, i) => ({ m, inflow: inflowByMonth[i], outflow: outflowByMonth[i] })),
-      inflowQ1, outflowQ1, netQ1: inflowQ1 - outflowQ1,
-    };
-  }
-
-  const bankAccounts = [
-    { id: "BA-001", entity: "ACG",  name: "บัญชีหลัก – ออมทรัพย์",         bank: "ธนาคารพาณิชย์ A", branch: "สำนักงานใหญ่", no: "xxx-x-12345-6", balance: 248_650_000, type: "ออมทรัพย์",   ccy: "THB" },
-    { id: "BA-002", entity: "HMW",  name: "บัญชีดำเนินงาน – กระแสรายวัน",   bank: "ธนาคารพาณิชย์ B", branch: "สีลม",         no: "xxx-x-22334-1", balance:  92_140_000, type: "กระแสรายวัน", ccy: "THB" },
-    { id: "BA-003", entity: "HMW",  name: "บัญชีเงินเดือน HMW",            bank: "ธนาคารพาณิชย์ A", branch: "สำนักงานใหญ่", no: "xxx-x-44778-9", balance:  18_220_000, type: "กระแสรายวัน", ccy: "THB" },
-    { id: "BA-004", entity: "ACG",  name: "บัญชีต่างประเทศ – USD",         bank: "ธนาคารพาณิชย์ C", branch: "สาทร",         no: "xxx-x-99812-0", balance:  64_310_000, type: "FCD",          ccy: "USD" },
-    { id: "BA-005", entity: "ACG",  name: "บัญชีลงทุนระยะสั้น",            bank: "ธนาคารพาณิชย์ A", branch: "สำนักงานใหญ่", no: "xxx-x-55611-3", balance:  45_900_000, type: "ออมทรัพย์",   ccy: "THB" },
-    { id: "BA-006", entity: "CLIK", name: "บัญชีดำเนินงาน CLIK",           bank: "ธนาคารพาณิชย์ B", branch: "สีลม",         no: "xxx-x-66422-7", balance:  32_480_000, type: "กระแสรายวัน", ccy: "THB" },
-    { id: "BA-007", entity: "CLIK", name: "บัญชีเงินเดือน CLIK",           bank: "ธนาคารพาณิชย์ A", branch: "สำนักงานใหญ่", no: "xxx-x-77133-2", balance:   8_640_000, type: "กระแสรายวัน", ccy: "THB" },
-  ];
-
-  // -------- CF line → segment mapping --------
-  // Each cash flow report line is mapped to the segments that should appear
-  // when drilled down. Income lines map per-entity; expense lines map to
-  // shared expense codes (F1, I1, O1–O6).
-  const cfMapping = {
-    // ================================================================
-    // กิจกรรมดำเนินงาน (Operating Activities)
-    // ================================================================
-
-    // --- เงินสดรับ (Cash Inflows) ---
-    // รายรับจากลูกค้า = ยอดขาย + ลูกหนี้ต้นงวด − ลูกหนี้ปลายงวด
-    "เงินสดรับจากการขายสินค้าและบริการ": {
-      type: "income",
-      incomeSegments: {
-        ACG:  ["MGT_HMW", "MGT_CLIK"],
-        HMW:  ["HONDA", "TOK", "INS", "INS_OPEN", "INS_LIM", "FIN", "RENT", "DEL"],
-        CLIK: ["SVC"],
-      },
-    },
-    // ดอกเบี้ยรับ + เงินปันผลรับ (TAS 7: จัดเป็น Operating หรือ Investing ได้)
-    "เงินสดรับจากดอกเบี้ยและเงินปันผล": {
-      type: "income",
-      incomeSegments: { ACG: ["OTH"], HMW: ["OTH"], CLIK: ["OTH"] },
-    },
-    "เงินสดรับอื่น": {
-      type: "income",
-      incomeSegments: { ACG: ["OTH"], HMW: ["OTH"], CLIK: ["OTH"] },
-    },
-
-    // --- เงินสดจ่าย (Cash Outflows) ---
-    // จ่ายผู้จัดจำหน่าย = ต้นทุนขาย + สินค้าปลายงวด − สินค้าต้นงวด ± เจ้าหนี้
-    // จ่ายพนักงาน = ค่าแรง + ค่าใช้จ่าย ± ค้างจ่าย
-    "เงินสดจ่ายให้แก่ผู้จัดจำหน่ายและพนักงาน": {
-      type: "expense",
-      expenseSegments: ["O1", "O2", "O3", "O4", "O6"],
-      // O1=Staff, O2=Inventory/COGS, O3=Sub-contract, O4=Rental&Facilities, O6=Others
-    },
-    // ดอกเบี้ยจ่าย = F1 (Loan & Interest)
-    "เงินสดจ่ายดอกเบี้ย": {
-      type: "expense",
-      expenseSegments: ["F1"],
-    },
-    // ภาษีเงินได้ = O5 (Tax)
-    "เงินสดจ่ายภาษีเงินได้": {
-      type: "expense",
-      expenseSegments: ["O5"],
-    },
-
-    // ================================================================
-    // กิจกรรมดำเนินงาน — Indirect Method adjustments
-    // ================================================================
-
-    // กำไรก่อนภาษี = จุดเริ่มต้น (แสดง income ทุกประเภท)
-    "กำไรก่อนภาษีเงินได้": {
-      type: "income",
-      incomeSegments: {
-        ACG:  ["MGT_HMW", "MGT_CLIK", "OTH"],
-        HMW:  ["HONDA", "TOK", "INS", "INS_OPEN", "INS_LIM", "FIN", "RENT", "DEL", "OTH"],
-        CLIK: ["SVC", "OTH"],
-      },
-    },
-    // ค่าเสื่อมราคา = I1 (Fixed Assets — บวกกลับ เพราะไม่ใช่เงินสดออก)
-    "ค่าเสื่อมราคาและค่าตัดจำหน่าย": {
-      type: "expense",
-      expenseSegments: ["I1"],
-    },
-    // หนี้สูญ = O6 (Others — บวกกลับ เพราะไม่ใช่เงินสดออก)
-    "หนี้สูญและค่าเผื่อหนี้สงสัยจะสูญ": {
-      type: "expense",
-      expenseSegments: ["O6"],
-    },
-    // ผลต่างอัตราแลกเปลี่ยน = F1 (Financial items)
-    "ขาดทุน/(กำไร) จากอัตราแลกเปลี่ยน": {
-      type: "expense",
-      expenseSegments: ["F1"],
-    },
-    // ดอกเบี้ยจ่าย (บวกกลับใน Indirect ก่อนหัก) = F1
-    "ดอกเบี้ยจ่าย": {
-      type: "expense",
-      expenseSegments: ["F1"],
-    },
-    // Working Capital changes:
-    // ลูกหนี้เพิ่ม = เงินสดลด (ลูกค้ายังไม่จ่าย) → แสดง income segments
-    "ลูกหนี้การค้า (เพิ่มขึ้น)/ลดลง": {
-      type: "income",
-      incomeSegments: {
-        ACG:  ["MGT_HMW", "MGT_CLIK"],
-        HMW:  ["HONDA", "TOK", "INS", "INS_OPEN", "INS_LIM", "FIN", "RENT", "DEL"],
-        CLIK: ["SVC"],
-      },
-    },
-    // สินค้าเพิ่ม = เงินสดลด (ซื้อมากขึ้น) → O2 Inventory
-    "สินค้าคงเหลือ (เพิ่มขึ้น)/ลดลง": {
-      type: "expense",
-      expenseSegments: ["O2"],
-    },
-    // เจ้าหนี้เพิ่ม = เงินสดเพิ่ม (ยังไม่จ่าย) → O2, O3 (Supplier/Sub-contract)
-    "เจ้าหนี้การค้า เพิ่มขึ้น/(ลดลง)": {
-      type: "expense",
-      expenseSegments: ["O2", "O3"],
-    },
-    // ค้างจ่ายเพิ่ม = เงินสดเพิ่ม (ยังไม่จ่าย) → O1 Staff, O4 Facilities
-    "ค่าใช้จ่ายค้างจ่าย เพิ่มขึ้น/(ลดลง)": {
-      type: "expense",
-      expenseSegments: ["O1", "O4"],
-    },
-
-    // ================================================================
-    // กิจกรรมลงทุน (Investing Activities)
-    // ================================================================
-
-    // ซื้อสินทรัพย์ถาวร = จ่ายเงินสด → I1 Fixed Assets
-    "ซื้อที่ดิน อาคารและอุปกรณ์": {
-      type: "expense",
-      expenseSegments: ["I1"],
-    },
-    // ขายสินทรัพย์ถาวร = รับเงินสด → OTH (กำไรจากการขาย)
-    "ขายสินทรัพย์ถาวร": {
-      type: "income",
-      incomeSegments: { ACG: ["OTH"], HMW: ["OTH"], CLIK: ["OTH"] },
-    },
-    // เงินลงทุนระยะสั้น = I1 (ลงทุนชั่วคราว — Fixed assets bucket)
-    "เงินลงทุนระยะสั้น (เพิ่ม)/ลด": {
-      type: "expense",
-      expenseSegments: ["I1"],
-    },
-    // เงินปันผลรับจากเงินลงทุน (TAS 7: อาจเป็น Operating/Investing)
-    "เงินปันผลรับจากเงินลงทุน": {
-      type: "income",
-      incomeSegments: { ACG: ["OTH"], HMW: ["OTH"], CLIK: ["OTH"] },
-    },
-
-    // ================================================================
-    // กิจกรรมจัดหาเงิน (Financing Activities)
-    // ================================================================
-
-    // เงินกู้ระยะสั้น ลด = จ่ายคืน (F1) / เพิ่ม = รับเงินกู้
-    "เงินกู้ระยะสั้นเพิ่มขึ้น/(ลดลง)": {
-      type: "expense",
-      expenseSegments: ["F1"],
-    },
-    // รับเงินกู้ระยะยาว = inflow → OTH (รับเงิน)
-    "เงินกู้ระยะยาว – รับ": {
-      type: "income",
-      incomeSegments: { ACG: ["OTH"], HMW: ["OTH"], CLIK: ["OTH"] },
-    },
-    // ชำระคืนเงินกู้ระยะยาว = outflow → F1
-    "เงินกู้ระยะยาว – ชำระคืน": {
-      type: "expense",
-      expenseSegments: ["F1"],
-    },
-    // จ่ายเงินปันผล = outflow → F1 (financing cost)
-    "จ่ายเงินปันผล": {
-      type: "expense",
-      expenseSegments: ["F1"],
-    },
-  };
-
-  // Filter income/expense segments by the mapping for a given line label
-  function filterSegmentsByMapping(segments, label, companyId) {
-    const m = cfMapping[label];
-    if (!m) return segments;
-    if (m.type === "expense") {
-      return segments.filter(s => (m.expenseSegments || []).includes(s.id));
-    }
-    if (m.type === "income") {
-      const inc = m.incomeSegments || {};
-      if (companyId && companyId !== "CONSO") {
-        const allowed = inc[companyId] || [];
-        return segments.filter(s => allowed.includes(s.id));
-      }
-      const allCombos = [];
-      Object.entries(inc).forEach(([entity, segs]) => {
-        (segs || []).forEach(sid => allCombos.push(`${entity}:${sid}`));
-      });
-      return segments.filter(s => allCombos.includes(s.id));
-    }
-    return segments;
-  }
-
-  // helper: get entity by account id
-  function getEntityForAccount(accountId) {
-    const b = bankAccounts.find(x => x.id === accountId);
-    return b ? b.entity : null;
-  }
-  // helper: get segment display name
-  function getSegmentName(entity, segmentId, type) {
-    if (type === "out") {
-      const s = expenseSegments.find(x => x.id === segmentId);
-      return s ? `${s.id} – ${s.name}` : segmentId;
-    }
-    const list = incomeSegmentsByCo[entity] || [];
-    const s = list.find(x => x.id === segmentId);
-    return s ? s.name : segmentId;
-  }
-
-  // Daily inflow/outflow for past 30 days (THB), approx values
-  const trend30 = (() => {
-    const days = [];
-    let d = new Date(2026, 2, 31);
-    for (let i = 29; i >= 0; i--) {
-      const dt = new Date(d);
-      dt.setDate(d.getDate() - i);
-      const baseIn = 6_200_000 + Math.sin(i * 0.7) * 2_800_000 + (i % 7 === 0 ? -3_400_000 : 0);
-      const baseOut = 5_400_000 + Math.cos(i * 0.55) * 2_200_000 + (i % 11 === 0 ? 4_200_000 : 0);
-      days.push({
-        date: dt.toISOString().slice(0, 10),
-        inflow: Math.max(800_000, Math.round(baseIn / 10_000) * 10_000),
-        outflow: Math.max(700_000, Math.round(baseOut / 10_000) * 10_000),
-      });
-    }
-    return days;
-  })();
-
-  const monthly = [
-    { m: "ต.ค. 68", inflow: 198_400_000, outflow: 176_200_000 },
-    { m: "พ.ย. 68", inflow: 212_800_000, outflow: 188_900_000 },
-    { m: "ธ.ค. 68", inflow: 245_600_000, outflow: 219_400_000 },
-    { m: "ม.ค. 69", inflow: 188_700_000, outflow: 174_300_000 },
-    { m: "ก.พ. 69", inflow: 224_500_000, outflow: 195_800_000 },
-    { m: "มี.ค. 69", inflow: 261_300_000, outflow: 218_700_000 },
-  ];
-
-  const topInflowCats = [
-    { cat: "รายได้จากการขาย – กลุ่มอุตสาหกรรม", amt: 412_300_000, pct: 0.61 },
-    { cat: "รายได้จากการขาย – กลุ่มบริการ", amt: 158_700_000, pct: 0.235 },
-    { cat: "เงินรับจากลูกหนี้การค้า", amt: 64_400_000, pct: 0.096 },
-    { cat: "เงินปันผลรับ", amt: 22_800_000, pct: 0.034 },
-    { cat: "ดอกเบี้ยรับ", amt: 16_300_000, pct: 0.024 },
-  ];
-
-  const topOutflowCats = [
-    { cat: "จ่ายชำระเจ้าหนี้การค้า", amt: 268_900_000, pct: 0.46 },
-    { cat: "เงินเดือน & สวัสดิการ", amt: 114_600_000, pct: 0.197 },
-    { cat: "ค่าใช้จ่ายดำเนินงาน", amt: 92_800_000, pct: 0.160 },
-    { cat: "ภาษีเงินได้นิติบุคคล", amt: 48_700_000, pct: 0.084 },
-    { cat: "ดอกเบี้ยจ่าย", amt: 36_200_000, pct: 0.062 },
-    { cat: "ลงทุนในสินทรัพย์ถาวร", amt: 21_400_000, pct: 0.037 },
-  ];
-
-  const recentTxns = [
-    { id: "T-04221", date: "2026-03-29", desc: "รับชำระจากลูกค้า – Honda CRV (พรีเมียร์ เทรดดิ้ง)", account: "BA-002", entity: "HMW",  segmentId: "HONDA",    amount:  18_420_000, type: "in",  status: "matched", source: "Bank" },
-    { id: "T-04220", date: "2026-03-29", desc: "ค่าสินค้า/อะไหล่รถยนต์ – INV-2026/0312",         account: "BA-002", entity: "HMW",  segmentId: "O2",       amount: -12_840_000, type: "out", status: "matched", source: "Bank" },
-    { id: "T-04219", date: "2026-03-28", desc: "เงินเดือนพนักงาน HMW – มี.ค. 69",                 account: "BA-003", entity: "HMW",  segmentId: "O1",       amount: -42_100_000, type: "out", status: "matched", source: "Payroll" },
-    { id: "T-04218", date: "2026-03-28", desc: "รับชำระค่าตอกเข็ม – Site บางพลี",                  account: "BA-002", entity: "HMW",  segmentId: "TOK",      amount:   6_480_000, type: "in",  status: "matched", source: "Bank" },
-    { id: "T-04217", date: "2026-03-27", desc: "ภาษีหัก ณ ที่จ่าย ภงด.53 (HMW)",                  account: "BA-002", entity: "HMW",  segmentId: "O5",       amount:  -4_280_000, type: "out", status: "pending", source: "Manual" },
-    { id: "T-04216", date: "2026-03-27", desc: "ดอกเบี้ยรับ เงินฝากประจำ – Treasury",              account: "BA-005", entity: "ACG",  segmentId: "OTH",      amount:   1_240_000, type: "in",  status: "matched", source: "Bank" },
-    { id: "T-04215", date: "2026-03-26", desc: "ชำระค่าไฟฟ้า – สาขาบางนา",                       account: "BA-002", entity: "HMW",  segmentId: "O4",       amount:  -2_960_000, type: "out", status: "matched", source: "Bank" },
-    { id: "T-04214", date: "2026-03-26", desc: "Commission ไฟแนนซ์ – Honda Leasing",            account: "BA-002", entity: "HMW",  segmentId: "FIN",      amount:   3_180_000, type: "in",  status: "matched", source: "Bank" },
-    { id: "T-04213", date: "2026-03-25", desc: "ค่า Sub Contract – บริการขนส่ง CLIK",            account: "BA-006", entity: "CLIK", segmentId: "O3",       amount:  -3_540_000, type: "out", status: "review",  source: "AP" },
-    { id: "T-04212", date: "2026-03-25", desc: "ชำระเงินกู้ + ดอกเบี้ย – ACG Treasury",          account: "BA-001", entity: "ACG",  segmentId: "F1",       amount: -25_000_000, type: "out", status: "matched", source: "Bank" },
-    { id: "T-04211", date: "2026-03-24", desc: "รับชำระ Service – สัญญา C-2026/044",            account: "BA-006", entity: "CLIK", segmentId: "SVC",      amount:   6_500_000, type: "in",  status: "matched", source: "Bank" },
-    { id: "T-04210", date: "2026-03-24", desc: "ค่าที่ปรึกษากฎหมาย Q1 – ACG",                    account: "BA-001", entity: "ACG",  segmentId: "O6",       amount:  -1_820_000, type: "out", status: "matched", source: "AP" },
-    { id: "T-04209", date: "2026-03-24", desc: "ค่าบริหารจัดการ Mar – HMW → ACG",                account: "BA-001", entity: "ACG",  segmentId: "MGT_HMW",  amount:   8_400_000, type: "in",  status: "matched", source: "Manual" },
-    { id: "T-04208", date: "2026-03-24", desc: "ค่าบริหารจัดการ Mar – CLIK → ACG",               account: "BA-001", entity: "ACG",  segmentId: "MGT_CLIK", amount:   4_200_000, type: "in",  status: "matched", source: "Manual" },
-    { id: "T-04207", date: "2026-03-23", desc: "เงินเดือนพนักงาน CLIK – มี.ค. 69",                account: "BA-007", entity: "CLIK", segmentId: "O1",       amount:  -9_600_000, type: "out", status: "matched", source: "Payroll" },
-    { id: "T-04206", date: "2026-03-23", desc: "Commission ประกัน – AIA Honda Plan",            account: "BA-002", entity: "HMW",  segmentId: "INS",      amount:   2_140_000, type: "in",  status: "matched", source: "Bank" },
-    { id: "T-04205", date: "2026-03-22", desc: "ค่าเช่าโชว์รูม – HMW (สาขาบางนา)",                account: "BA-002", entity: "HMW",  segmentId: "O4",       amount:  -3_200_000, type: "out", status: "matched", source: "AP" },
-    { id: "T-04204", date: "2026-03-22", desc: "รับเงินค่ารถเช่า – Fleet Q1",                    account: "BA-002", entity: "HMW",  segmentId: "RENT",     amount:   1_780_000, type: "in",  status: "matched", source: "Bank" },
-  ];
-
-  const arAging = [
-    { customer: "บมจ. สยามอุตสาหกรรมเหล็ก",        entity: "HMW",  total: 84_200_000, current: 52_400_000, d30: 18_200_000, d60: 8_900_000, d90: 4_700_000, over: 0 },
-    { customer: "บจก. นอร์ทเทิร์น แมนูแฟคเจอริ่ง", entity: "HMW",  total: 38_700_000, current: 22_500_000, d30: 10_100_000, d60: 4_200_000, d90: 1_900_000, over: 0 },
-    { customer: "บริษัท พรีเมียร์ เทรดดิ้ง จก.",     entity: "HMW",  total: 26_400_000, current: 14_200_000, d30:  8_600_000, d60: 3_600_000, d90: 0,         over: 0 },
-    { customer: "บจก. อีสเทิร์น ปิโตรเคมิคอล",       entity: "CLIK", total: 49_800_000, current: 28_900_000, d30: 12_400_000, d60: 5_500_000, d90: 3_000_000, over: 0 },
-    { customer: "บจก. ทรอปิคัล อะกริ",              entity: "CLIK", total: 14_200_000, current:  4_900_000, d30:  3_400_000, d60: 2_800_000, d90: 1_700_000, over: 1_400_000 },
-    { customer: "บจก. เซ็นทรัล แพ็คเกจจิ้ง",         entity: "CLIK", total: 22_100_000, current: 16_400_000, d30:  4_200_000, d60: 1_500_000, d90: 0,         over: 0 },
-    { customer: "HMW (ค่าบริหารจัดการ)",           entity: "ACG",  total: 12_600_000, current: 12_600_000, d30:          0, d60:         0, d90: 0,         over: 0 },
-    { customer: "CLIK (ค่าบริหารจัดการ)",          entity: "ACG",  total:  6_300_000, current:  4_200_000, d30:  2_100_000, d60:         0, d90: 0,         over: 0 },
-  ];
-
-  const apAging = [
-    { vendor: "บจก. วัตถุดิบเอเชีย",                 entity: "HMW",  total: 64_700_000, current: 38_400_000, d30: 16_200_000, d60: 6_100_000, d90: 4_000_000 },
-    { vendor: "บมจ. พลังงานไทยจำกัด",                entity: "HMW",  total: 38_900_000, current: 24_500_000, d30:  9_800_000, d60: 4_600_000, d90: 0         },
-    { vendor: "บจก. โลจิสติกส์ไทย",                  entity: "CLIK", total: 12_400_000, current:  8_700_000, d30:  2_600_000, d60: 1_100_000, d90: 0         },
-    { vendor: "บจก. เครื่องจักรอุตสาหกรรม KK",      entity: "HMW",  total: 21_300_000, current: 12_400_000, d30:  5_900_000, d60: 3_000_000, d90: 0         },
-    { vendor: "บจก. เทคโนโลยีสารสนเทศ",            entity: "ACG",  total:  7_200_000, current:  5_100_000, d30:  1_400_000, d60:   700_000, d90: 0         },
-  ];
-
-  const glAccounts = [
-    { code: "1110", name: "เงินสด", type: "Asset" },
-    { code: "1120", name: "เงินฝากธนาคาร", type: "Asset" },
-    { code: "1140", name: "ลูกหนี้การค้า", type: "Asset" },
-    { code: "1150", name: "ลูกหนี้อื่น", type: "Asset" },
-    { code: "1160", name: "สินค้าคงเหลือ", type: "Asset" },
-    { code: "1210", name: "ที่ดิน อาคารและอุปกรณ์", type: "Asset" },
-    { code: "2110", name: "เจ้าหนี้การค้า", type: "Liability" },
-    { code: "2120", name: "เจ้าหนี้อื่น", type: "Liability" },
-    { code: "2130", name: "ค่าใช้จ่ายค้างจ่าย", type: "Liability" },
-    { code: "2210", name: "เงินกู้ระยะสั้น", type: "Liability" },
-    { code: "2310", name: "เงินกู้ระยะยาว", type: "Liability" },
-    { code: "3110", name: "ทุนจดทะเบียน", type: "Equity" },
-    { code: "3210", name: "กำไรสะสม", type: "Equity" },
-    { code: "4110", name: "รายได้จากการขาย", type: "Revenue" },
-    { code: "4210", name: "รายได้อื่น", type: "Revenue" },
-    { code: "5110", name: "ต้นทุนขาย", type: "Expense" },
-    { code: "5210", name: "ค่าใช้จ่ายในการขาย", type: "Expense" },
-    { code: "5220", name: "ค่าใช้จ่ายในการบริหาร", type: "Expense" },
-    { code: "5310", name: "ค่าเสื่อมราคา", type: "Expense" },
-    { code: "5410", name: "ดอกเบี้ยจ่าย", type: "Expense" },
-    { code: "5510", name: "ภาษีเงินได้", type: "Expense" },
-  ];
-
-  // Inventory
-  const inventory = [
-    { sku: "RM-STL-001", name: "เหล็กม้วน HR Coil", uom: "ตัน", qty: 1_240, unit: 28_400, value: 35_216_000 },
-    { sku: "RM-STL-002", name: "เหล็กแผ่นรีดเย็น CR", uom: "ตัน", qty: 860, unit: 31_200, value: 26_832_000 },
-    { sku: "RM-PLY-014", name: "เม็ดพลาสติก PE", uom: "ตัน", qty: 420, unit: 64_500, value: 27_090_000 },
-    { sku: "FG-PIP-090", name: "ท่อเหล็กกล้า 4 นิ้ว", uom: "ชิ้น", qty: 18_400, unit: 1_240, value: 22_816_000 },
-    { sku: "FG-PCK-220", name: "แพ็คเกจอุตสาหกรรม L", uom: "ชิ้น", qty: 64_200, unit: 184, value: 11_812_800 },
-    { sku: "WIP-A-101", name: "สินค้าระหว่างผลิต กลุ่ม A", uom: "ล็อต", qty: 38, unit: 412_000, value: 15_656_000 },
-  ];
-
-  // ===========================================================================
-  // AP HONDA Payments — การจ่ายเงินให้ HONDA (รถยนต์/อะไหล่)
-  // ไม่อยู่ใน Payments ทั่วไป เพราะมีลักษณะพิเศษ (Stock Financing)
-  // ===========================================================================
-  const apHondaPayments = [
-    { id: "HD-2603-01", date: "2026-03-28", entity: "HMW", invoice: "HD-INV-26030145", model: "Honda Civic RS 2026", qty: 8, unit: 1_124_000, amount: 8_992_000, dueDate: "2026-04-15", status: "pending", account: "BA-002" },
-    { id: "HD-2603-02", date: "2026-03-25", entity: "HMW", invoice: "HD-INV-26030122", model: "Honda CR-V 2026", qty: 5, unit: 1_490_000, amount: 7_450_000, dueDate: "2026-04-12", status: "pending", account: "BA-002" },
-    { id: "HD-2603-03", date: "2026-03-20", entity: "HMW", invoice: "HD-INV-26030089", model: "Honda HR-V 2026", qty: 6, unit: 1_009_000, amount: 6_054_000, dueDate: "2026-04-08", status: "paid", account: "BA-002" },
-    { id: "HD-2603-04", date: "2026-03-15", entity: "HMW", invoice: "HD-INV-26030054", model: "Honda Accord 2026", qty: 3, unit: 1_790_000, amount: 5_370_000, dueDate: "2026-04-02", status: "paid", account: "BA-002" },
-    { id: "HD-2603-05", date: "2026-03-12", entity: "HMW", invoice: "HD-INV-26030041", model: "อะไหล่ Genuine Parts Q1", qty: 1, unit: 2_840_000, amount: 2_840_000, dueDate: "2026-03-30", status: "paid", account: "BA-002" },
-    { id: "HD-2602-06", date: "2026-02-28", entity: "HMW", invoice: "HD-INV-26020198", model: "Honda City 2026", qty: 10, unit: 729_000, amount: 7_290_000, dueDate: "2026-03-18", status: "paid", account: "BA-002" },
-    { id: "HD-2602-07", date: "2026-02-20", entity: "HMW", invoice: "HD-INV-26020156", model: "Honda BR-V 2026", qty: 4, unit: 894_000, amount: 3_576_000, dueDate: "2026-03-10", status: "paid", account: "BA-002" },
-  ];
-
-  // ===========================================================================
-  // PN Payments — Promissory Note Payment (ตั๋วเงินจ่าย)
-  // ใช้สำหรับการจ่ายค่ารถยนต์/อะไหล่ผ่านตั๋วเงิน
-  // ===========================================================================
-  const pnPayments = [
-    { id: "PN-2603-01", date: "2026-03-30", entity: "HMW", pnNo: "PN-HMW-26-0145", beneficiary: "Honda Automobile (Thailand)", amount: 12_500_000, issueDate: "2026-01-30", dueDate: "2026-04-30", term: "90 วัน", status: "outstanding", account: "BA-002" },
-    { id: "PN-2603-02", date: "2026-03-25", entity: "HMW", pnNo: "PN-HMW-26-0142", beneficiary: "TC Subaru Thailand", amount: 8_400_000, issueDate: "2026-01-25", dueDate: "2026-04-25", term: "90 วัน", status: "outstanding", account: "BA-002" },
-    { id: "PN-2603-03", date: "2026-03-15", entity: "HMW", pnNo: "PN-HMW-26-0138", beneficiary: "Honda Automobile (Thailand)", amount: 6_200_000, issueDate: "2025-12-15", dueDate: "2026-03-15", term: "90 วัน", status: "paid", account: "BA-002" },
-    { id: "PN-2602-04", date: "2026-02-20", entity: "CLIK", pnNo: "PN-CLIK-26-0098", beneficiary: "บจก. เครื่องจักรอุตสาหกรรม KK", amount: 4_500_000, issueDate: "2025-11-20", dueDate: "2026-02-20", term: "90 วัน", status: "paid", account: "BA-007" },
-    { id: "PN-2602-05", date: "2026-02-15", entity: "HMW", pnNo: "PN-HMW-26-0095", beneficiary: "Honda Automobile (Thailand)", amount: 9_800_000, issueDate: "2025-11-15", dueDate: "2026-02-15", term: "90 วัน", status: "paid", account: "BA-002" },
-  ];
-
-  // ===========================================================================
-  // Reconcile AR — กระทบยอดลูกหนี้สำหรับ CF Indirect Method
-  // เปิดงวด + Sales − Collection = ปิดงวด
-  // Change = WC Adjustment สำหรับ Operating CF (Indirect)
-  // ===========================================================================
-  const reconcileAR = {
-    period: "2026-Q1",
-    entities: [
-      {
-        entity: "HMW",
-        opening: 224_000_000,
-        sales: 412_400_000,
-        collection: -385_200_000,
-        adjustments: 0,
-        closing: 251_200_000,
-        change: 27_200_000,
-        impact: "Decrease Cash (AR เพิ่ม = ใช้เงิน)",
-      },
-      {
-        entity: "CLIK",
-        opening: 86_100_000,
-        sales: 165_300_000,
-        collection: -148_900_000,
-        adjustments: -1_200_000,
-        closing: 101_300_000,
-        change: 15_200_000,
-        impact: "Decrease Cash (AR เพิ่ม = ใช้เงิน)",
-      },
-      {
-        entity: "ACG",
-        opening: 14_500_000,
-        sales: 32_400_000,
-        collection: -27_100_000,
-        adjustments: 0,
-        closing: 19_800_000,
-        change: 5_300_000,
-        impact: "Decrease Cash (AR เพิ่ม = ใช้เงิน)",
-      },
-    ],
-    totalOpening: 324_600_000,
-    totalSales: 610_100_000,
-    totalCollection: -561_200_000,
-    totalAdjustments: -1_200_000,
-    totalClosing: 372_300_000,
-    totalChange: 47_700_000,
-    cfImpact: -47_700_000, // Negative = Cash Outflow
-  };
-
-  // ===========================================================================
-  // Reconcile AP — กระทบยอดเจ้าหนี้สำหรับ CF Indirect Method
-  // เปิดงวด + Purchase − Payment = ปิดงวด
-  // ===========================================================================
-  const reconcileAP = {
-    period: "2026-Q1",
-    entities: [
-      {
-        entity: "HMW",
-        opening: 98_400_000,
-        purchases: 268_900_000,
-        payment: -245_300_000,
-        adjustments: 0,
-        closing: 122_000_000,
-        change: 23_600_000,
-        impact: "Increase Cash (AP เพิ่ม = ได้เงิน)",
-      },
-      {
-        entity: "CLIK",
-        opening: 18_500_000,
-        purchases: 84_200_000,
-        payment: -78_400_000,
-        adjustments: -300_000,
-        closing: 24_000_000,
-        change: 5_500_000,
-        impact: "Increase Cash (AP เพิ่ม = ได้เงิน)",
-      },
-      {
-        entity: "ACG",
-        opening: 5_200_000,
-        purchases: 12_400_000,
-        payment: -11_100_000,
-        adjustments: 0,
-        closing: 6_500_000,
-        change: 1_300_000,
-        impact: "Increase Cash (AP เพิ่ม = ได้เงิน)",
-      },
-    ],
-    totalOpening: 122_100_000,
-    totalPurchases: 365_500_000,
-    totalPayment: -334_800_000,
-    totalAdjustments: -300_000,
-    totalClosing: 152_500_000,
-    totalChange: 30_400_000,
-    cfImpact: 30_400_000, // Positive = Cash Inflow
-  };
-
-  // Forecast (next 8 weeks)
-  const forecast = (() => {
-    const weeks = [];
-    let bal = 469_220_000;
-    for (let i = 1; i <= 8; i++) {
-      const inflow = 38_000_000 + Math.round((Math.sin(i * 0.8) + 1) * 12_000_000);
-      const outflow = 34_000_000 + Math.round((Math.cos(i * 0.6) + 1) * 9_000_000);
-      bal += inflow - outflow;
-      weeks.push({ week: `W${i}`, label: `สัปดาห์ที่ ${i}`, inflow, outflow, net: inflow - outflow, balance: bal });
-    }
-    return weeks;
-  })();
-
-  // Reconciliation pairs
-  const reconItems = [
-    { id: "R-01", bank: { date: "2026-03-29", desc: "TFR IN – PREMIER TRADING", amount: 18_420_000 }, gl: { date: "2026-03-29", desc: "รับชำระลูกหนี้ – พรีเมียร์", account: "1140", amount: 18_420_000 }, status: "matched" },
-    { id: "R-02", bank: { date: "2026-03-29", desc: "PAY – Asia Materials INV-0312", amount: -12_840_000 }, gl: { date: "2026-03-29", desc: "จ่ายเจ้าหนี้ – วัตถุดิบเอเชีย", account: "2110", amount: -12_840_000 }, status: "matched" },
-    { id: "R-03", bank: { date: "2026-03-28", desc: "PAYROLL – Mar 2026", amount: -42_100_000 }, gl: { date: "2026-03-28", desc: "เงินเดือนพนักงาน มี.ค.", account: "5220", amount: -42_100_000 }, status: "matched" },
-    { id: "R-04", bank: { date: "2026-03-27", desc: "WHT ภงด.53", amount: -4_280_000 }, gl: null, status: "unmatched-bank" },
-    { id: "R-05", bank: null, gl: { date: "2026-03-26", desc: "ขายสด – หน้าร้านระยอง", account: "4110", amount: 1_180_000 }, status: "unmatched-gl" },
-    { id: "R-06", bank: { date: "2026-03-26", desc: "FEE – Service charge", amount: -28_400 }, gl: { date: "2026-03-26", desc: "ค่าธรรมเนียมธนาคาร", account: "5220", amount: -28_400 }, status: "matched" },
-    { id: "R-07", bank: { date: "2026-03-25", desc: "TFR OUT – LOGISTIC TH", amount: -3_540_000 }, gl: { date: "2026-03-25", desc: "ค่าขนส่ง – โลจิสติกส์ไทย", account: "5210", amount: -3_540_000 }, status: "matched" },
-    { id: "R-08", bank: { date: "2026-03-24", desc: "DEPOSIT – Contract C-2026/044", amount: 6_500_000 }, gl: { date: "2026-03-24", desc: "เงินมัดจำสัญญา", account: "2120", amount: 6_500_000 }, status: "needs-review" },
-  ];
-
-  // Direct method CF
-  const directCF = {
-    sections: [
-      {
-        title: "กระแสเงินสดจากกิจกรรมดำเนินงาน (วิธีตรง)",
-        items: [
-          { label: "เงินสดรับจากการขายสินค้าและบริการ", current: 612_400_000, prior: 548_900_000, indent: 1 },
-          { label: "เงินสดรับจากดอกเบี้ยและเงินปันผล", current: 39_100_000, prior: 32_700_000, indent: 1 },
-          { label: "เงินสดรับอื่น", current: 14_200_000, prior: 11_400_000, indent: 1 },
-          { label: "เงินสดจ่ายให้แก่ผู้จัดจำหน่ายและพนักงาน", current: -483_700_000, prior: -441_200_000, indent: 1 },
-          { label: "เงินสดจ่ายดอกเบี้ย", current: -36_200_000, prior: -34_800_000, indent: 1 },
-          { label: "เงินสดจ่ายภาษีเงินได้", current: -48_700_000, prior: -41_600_000, indent: 1 },
-        ],
-        subtotalLabel: "เงินสดสุทธิจากกิจกรรมดำเนินงาน",
-      },
-      {
-        title: "กระแสเงินสดจากกิจกรรมลงทุน",
-        items: [
-          { label: "ซื้อที่ดิน อาคารและอุปกรณ์", current: -21_400_000, prior: -38_900_000, indent: 1 },
-          { label: "ขายสินทรัพย์ถาวร", current: 4_200_000, prior: 1_800_000, indent: 1 },
-          { label: "เงินลงทุนระยะสั้น (เพิ่ม)/ลด", current: -8_600_000, prior: 3_400_000, indent: 1 },
-          { label: "เงินปันผลรับจากเงินลงทุน", current: 6_800_000, prior: 5_900_000, indent: 1 },
-        ],
-        subtotalLabel: "เงินสดสุทธิจากกิจกรรมลงทุน",
-      },
-      {
-        title: "กระแสเงินสดจากกิจกรรมจัดหาเงิน",
-        items: [
-          { label: "เงินกู้ระยะสั้นเพิ่มขึ้น/(ลดลง)", current: -25_000_000, prior: 12_000_000, indent: 1 },
-          { label: "เงินกู้ระยะยาว – รับ", current: 0, prior: 60_000_000, indent: 1 },
-          { label: "เงินกู้ระยะยาว – ชำระคืน", current: -18_400_000, prior: -16_200_000, indent: 1 },
-          { label: "จ่ายเงินปันผล", current: -32_000_000, prior: -28_000_000, indent: 1 },
-        ],
-        subtotalLabel: "เงินสดสุทธิจากกิจกรรมจัดหาเงิน",
-      },
-    ],
-    opening: 446_780_000,
-    priorOpening: 412_400_000,
-  };
-
-  // Indirect method CF
-  const indirectCF = {
-    sections: [
-      {
-        title: "กระแสเงินสดจากกิจกรรมดำเนินงาน (วิธีอ้อม)",
-        items: [
-          { label: "กำไรก่อนภาษีเงินได้", current: 142_800_000, prior: 118_400_000, indent: 1 },
-          { label: "ปรับด้วยรายการที่ไม่ใช่เงินสด:", current: null, prior: null, indent: 1, header: true },
-          { label: "ค่าเสื่อมราคาและค่าตัดจำหน่าย", current: 38_700_000, prior: 35_200_000, indent: 2 },
-          { label: "หนี้สูญและค่าเผื่อหนี้สงสัยจะสูญ", current: 4_200_000, prior: 3_100_000, indent: 2 },
-          { label: "ขาดทุน/(กำไร) จากอัตราแลกเปลี่ยน", current: -2_400_000, prior: 1_800_000, indent: 2 },
-          { label: "ดอกเบี้ยจ่าย", current: 36_200_000, prior: 34_800_000, indent: 2 },
-          { label: "การเปลี่ยนแปลงในสินทรัพย์/หนี้สินดำเนินงาน:", current: null, prior: null, indent: 1, header: true },
-          { label: "ลูกหนี้การค้า (เพิ่มขึ้น)/ลดลง", current: -28_400_000, prior: -22_100_000, indent: 2 },
-          { label: "สินค้าคงเหลือ (เพิ่มขึ้น)/ลดลง", current: -14_800_000, prior: -9_600_000, indent: 2 },
-          { label: "เจ้าหนี้การค้า เพิ่มขึ้น/(ลดลง)", current: 18_600_000, prior: 12_400_000, indent: 2 },
-          { label: "ค่าใช้จ่ายค้างจ่าย เพิ่มขึ้น/(ลดลง)", current: 6_200_000, prior: 4_900_000, indent: 2 },
-          { label: "เงินสดจ่ายดอกเบี้ย", current: -36_200_000, prior: -34_800_000, indent: 1 },
-          { label: "เงินสดจ่ายภาษีเงินได้", current: -48_700_000, prior: -41_600_000, indent: 1 },
-        ],
-        subtotalLabel: "เงินสดสุทธิจากกิจกรรมดำเนินงาน",
-      },
-      {
-        title: "กระแสเงินสดจากกิจกรรมลงทุน",
-        items: [
-          { label: "ซื้อที่ดิน อาคารและอุปกรณ์", current: -21_400_000, prior: -38_900_000, indent: 1 },
-          { label: "ขายสินทรัพย์ถาวร", current: 4_200_000, prior: 1_800_000, indent: 1 },
-          { label: "เงินลงทุนระยะสั้น (เพิ่ม)/ลด", current: -8_600_000, prior: 3_400_000, indent: 1 },
-          { label: "เงินปันผลรับจากเงินลงทุน", current: 6_800_000, prior: 5_900_000, indent: 1 },
-        ],
-        subtotalLabel: "เงินสดสุทธิจากกิจกรรมลงทุน",
-      },
-      {
-        title: "กระแสเงินสดจากกิจกรรมจัดหาเงิน",
-        items: [
-          { label: "เงินกู้ระยะสั้นเพิ่มขึ้น/(ลดลง)", current: -25_000_000, prior: 12_000_000, indent: 1 },
-          { label: "เงินกู้ระยะยาว – รับ", current: 0, prior: 60_000_000, indent: 1 },
-          { label: "เงินกู้ระยะยาว – ชำระคืน", current: -18_400_000, prior: -16_200_000, indent: 1 },
-          { label: "จ่ายเงินปันผล", current: -32_000_000, prior: -28_000_000, indent: 1 },
-        ],
-        subtotalLabel: "เงินสดสุทธิจากกิจกรรมจัดหาเงิน",
-      },
-    ],
-    opening: 446_780_000,
-    priorOpening: 412_400_000,
-  };
-
-  // Export history
-  const exports = [
-    { id: "EXP-2026-038", name: "Cash Flow Q1 2026 - Indirect.xlsx", type: "งบกระแสเงินสด (วิธีอ้อม)", period: "Q1 2026", by: "K. ปริญญา ส.", at: "2026-03-31 16:42", size: "212 KB", status: "ready" },
-    { id: "EXP-2026-037", name: "Cash Flow Q1 2026 - Direct.xlsx", type: "งบกระแสเงินสด (วิธีตรง)", period: "Q1 2026", by: "K. ปริญญา ส.", at: "2026-03-31 16:38", size: "198 KB", status: "ready" },
-    { id: "EXP-2026-036", name: "Bank Balances Mar 26.xlsx", type: "ยอดเงินฝากธนาคาร", period: "มี.ค. 2026", by: "K. รดา ม.", at: "2026-03-30 11:20", size: "84 KB", status: "ready" },
-    { id: "EXP-2026-035", name: "AR Aging Mar 26.xlsx", type: "ลูกหนี้ค้างชำระ", period: "มี.ค. 2026", by: "K. ธนวรรธน์ ค.", at: "2026-03-29 09:14", size: "146 KB", status: "ready" },
-    { id: "EXP-2026-034", name: "AP Aging Mar 26.xlsx", type: "เจ้าหนี้ค้างชำระ", period: "มี.ค. 2026", by: "K. ธนวรรธน์ ค.", at: "2026-03-29 09:13", size: "118 KB", status: "ready" },
-    { id: "EXP-2026-033", name: "Forecast 8W Apr-May 2026.xlsx", type: "Forecast", period: "เม.ย. – พ.ค. 2026", by: "K. ปริญญา ส.", at: "2026-03-28 18:05", size: "164 KB", status: "ready" },
-    { id: "EXP-2026-032", name: "Cash Flow Feb 2026 - Indirect.xlsx", type: "งบกระแสเงินสด (วิธีอ้อม)", period: "ก.พ. 2026", by: "K. ปริญญา ส.", at: "2026-02-28 17:00", size: "208 KB", status: "ready" },
-  ];
-
-  // Categories for settings
-  const categories = [
-    { code: "OP-IN-01", name: "เงินรับจากการขาย", method: "ดำเนินงาน", gl: "4110", direction: "in" },
-    { code: "OP-IN-02", name: "เงินรับจากลูกหนี้", method: "ดำเนินงาน", gl: "1140", direction: "in" },
-    { code: "OP-IN-03", name: "ดอกเบี้ยรับ", method: "ดำเนินงาน", gl: "4210", direction: "in" },
-    { code: "OP-OUT-01", name: "จ่ายเจ้าหนี้การค้า", method: "ดำเนินงาน", gl: "2110", direction: "out" },
-    { code: "OP-OUT-02", name: "เงินเดือนและสวัสดิการ", method: "ดำเนินงาน", gl: "5220", direction: "out" },
-    { code: "OP-OUT-03", name: "ค่าใช้จ่ายดำเนินงานอื่น", method: "ดำเนินงาน", gl: "5210", direction: "out" },
-    { code: "OP-OUT-04", name: "ดอกเบี้ยจ่าย", method: "ดำเนินงาน", gl: "5410", direction: "out" },
-    { code: "OP-OUT-05", name: "ภาษีเงินได้", method: "ดำเนินงาน", gl: "5510", direction: "out" },
-    { code: "IV-OUT-01", name: "ซื้อทรัพย์สินถาวร", method: "ลงทุน", gl: "1210", direction: "out" },
-    { code: "IV-IN-01", name: "ขายทรัพย์สินถาวร", method: "ลงทุน", gl: "1210", direction: "in" },
-    { code: "FN-IN-01", name: "เงินกู้ – รับ", method: "จัดหาเงิน", gl: "2210", direction: "in" },
-    { code: "FN-OUT-01", name: "เงินกู้ – ชำระ", method: "จัดหาเงิน", gl: "2210", direction: "out" },
-    { code: "FN-OUT-02", name: "จ่ายเงินปันผล", method: "จัดหาเงิน", gl: "3210", direction: "out" },
-  ];
-
-  // -------- Trial Balance (multi-period) for Auto-Calc --------
-  // Account_Type: Asset / Liability / Equity / Revenue / Expense
-  // Use to auto-derive: AR Change, AP Change, Inventory Change, Depreciation, PPE addition
-  const trialBalance = {
-    "2025-Q4": [  // Prior quarter (opening)
-      { code: "1010", name: "เงินสดและรายการเทียบเท่า", type: "Asset", balance: 412_400_000 },
-      { code: "1130", name: "ลูกหนี้การค้า",            type: "Asset", balance: 168_300_000 },
-      { code: "1140", name: "ค่าเผื่อหนี้สงสัยจะสูญ",        type: "Asset", balance: -8_200_000 },
-      { code: "1200", name: "สินค้าคงเหลือ",            type: "Asset", balance: 142_800_000 },
-      { code: "1500", name: "ที่ดิน อาคารและอุปกรณ์",      type: "Asset", balance: 982_400_000 },
-      { code: "1590", name: "ค่าเสื่อมราคาสะสม",          type: "Asset", balance: -286_500_000 },
-      { code: "2110", name: "เจ้าหนี้การค้า",            type: "Liability", balance: 95_400_000 },
-      { code: "2120", name: "ค่าใช้จ่ายค้างจ่าย",          type: "Liability", balance: 42_100_000 },
-      { code: "2210", name: "เงินกู้ระยะสั้น",           type: "Liability", balance: 180_000_000 },
-      { code: "2310", name: "เงินกู้ระยะยาว",            type: "Liability", balance: 240_000_000 },
-      { code: "3000", name: "ทุนจดทะเบียน",              type: "Equity", balance: 500_000_000 },
-      { code: "3100", name: "กำไรสะสม",                  type: "Equity", balance: 354_900_000 },
-    ],
-    "2026-Q1": [  // Current quarter (closing)
-      { code: "1010", name: "เงินสดและรายการเทียบเท่า", type: "Asset", balance: 465_220_000 },
-      { code: "1130", name: "ลูกหนี้การค้า",            type: "Asset", balance: 196_700_000 },  // +28.4M (AR up)
-      { code: "1140", name: "ค่าเผื่อหนี้สงสัยจะสูญ",        type: "Asset", balance: -12_400_000 }, // +4.2M (bad debt)
-      { code: "1200", name: "สินค้าคงเหลือ",            type: "Asset", balance: 157_600_000 },  // +14.8M (inv up)
-      { code: "1500", name: "ที่ดิน อาคารและอุปกรณ์",      type: "Asset", balance: 999_600_000 },  // +21.4M - 4.2M = +17.2M net
-      { code: "1590", name: "ค่าเสื่อมราคาสะสม",          type: "Asset", balance: -325_200_000 }, // +38.7M
-      { code: "2110", name: "เจ้าหนี้การค้า",            type: "Liability", balance: 114_000_000 }, // +18.6M (AP up)
-      { code: "2120", name: "ค่าใช้จ่ายค้างจ่าย",          type: "Liability", balance: 48_300_000 },  // +6.2M
-      { code: "2210", name: "เงินกู้ระยะสั้น",           type: "Liability", balance: 155_000_000 }, // -25M (paid down)
-      { code: "2310", name: "เงินกู้ระยะยาว",            type: "Liability", balance: 221_600_000 }, // -18.4M (paid down)
-      { code: "3000", name: "ทุนจดทะเบียน",              type: "Equity", balance: 500_000_000 },
-      { code: "3100", name: "กำไรสะสม",                  type: "Equity", balance: 415_700_000 },  // +94.1M (Net Income - Dividend)
-    ],
-  };
-
-  // -------- Income Statement summary (for Net Profit) --------
-  const incomeStatement = {
-    "2026-Q1": {
-      revenue:           1_242_000_000,
-      cogs:                845_000_000,
-      grossProfit:         397_000_000,
-      opEx:                182_000_000,
-      depreciation:         38_700_000,  // non-cash, added back in Indirect
-      badDebt:               4_200_000,  // non-cash, added back
-      fxLoss:               -2_400_000,
-      interestExp:          36_200_000,
-      profitBeforeTax:     142_800_000,
-      tax:                  48_700_000,
-      netProfit:            94_100_000,
-    },
-    "2025-Q4": {
-      revenue:           1_098_000_000,
-      cogs:                756_000_000,
-      grossProfit:         342_000_000,
-      opEx:                166_400_000,
-      depreciation:         35_200_000,
-      badDebt:               3_100_000,
-      fxLoss:                1_800_000,
-      interestExp:          34_800_000,
-      profitBeforeTax:     118_400_000,
-      tax:                  41_600_000,
-      netProfit:            76_800_000,
-    },
-  };
-
-  // -------- Auto-calc helpers (derive CF items from TB + IS) --------
-  // Lookup helper
-  function tbBal(period, code) {
-    const row = (trialBalance[period] || []).find(r => r.code === code);
-    return row ? row.balance : 0;
-  }
-  // Delta: closing - opening (positive = balance went up)
-  function tbDelta(curPeriod, priorPeriod, code) {
-    return tbBal(curPeriod, code) - tbBal(priorPeriod, code);
-  }
-
-  // Working capital changes (Indirect Method conventions: use sign that makes cash effect explicit)
-  // AR up → cash down → negative adjustment
-  // AP up → cash up → positive adjustment
-  // Inventory up → cash down → negative
-  function getARChange(cur, prior) {
-    // Net AR = 1130 - 1140 (allowance)
-    const arCur = tbBal(cur, "1130") + tbBal(cur, "1140");
-    const arPri = tbBal(prior, "1130") + tbBal(prior, "1140");
-    return -(arCur - arPri);  // negative if AR increased
-  }
-  function getAPChange(cur, prior) {
-    return tbDelta(cur, prior, "2110");
-  }
-  function getInventoryChange(cur, prior) {
-    return -tbDelta(cur, prior, "1200");
-  }
-  function getAccruedExpChange(cur, prior) {
-    return tbDelta(cur, prior, "2120");
-  }
-  function getDepreciation(period) {
-    return incomeStatement[period]?.depreciation || 0;
-  }
-  function getPPEAcquisition(cur, prior) {
-    // Gross PPE change minus disposals; for simplicity here, we expose net addition
-    return tbDelta(cur, prior, "1500");
-  }
-  function getShortTermLoanChange(cur, prior) {
-    return tbDelta(cur, prior, "2210");
-  }
-  function getLongTermLoanChange(cur, prior) {
-    return tbDelta(cur, prior, "2310");
-  }
-
-  // Build Indirect CF dynamically from TB + IS (returns array of section items)
-  function buildIndirectCF(curPeriod, priorPeriod) {
-    const is = incomeStatement[curPeriod] || {};
-    const isPrior = incomeStatement[priorPeriod] || {};
-
-    return {
-      sections: [
-        {
-          title: "กระแสเงินสดจากกิจกรรมดำเนินงาน (วิธีอ้อม)",
-          items: [
-            { label: "กำไรก่อนภาษีเงินได้", current: is.profitBeforeTax, prior: isPrior.profitBeforeTax, indent: 1, formula: "จาก Income Statement" },
-            { label: "ปรับด้วยรายการที่ไม่ใช่เงินสด:", current: null, prior: null, indent: 1, header: true },
-            { label: "ค่าเสื่อมราคาและค่าตัดจำหน่าย", current: is.depreciation, prior: isPrior.depreciation, indent: 2, formula: "ΔAccumulated Depreciation (1590)" },
-            { label: "หนี้สูญและค่าเผื่อหนี้สงสัยจะสูญ", current: is.badDebt, prior: isPrior.badDebt, indent: 2, formula: "ΔAllowance for Doubtful Accounts (1140)" },
-            { label: "ขาดทุน/(กำไร) จากอัตราแลกเปลี่ยน", current: is.fxLoss, prior: isPrior.fxLoss, indent: 2, formula: "จาก Income Statement" },
-            { label: "ดอกเบี้ยจ่าย", current: is.interestExp, prior: isPrior.interestExp, indent: 2, formula: "Interest Expense จาก Income Statement" },
-            { label: "การเปลี่ยนแปลงในสินทรัพย์/หนี้สินดำเนินงาน:", current: null, prior: null, indent: 1, header: true },
-            { label: "ลูกหนี้การค้า (เพิ่มขึ้น)/ลดลง", current: getARChange(curPeriod, priorPeriod), prior: getARChange(priorPeriod, "2025-Q3"), indent: 2, formula: "-(AR Cur - AR Prior)" },
-            { label: "สินค้าคงเหลือ (เพิ่มขึ้น)/ลดลง", current: getInventoryChange(curPeriod, priorPeriod), prior: getInventoryChange(priorPeriod, "2025-Q3"), indent: 2, formula: "-(Inv Cur - Inv Prior)" },
-            { label: "เจ้าหนี้การค้า เพิ่มขึ้น/(ลดลง)", current: getAPChange(curPeriod, priorPeriod), prior: getAPChange(priorPeriod, "2025-Q3"), indent: 2, formula: "AP Cur - AP Prior" },
-            { label: "ค่าใช้จ่ายค้างจ่าย เพิ่มขึ้น/(ลดลง)", current: getAccruedExpChange(curPeriod, priorPeriod), prior: getAccruedExpChange(priorPeriod, "2025-Q3"), indent: 2, formula: "ΔAccrued Expenses (2120)" },
-            { label: "เงินสดจ่ายดอกเบี้ย", current: -is.interestExp, prior: -isPrior.interestExp, indent: 1, formula: "-Interest Expense" },
-            { label: "เงินสดจ่ายภาษีเงินได้", current: -is.tax, prior: -isPrior.tax, indent: 1, formula: "-Income Tax" },
-          ],
-          subtotalLabel: "เงินสดสุทธิจากกิจกรรมดำเนินงาน",
-        },
-        {
-          title: "กระแสเงินสดจากกิจกรรมลงทุน",
-          items: [
-            { label: "ซื้อที่ดิน อาคารและอุปกรณ์", current: -21_400_000, prior: -38_900_000, indent: 1, formula: "ΔPPE Gross (1500) + Disposal" },
-            { label: "ขายสินทรัพย์ถาวร", current: 4_200_000, prior: 1_800_000, indent: 1 },
-            { label: "เงินลงทุนระยะสั้น (เพิ่ม)/ลด", current: -8_600_000, prior: 3_400_000, indent: 1 },
-            { label: "เงินปันผลรับจากเงินลงทุน", current: 6_800_000, prior: 5_900_000, indent: 1 },
-          ],
-          subtotalLabel: "เงินสดสุทธิจากกิจกรรมลงทุน",
-        },
-        {
-          title: "กระแสเงินสดจากกิจกรรมจัดหาเงิน",
-          items: [
-            { label: "เงินกู้ระยะสั้นเพิ่มขึ้น/(ลดลง)", current: getShortTermLoanChange(curPeriod, priorPeriod), prior: 12_000_000, indent: 1, formula: "ΔShort-term Loan (2210)" },
-            { label: "เงินกู้ระยะยาว – รับ", current: 0, prior: 60_000_000, indent: 1 },
-            { label: "เงินกู้ระยะยาว – ชำระคืน", current: getLongTermLoanChange(curPeriod, priorPeriod), prior: -16_200_000, indent: 1, formula: "ΔLong-term Loan (2310)" },
-            { label: "จ่ายเงินปันผล", current: -32_000_000, prior: -28_000_000, indent: 1 },
-          ],
-          subtotalLabel: "เงินสดสุทธิจากกิจกรรมจัดหาเงิน",
-        },
-      ],
-      opening: tbBal(priorPeriod, "1010"),
-      priorOpening: 412_400_000,
-    };
-  }
-
-  // Overwrite indirectCF with auto-calculated version
-  Object.assign(indirectCF, buildIndirectCF("2026-Q1", "2025-Q4"));
-
-  // Totals derived
-  const totalCash = bankAccounts.reduce((s, b) => s + b.balance, 0);
-  const inflowQ1 = monthly.slice(3).reduce((s, m) => s + m.inflow, 0);
-  const outflowQ1 = monthly.slice(3).reduce((s, m) => s + m.outflow, 0);
-
-  return {
-    company, companies, bankAccounts, trend30, monthly,
-    topInflowCats, topOutflowCats, recentTxns,
-    arAging, apAging, glAccounts, inventory,
-    // Phase A additions
-    apHondaPayments, pnPayments, reconcileAR, reconcileAP,
-    forecast, reconItems, directCF, indirectCF,
-    exports, categories,
-    // Auto-calc CF
-    trialBalance, incomeStatement,
-    getARChange, getAPChange, getInventoryChange, getAccruedExpChange,
-    getDepreciation, getPPEAcquisition, getShortTermLoanChange, getLongTermLoanChange,
-    buildIndirectCF, tbBal, tbDelta,
-    // segment data
-    incomeSegmentsByCo, expenseSegments, segmentMonths,
-    incomeByCoMonth, expenseByCoMonth,
-    getIncomeMatrix, getExpenseMatrix, getCompanyTotals,
-    getEntityForAccount, getSegmentName,
-    cfMapping, filterSegmentsByMapping,
-    totals: { totalCash, inflowQ1, outflowQ1, netQ1: inflowQ1 - outflowQ1 },
-  };
-})();
-
-window.fmtTHB = function (n, opts = {}) {
-  if (n == null || isNaN(n)) return "—";
-  const { compact = false, sign = false, decimals = 0 } = opts;
-  const abs = Math.abs(n);
-  let str;
-  if (compact && abs >= 1_000_000) {
-    str = (abs / 1_000_000).toLocaleString("en-US", { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + " ลบ.";
-  } else {
-    str = abs.toLocaleString("en-US", { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
-  }
-  if (n < 0) return "(" + str + ")";
-  return sign && n > 0 ? "+" + str : str;
-};
-
-window.fmtTHBShort = function (n) {
-  if (n == null) return "—";
-  const abs = Math.abs(n);
-  let v, suf;
-  if (abs >= 1_000_000_000) { v = n / 1_000_000_000; suf = " พันลบ."; }
-  else if (abs >= 1_000_000) { v = n / 1_000_000; suf = " ลบ."; }
-  else if (abs >= 1_000) { v = n / 1_000; suf = " พัน"; }
-  else { v = n; suf = ""; }
-  return v.toLocaleString("en-US", { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + suf;
-};
-
-</script>
-
 <script type="text/babel">
 /* Icon set — minimal stroke icons */
 const Ic = ({ name, size = 16, className = "ic", style }) => {
@@ -2492,7 +1501,450 @@ function EntityChip({ entity, size = "sm" }) {
 window.EntityChip = EntityChip;
 
 </script>
+
 <script type="text/babel">
+/* Chart components — pure SVG, no library */
+
+function useSize(ref) {
+  const [size, setSize] = React.useState({ w: 600, h: 240 });
+  React.useEffect(() => {
+    if (!ref.current) return;
+    const obs = new ResizeObserver(() => {
+      if (ref.current) setSize({ w: ref.current.clientWidth, h: ref.current.clientHeight });
+    });
+    obs.observe(ref.current);
+    return () => obs.disconnect();
+  }, []);
+  return size;
+}
+
+/* TrendChart: line/bar/area for monthly inflow vs outflow */
+function TrendChart({ data, height = 260, style = "line" }) {
+  const ref = React.useRef(null);
+  const { w } = useSize(ref);
+  const padL = 56, padR = 16, padT = 12, padB = 28;
+  const innerW = Math.max(0, w - padL - padR);
+  const innerH = height - padT - padB;
+
+  const maxVal = Math.max(...data.flatMap((d) => [d.inflow, d.outflow])) * 1.1;
+  const n = data.length;
+  const stepX = n > 1 ? innerW / (n - 1) : innerW;
+  const barW = n > 0 ? (innerW / n) * 0.32 : 0;
+
+  const yTicks = 4;
+  const ticks = Array.from({ length: yTicks + 1 }, (_, i) => (maxVal / yTicks) * i);
+
+  const xFor = (i) => padL + i * stepX;
+  const xForBar = (i, j) => padL + i * stepX - barW + (j === 0 ? 0 : barW);
+  const yFor = (v) => padT + innerH - (v / maxVal) * innerH;
+
+  const linePath = (key) =>
+    data.map((d, i) => `${i === 0 ? "M" : "L"} ${xFor(i)} ${yFor(d[key])}`).join(" ");
+
+  const areaPath = (key) =>
+    `M ${padL} ${padT + innerH} ` +
+    data.map((d, i) => `L ${xFor(i)} ${yFor(d[key])}`).join(" ") +
+    ` L ${padL + (n - 1) * stepX} ${padT + innerH} Z`;
+
+  return (
+    <div ref={ref} style={{ width: "100%", height }}>
+      <svg width="100%" height={height} style={{ overflow: "visible" }}>
+        <defs>
+          <linearGradient id="gIn" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#1F9D55" stopOpacity="0.22" />
+            <stop offset="100%" stopColor="#1F9D55" stopOpacity="0" />
+          </linearGradient>
+          <linearGradient id="gOut" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#D03434" stopOpacity="0.18" />
+            <stop offset="100%" stopColor="#D03434" stopOpacity="0" />
+          </linearGradient>
+        </defs>
+
+        {/* gridlines */}
+        {ticks.map((t, i) => (
+          <g key={i}>
+            <line x1={padL} x2={w - padR} y1={yFor(t)} y2={yFor(t)} stroke="#EEF0F3" strokeWidth="1" />
+            <text x={padL - 8} y={yFor(t) + 3} fontSize="10.5" textAnchor="end" fill="#8B95A1" fontFamily="IBM Plex Mono, monospace">{(t / 1_000_000).toFixed(0)}M</text>
+          </g>
+        ))}
+
+        {/* X labels */}
+        {data.map((d, i) => (
+          <text key={i} x={xFor(i)} y={height - 10} fontSize="10.5" textAnchor="middle" fill="#5C6470">{d.m || d.label || d.date?.slice(5)}</text>
+        ))}
+
+        {style === "bar" && data.map((d, i) => (
+          <g key={i}>
+            <rect x={xFor(i) - barW - 1} y={yFor(d.inflow)} width={barW} height={innerH - (yFor(d.inflow) - padT)} fill="#1F9D55" rx="2" />
+            <rect x={xFor(i) + 1} y={yFor(d.outflow)} width={barW} height={innerH - (yFor(d.outflow) - padT)} fill="#D03434" rx="2" />
+          </g>
+        ))}
+
+        {style === "area" && (
+          <>
+            <path d={areaPath("inflow")} fill="url(#gIn)" />
+            <path d={areaPath("outflow")} fill="url(#gOut)" />
+            <path d={linePath("inflow")} fill="none" stroke="#1F9D55" strokeWidth="2" />
+            <path d={linePath("outflow")} fill="none" stroke="#D03434" strokeWidth="2" />
+          </>
+        )}
+
+        {style === "line" && (
+          <>
+            <path d={linePath("inflow")} fill="none" stroke="#1F9D55" strokeWidth="2" />
+            <path d={linePath("outflow")} fill="none" stroke="#D03434" strokeWidth="2" />
+            {data.map((d, i) => (
+              <g key={i}>
+                <circle cx={xFor(i)} cy={yFor(d.inflow)} r="3" fill="white" stroke="#1F9D55" strokeWidth="1.8" />
+                <circle cx={xFor(i)} cy={yFor(d.outflow)} r="3" fill="white" stroke="#D03434" strokeWidth="1.8" />
+              </g>
+            ))}
+          </>
+        )}
+      </svg>
+    </div>
+  );
+}
+
+/* Mini sparkline */
+function Sparkline({ data, color = "#2A6FF0", height = 38, fill = false }) {
+  const ref = React.useRef(null);
+  const { w } = useSize(ref);
+  const max = Math.max(...data), min = Math.min(...data);
+  const range = max - min || 1;
+  const stepX = data.length > 1 ? w / (data.length - 1) : w;
+  const path = data.map((v, i) => `${i === 0 ? "M" : "L"} ${i * stepX} ${height - 2 - ((v - min) / range) * (height - 6)}`).join(" ");
+  const area = path + ` L ${(data.length - 1) * stepX} ${height} L 0 ${height} Z`;
+  return (
+    <div ref={ref} style={{ width: "100%", height }}>
+      <svg width="100%" height={height}>
+        {fill && <path d={area} fill={color} fillOpacity="0.12" />}
+        <path d={path} fill="none" stroke={color} strokeWidth="1.6" />
+      </svg>
+    </div>
+  );
+}
+
+/* Bar list — horizontal mini bars next to category names */
+function BarList({ items, color = "#2A6FF0", showSign = false }) {
+  const max = Math.max(...items.map((i) => i.amt));
+  return (
+    <div className="col" style={{ gap: 10 }}>
+      {items.map((it) => (
+        <div key={it.cat}>
+          <div className="row" style={{ justifyContent: "space-between", marginBottom: 4 }}>
+            <div className="small" style={{ color: "var(--text)" }}>{it.cat}</div>
+            <div className="small num">{showSign ? "−" : ""}{window.fmtTHB(it.amt, { compact: true })}</div>
+          </div>
+          <div style={{ height: 6, background: "var(--bg-hover)", borderRadius: 3, overflow: "hidden" }}>
+            <div style={{ width: `${(it.amt / max) * 100}%`, height: "100%", background: color, borderRadius: 3 }} />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/* Donut: list of items with amt */
+function Donut({ items, total, size = 140, thickness = 22 }) {
+  const r = size / 2 - thickness / 2;
+  const cx = size / 2, cy = size / 2;
+  const C = 2 * Math.PI * r;
+  let acc = 0;
+  const palette = ["#2A6FF0", "#1F9D55", "#7C4DFF", "#C97A00", "#D03434", "#0E97A0"];
+  return (
+    <div className="row" style={{ gap: 18, alignItems: "center" }}>
+      <svg width={size} height={size}>
+        <circle cx={cx} cy={cy} r={r} fill="none" stroke="#EEF0F3" strokeWidth={thickness} />
+        {items.map((it, i) => {
+          const frac = it.amt / total;
+          const dash = frac * C;
+          const off = -acc * C;
+          acc += frac;
+          return (
+            <circle key={i} cx={cx} cy={cy} r={r}
+              fill="none"
+              stroke={palette[i % palette.length]}
+              strokeWidth={thickness}
+              strokeDasharray={`${dash} ${C - dash}`}
+              strokeDashoffset={off}
+              transform={`rotate(-90 ${cx} ${cy})`}
+            />
+          );
+        })}
+        <text x={cx} y={cy - 2} textAnchor="middle" fontSize="11" fill="#8B95A1">รวม</text>
+        <text x={cx} y={cy + 14} textAnchor="middle" fontSize="14" fontWeight="600" fontFamily="IBM Plex Mono, monospace" fill="#1A1D21">{window.fmtTHBShort(total)}</text>
+      </svg>
+      <div className="col" style={{ gap: 6, flex: 1 }}>
+        {items.map((it, i) => (
+          <div key={i} className="row" style={{ justifyContent: "space-between", fontSize: 12 }}>
+            <div className="row" style={{ gap: 6 }}>
+              <span className="sw" style={{ background: palette[i % palette.length], width: 9, height: 9, borderRadius: 2 }} />
+              <span>{it.cat}</span>
+            </div>
+            <span className="num muted">{(it.pct * 100).toFixed(1)}%</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* StackedBarChart: stacked bars per month, one segment per stack */
+function StackedBarChart({ months, segments, data, height = 280, palette }) {
+  const ref = React.useRef(null);
+  const { w } = useSize(ref);
+  const padL = 56, padR = 16, padT = 14, padB = 28;
+  const innerW = Math.max(0, w - padL - padR);
+  const innerH = height - padT - padB;
+  const defaultPalette = ["#2A6FF0", "#1F9D55", "#7C4DFF", "#C97A00", "#D03434", "#0E97A0", "#8B5A2B", "#8B95A1", "#E15A8A", "#3D8B40"];
+
+  const colorFor = (seg, i) => seg.color || (palette && palette[i % palette.length]) || defaultPalette[i % defaultPalette.length];
+
+  // Totals per month for max value
+  const totals = months.map((_, i) => segments.reduce((s, sg) => s + (data[sg.id]?.[i] || 0), 0));
+  const maxVal = (Math.max(...totals, 1)) * 1.12;
+  const n = months.length;
+  const slotW = innerW / n;
+  const barW = slotW * 0.62;
+  const yTicks = 4;
+  const ticks = Array.from({ length: yTicks + 1 }, (_, i) => (maxVal / yTicks) * i);
+  const yFor = (v) => padT + innerH - (v / maxVal) * innerH;
+  const xFor = (i) => padL + i * slotW + slotW / 2;
+
+  return (
+    <div ref={ref} style={{ width: "100%", height }}>
+      <svg width="100%" height={height} style={{ overflow: "visible" }}>
+        {ticks.map((t, i) => (
+          <g key={i}>
+            <line x1={padL} x2={w - padR} y1={yFor(t)} y2={yFor(t)} stroke="#EEF0F3" strokeWidth="1" />
+            <text x={padL - 8} y={yFor(t) + 3} fontSize="10.5" textAnchor="end" fill="#8B95A1" fontFamily="IBM Plex Mono, monospace">
+              {(t / 1_000_000).toFixed(0)}M
+            </text>
+          </g>
+        ))}
+
+        {months.map((m, i) => {
+          let yCursor = padT + innerH;
+          return (
+            <g key={i}>
+              {segments.map((sg, sIdx) => {
+                const v = data[sg.id]?.[i] || 0;
+                if (v <= 0) return null;
+                const h = (v / maxVal) * innerH;
+                yCursor -= h;
+                return (
+                  <rect key={sg.id}
+                        x={xFor(i) - barW / 2}
+                        y={yCursor}
+                        width={barW}
+                        height={h}
+                        fill={colorFor(sg, sIdx)}
+                        opacity={0.92}>
+                    <title>{sg.name}: {window.fmtTHB(v)}</title>
+                  </rect>
+                );
+              })}
+              <text x={xFor(i)} y={height - 10} fontSize="10.5" textAnchor="middle" fill="#5C6470">{m}</text>
+              <text x={xFor(i)} y={yFor(totals[i]) - 5} fontSize="10" textAnchor="middle" fill="#5C6470" fontFamily="IBM Plex Mono, monospace">
+                {window.fmtTHBShort(totals[i])}
+              </text>
+            </g>
+          );
+        })}
+      </svg>
+    </div>
+  );
+}
+
+/* SegmentTable: months × segments with row/col totals */
+function SegmentTable({ months, segments, data, palette, valueColor = "var(--text)" }) {
+  const defaultPalette = ["#2A6FF0", "#1F9D55", "#7C4DFF", "#C97A00", "#D03434", "#0E97A0", "#8B5A2B", "#8B95A1", "#E15A8A", "#3D8B40"];
+  const colorFor = (seg, i) => seg.color || (palette && palette[i % palette.length]) || defaultPalette[i % defaultPalette.length];
+  const rowTotal = (sg) => (data[sg.id] || []).reduce((s, v) => s + v, 0);
+  const colTotal = (i) => segments.reduce((s, sg) => s + (data[sg.id]?.[i] || 0), 0);
+  const grand = segments.reduce((s, sg) => s + rowTotal(sg), 0);
+  return (
+    <div style={{ overflowX: "auto" }}>
+      <table className="tbl segment-tbl">
+        <thead>
+          <tr>
+            <th style={{ minWidth: 200 }}>Segment</th>
+            {months.map(m => <th key={m} className="num" style={{ minWidth: 90 }}>{m}</th>)}
+            <th className="num" style={{ minWidth: 110, background: "var(--bg-subtle)" }}>รวม</th>
+            <th className="num" style={{ width: 60 }}>%</th>
+          </tr>
+        </thead>
+        <tbody>
+          {segments.map((sg, i) => {
+            const tot = rowTotal(sg);
+            const pct = grand > 0 ? (tot / grand) * 100 : 0;
+            return (
+              <tr key={sg.id}>
+                <td>
+                  <span className="row" style={{ gap: 8 }}>
+                    <span className="sw" style={{ width: 10, height: 10, borderRadius: 2, background: colorFor(sg, i) }} />
+                    <span>{sg.name}</span>
+                  </span>
+                </td>
+                {months.map((m, mi) => (
+                  <td key={m} className="num" style={{ color: valueColor }}>
+                    {(data[sg.id]?.[mi] || 0) === 0 ? <span className="faint">–</span> : window.fmtTHB(data[sg.id][mi])}
+                  </td>
+                ))}
+                <td className="num" style={{ fontWeight: 600, background: "var(--bg-subtle)" }}>{window.fmtTHB(tot)}</td>
+                <td className="num small muted">{pct.toFixed(1)}%</td>
+              </tr>
+            );
+          })}
+        </tbody>
+        <tfoot>
+          <tr style={{ background: "var(--bg-subtle)", fontWeight: 600 }}>
+            <td>Grand Total</td>
+            {months.map((m, i) => <td key={m} className="num">{window.fmtTHB(colTotal(i))}</td>)}
+            <td className="num">{window.fmtTHB(grand)}</td>
+            <td className="num">100.0%</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  );
+}
+
+window.TrendChart = TrendChart;
+window.Sparkline = Sparkline;
+window.BarList = BarList;
+window.Donut = Donut;
+window.StackedBarChart = StackedBarChart;
+window.SegmentTable = SegmentTable;
+window.useSize = useSize;
+
+</script>
+
+<script type="text/babel">
+/* Sidebar + Topbar */
+
+const NAV = [
+  {
+    label: "ภาพรวม",
+    items: [
+      { id: "dashboard", name: "Dashboard", icon: "dashboard" },
+    ],
+  },
+  {
+    label: "บันทึกข้อมูล",
+    items: [
+      { id: "finance", name: "ข้อมูลทางการเงิน", icon: "bank", badge: "12" },
+      { id: "accounting", name: "ข้อมูลทางบัญชี", icon: "book", badge: "8" },
+    ],
+  },
+  {
+    label: "งบกระแสเงินสด",
+    items: [
+      { id: "direct", name: "วิธีตรง (Direct)", icon: "chart" },
+      { id: "indirect", name: "วิธีอ้อม (Indirect)", icon: "barChart" },
+      { id: "forecast", name: "Forecast", icon: "forecast" },
+    ],
+  },
+  {
+    label: "อื่นๆ",
+    items: [
+      { id: "export", name: "Export Center", icon: "download" },
+      { id: "settings", name: "Settings", icon: "settings" },
+    ],
+  },
+];
+
+function Sidebar({ active, setActive }) {
+  const d = window.CFData;
+  return (
+    <aside className="sidebar">
+      <div className="sb-brand">
+        <div className="sb-logo">฿</div>
+        <div>
+          <div className="sb-brand-name">CashFlow</div>
+          <div className="sb-brand-sub">{d.company.short} Treasury</div>
+        </div>
+      </div>
+
+      <nav style={{ overflowY: "auto", flex: 1, paddingBottom: 8 }}>
+        {NAV.map((g) => (
+          <div key={g.label} className="sb-section">
+            <div className="sb-section-label">{g.label}</div>
+            {g.items.map((it) => (
+              <button
+                key={it.id}
+                className={"sb-item " + (active === it.id ? "active" : "")}
+                onClick={() => setActive(it.id)}
+              >
+                <Ic name={it.icon} size={15} />
+                <span>{it.name}</span>
+                {it.badge && <span className="sb-item-badge">{it.badge}</span>}
+              </button>
+            ))}
+          </div>
+        ))}
+      </nav>
+
+      <div className="sb-footer">
+        <div className="sb-avatar">ปร</div>
+        <div style={{ minWidth: 0 }}>
+          <div style={{ fontWeight: 500, color: "var(--text)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>K. ปริญญา ส.</div>
+          <div className="tiny faint">CFO Office</div>
+        </div>
+      </div>
+    </aside>
+  );
+}
+
+function Topbar({ crumbs, period, setPeriod, onSearch, companyId, setCompanyId }) {
+  const periods = ["รายสัปดาห์", "เดือนนี้", "ไตรมาส 1/2569", "YTD 2569", "ปี 2568"];
+  const companies = window.CFData.companies;
+  const activeCo = companies.find(c => c.id === companyId) || companies[0];
+  return (
+    <header className="topbar">
+      <div className="crumbs">
+        <span>{activeCo.short}</span>
+        <span className="sep">/</span>
+        {crumbs.map((c, i) => (
+          <React.Fragment key={i}>
+            {i > 0 && <span className="sep">/</span>}
+            <span className={i === crumbs.length - 1 ? "here" : ""}>{c}</span>
+          </React.Fragment>
+        ))}
+      </div>
+      <div className="tb-spacer" />
+      <div className="search-wrap">
+        <Ic name="search" size={14} className="search-ic" />
+        <input className="input search" placeholder="ค้นหา รายการ / บัญชี / ลูกค้า…" style={{ width: 220 }} onChange={(e) => onSearch && onSearch(e.target.value)} />
+      </div>
+
+      {/* Company selector */}
+      <div className="company-picker" title={activeCo.desc}>
+        <Ic name="bank" size={13} />
+        <select className="select co-select" value={companyId} onChange={(e) => setCompanyId(e.target.value)}>
+          {companies.map(c => (
+            <option key={c.id} value={c.id}>
+              {c.id === "CONSO" ? "◆ " : ""}{c.short} — {c.name}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <select className="select" value={period} onChange={(e) => setPeriod(e.target.value)}>
+        {periods.map((p) => <option key={p}>{p}</option>)}
+      </select>
+      <button className="iconbtn" title="แจ้งเตือน"><Ic name="bell" size={16} /></button>
+    </header>
+  );
+}
+
+window.Sidebar = Sidebar;
+window.Topbar = Topbar;
+
+</script>
+
+<script type="text/javascript">
 /* Mock data — Thai enterprise listed company, THB millions */
 /* Numbers in THB (raw baht); display helper formats them. */
 
@@ -3564,325 +3016,33 @@ window.fmtTHBShort = function (n) {
   return v.toLocaleString("en-US", { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + suf;
 };
 
-</script>
-<script type="text/babel">
-/* Chart components — pure SVG, no library */
+window.fmtTHB = function (n, opts = {}) {
+  if (n == null || isNaN(n)) return "—";
+  const { compact = false, sign = false, decimals = 0 } = opts;
+  const abs = Math.abs(n);
+  let str;
+  if (compact && abs >= 1_000_000) {
+    str = (abs / 1_000_000).toLocaleString("en-US", { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + " ลบ.";
+  } else {
+    str = abs.toLocaleString("en-US", { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+  }
+  if (n < 0) return "(" + str + ")";
+  return sign && n > 0 ? "+" + str : str;
+};
 
-function useSize(ref) {
-  const [size, setSize] = React.useState({ w: 600, h: 240 });
-  React.useEffect(() => {
-    if (!ref.current) return;
-    const obs = new ResizeObserver(() => {
-      if (ref.current) setSize({ w: ref.current.clientWidth, h: ref.current.clientHeight });
-    });
-    obs.observe(ref.current);
-    return () => obs.disconnect();
-  }, []);
-  return size;
-}
-
-/* TrendChart: line/bar/area for monthly inflow vs outflow */
-function TrendChart({ data, height = 260, style = "line" }) {
-  const ref = React.useRef(null);
-  const { w } = useSize(ref);
-  const padL = 56, padR = 16, padT = 12, padB = 28;
-  const innerW = Math.max(0, w - padL - padR);
-  const innerH = height - padT - padB;
-
-  const maxVal = Math.max(...data.flatMap((d) => [d.inflow, d.outflow])) * 1.1;
-  const n = data.length;
-  const stepX = n > 1 ? innerW / (n - 1) : innerW;
-  const barW = n > 0 ? (innerW / n) * 0.32 : 0;
-
-  const yTicks = 4;
-  const ticks = Array.from({ length: yTicks + 1 }, (_, i) => (maxVal / yTicks) * i);
-
-  const xFor = (i) => padL + i * stepX;
-  const xForBar = (i, j) => padL + i * stepX - barW + (j === 0 ? 0 : barW);
-  const yFor = (v) => padT + innerH - (v / maxVal) * innerH;
-
-  const linePath = (key) =>
-    data.map((d, i) => `${i === 0 ? "M" : "L"} ${xFor(i)} ${yFor(d[key])}`).join(" ");
-
-  const areaPath = (key) =>
-    `M ${padL} ${padT + innerH} ` +
-    data.map((d, i) => `L ${xFor(i)} ${yFor(d[key])}`).join(" ") +
-    ` L ${padL + (n - 1) * stepX} ${padT + innerH} Z`;
-
-  return (
-    <div ref={ref} style={{ width: "100%", height }}>
-      <svg width="100%" height={height} style={{ overflow: "visible" }}>
-        <defs>
-          <linearGradient id="gIn" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#1F9D55" stopOpacity="0.22" />
-            <stop offset="100%" stopColor="#1F9D55" stopOpacity="0" />
-          </linearGradient>
-          <linearGradient id="gOut" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#D03434" stopOpacity="0.18" />
-            <stop offset="100%" stopColor="#D03434" stopOpacity="0" />
-          </linearGradient>
-        </defs>
-
-        {/* gridlines */}
-        {ticks.map((t, i) => (
-          <g key={i}>
-            <line x1={padL} x2={w - padR} y1={yFor(t)} y2={yFor(t)} stroke="#EEF0F3" strokeWidth="1" />
-            <text x={padL - 8} y={yFor(t) + 3} fontSize="10.5" textAnchor="end" fill="#8B95A1" fontFamily="IBM Plex Mono, monospace">{(t / 1_000_000).toFixed(0)}M</text>
-          </g>
-        ))}
-
-        {/* X labels */}
-        {data.map((d, i) => (
-          <text key={i} x={xFor(i)} y={height - 10} fontSize="10.5" textAnchor="middle" fill="#5C6470">{d.m || d.label || d.date?.slice(5)}</text>
-        ))}
-
-        {style === "bar" && data.map((d, i) => (
-          <g key={i}>
-            <rect x={xFor(i) - barW - 1} y={yFor(d.inflow)} width={barW} height={innerH - (yFor(d.inflow) - padT)} fill="#1F9D55" rx="2" />
-            <rect x={xFor(i) + 1} y={yFor(d.outflow)} width={barW} height={innerH - (yFor(d.outflow) - padT)} fill="#D03434" rx="2" />
-          </g>
-        ))}
-
-        {style === "area" && (
-          <>
-            <path d={areaPath("inflow")} fill="url(#gIn)" />
-            <path d={areaPath("outflow")} fill="url(#gOut)" />
-            <path d={linePath("inflow")} fill="none" stroke="#1F9D55" strokeWidth="2" />
-            <path d={linePath("outflow")} fill="none" stroke="#D03434" strokeWidth="2" />
-          </>
-        )}
-
-        {style === "line" && (
-          <>
-            <path d={linePath("inflow")} fill="none" stroke="#1F9D55" strokeWidth="2" />
-            <path d={linePath("outflow")} fill="none" stroke="#D03434" strokeWidth="2" />
-            {data.map((d, i) => (
-              <g key={i}>
-                <circle cx={xFor(i)} cy={yFor(d.inflow)} r="3" fill="white" stroke="#1F9D55" strokeWidth="1.8" />
-                <circle cx={xFor(i)} cy={yFor(d.outflow)} r="3" fill="white" stroke="#D03434" strokeWidth="1.8" />
-              </g>
-            ))}
-          </>
-        )}
-      </svg>
-    </div>
-  );
-}
-
-/* Mini sparkline */
-function Sparkline({ data, color = "#2A6FF0", height = 38, fill = false }) {
-  const ref = React.useRef(null);
-  const { w } = useSize(ref);
-  const max = Math.max(...data), min = Math.min(...data);
-  const range = max - min || 1;
-  const stepX = data.length > 1 ? w / (data.length - 1) : w;
-  const path = data.map((v, i) => `${i === 0 ? "M" : "L"} ${i * stepX} ${height - 2 - ((v - min) / range) * (height - 6)}`).join(" ");
-  const area = path + ` L ${(data.length - 1) * stepX} ${height} L 0 ${height} Z`;
-  return (
-    <div ref={ref} style={{ width: "100%", height }}>
-      <svg width="100%" height={height}>
-        {fill && <path d={area} fill={color} fillOpacity="0.12" />}
-        <path d={path} fill="none" stroke={color} strokeWidth="1.6" />
-      </svg>
-    </div>
-  );
-}
-
-/* Bar list — horizontal mini bars next to category names */
-function BarList({ items, color = "#2A6FF0", showSign = false }) {
-  const max = Math.max(...items.map((i) => i.amt));
-  return (
-    <div className="col" style={{ gap: 10 }}>
-      {items.map((it) => (
-        <div key={it.cat}>
-          <div className="row" style={{ justifyContent: "space-between", marginBottom: 4 }}>
-            <div className="small" style={{ color: "var(--text)" }}>{it.cat}</div>
-            <div className="small num">{showSign ? "−" : ""}{window.fmtTHB(it.amt, { compact: true })}</div>
-          </div>
-          <div style={{ height: 6, background: "var(--bg-hover)", borderRadius: 3, overflow: "hidden" }}>
-            <div style={{ width: `${(it.amt / max) * 100}%`, height: "100%", background: color, borderRadius: 3 }} />
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-/* Donut: list of items with amt */
-function Donut({ items, total, size = 140, thickness = 22 }) {
-  const r = size / 2 - thickness / 2;
-  const cx = size / 2, cy = size / 2;
-  const C = 2 * Math.PI * r;
-  let acc = 0;
-  const palette = ["#2A6FF0", "#1F9D55", "#7C4DFF", "#C97A00", "#D03434", "#0E97A0"];
-  return (
-    <div className="row" style={{ gap: 18, alignItems: "center" }}>
-      <svg width={size} height={size}>
-        <circle cx={cx} cy={cy} r={r} fill="none" stroke="#EEF0F3" strokeWidth={thickness} />
-        {items.map((it, i) => {
-          const frac = it.amt / total;
-          const dash = frac * C;
-          const off = -acc * C;
-          acc += frac;
-          return (
-            <circle key={i} cx={cx} cy={cy} r={r}
-              fill="none"
-              stroke={palette[i % palette.length]}
-              strokeWidth={thickness}
-              strokeDasharray={`${dash} ${C - dash}`}
-              strokeDashoffset={off}
-              transform={`rotate(-90 ${cx} ${cy})`}
-            />
-          );
-        })}
-        <text x={cx} y={cy - 2} textAnchor="middle" fontSize="11" fill="#8B95A1">รวม</text>
-        <text x={cx} y={cy + 14} textAnchor="middle" fontSize="14" fontWeight="600" fontFamily="IBM Plex Mono, monospace" fill="#1A1D21">{window.fmtTHBShort(total)}</text>
-      </svg>
-      <div className="col" style={{ gap: 6, flex: 1 }}>
-        {items.map((it, i) => (
-          <div key={i} className="row" style={{ justifyContent: "space-between", fontSize: 12 }}>
-            <div className="row" style={{ gap: 6 }}>
-              <span className="sw" style={{ background: palette[i % palette.length], width: 9, height: 9, borderRadius: 2 }} />
-              <span>{it.cat}</span>
-            </div>
-            <span className="num muted">{(it.pct * 100).toFixed(1)}%</span>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-/* StackedBarChart: stacked bars per month, one segment per stack */
-function StackedBarChart({ months, segments, data, height = 280, palette }) {
-  const ref = React.useRef(null);
-  const { w } = useSize(ref);
-  const padL = 56, padR = 16, padT = 14, padB = 28;
-  const innerW = Math.max(0, w - padL - padR);
-  const innerH = height - padT - padB;
-  const defaultPalette = ["#2A6FF0", "#1F9D55", "#7C4DFF", "#C97A00", "#D03434", "#0E97A0", "#8B5A2B", "#8B95A1", "#E15A8A", "#3D8B40"];
-
-  const colorFor = (seg, i) => seg.color || (palette && palette[i % palette.length]) || defaultPalette[i % defaultPalette.length];
-
-  // Totals per month for max value
-  const totals = months.map((_, i) => segments.reduce((s, sg) => s + (data[sg.id]?.[i] || 0), 0));
-  const maxVal = (Math.max(...totals, 1)) * 1.12;
-  const n = months.length;
-  const slotW = innerW / n;
-  const barW = slotW * 0.62;
-  const yTicks = 4;
-  const ticks = Array.from({ length: yTicks + 1 }, (_, i) => (maxVal / yTicks) * i);
-  const yFor = (v) => padT + innerH - (v / maxVal) * innerH;
-  const xFor = (i) => padL + i * slotW + slotW / 2;
-
-  return (
-    <div ref={ref} style={{ width: "100%", height }}>
-      <svg width="100%" height={height} style={{ overflow: "visible" }}>
-        {ticks.map((t, i) => (
-          <g key={i}>
-            <line x1={padL} x2={w - padR} y1={yFor(t)} y2={yFor(t)} stroke="#EEF0F3" strokeWidth="1" />
-            <text x={padL - 8} y={yFor(t) + 3} fontSize="10.5" textAnchor="end" fill="#8B95A1" fontFamily="IBM Plex Mono, monospace">
-              {(t / 1_000_000).toFixed(0)}M
-            </text>
-          </g>
-        ))}
-
-        {months.map((m, i) => {
-          let yCursor = padT + innerH;
-          return (
-            <g key={i}>
-              {segments.map((sg, sIdx) => {
-                const v = data[sg.id]?.[i] || 0;
-                if (v <= 0) return null;
-                const h = (v / maxVal) * innerH;
-                yCursor -= h;
-                return (
-                  <rect key={sg.id}
-                        x={xFor(i) - barW / 2}
-                        y={yCursor}
-                        width={barW}
-                        height={h}
-                        fill={colorFor(sg, sIdx)}
-                        opacity={0.92}>
-                    <title>{sg.name}: {window.fmtTHB(v)}</title>
-                  </rect>
-                );
-              })}
-              <text x={xFor(i)} y={height - 10} fontSize="10.5" textAnchor="middle" fill="#5C6470">{m}</text>
-              <text x={xFor(i)} y={yFor(totals[i]) - 5} fontSize="10" textAnchor="middle" fill="#5C6470" fontFamily="IBM Plex Mono, monospace">
-                {window.fmtTHBShort(totals[i])}
-              </text>
-            </g>
-          );
-        })}
-      </svg>
-    </div>
-  );
-}
-
-/* SegmentTable: months × segments with row/col totals */
-function SegmentTable({ months, segments, data, palette, valueColor = "var(--text)" }) {
-  const defaultPalette = ["#2A6FF0", "#1F9D55", "#7C4DFF", "#C97A00", "#D03434", "#0E97A0", "#8B5A2B", "#8B95A1", "#E15A8A", "#3D8B40"];
-  const colorFor = (seg, i) => seg.color || (palette && palette[i % palette.length]) || defaultPalette[i % defaultPalette.length];
-  const rowTotal = (sg) => (data[sg.id] || []).reduce((s, v) => s + v, 0);
-  const colTotal = (i) => segments.reduce((s, sg) => s + (data[sg.id]?.[i] || 0), 0);
-  const grand = segments.reduce((s, sg) => s + rowTotal(sg), 0);
-  return (
-    <div style={{ overflowX: "auto" }}>
-      <table className="tbl segment-tbl">
-        <thead>
-          <tr>
-            <th style={{ minWidth: 200 }}>Segment</th>
-            {months.map(m => <th key={m} className="num" style={{ minWidth: 90 }}>{m}</th>)}
-            <th className="num" style={{ minWidth: 110, background: "var(--bg-subtle)" }}>รวม</th>
-            <th className="num" style={{ width: 60 }}>%</th>
-          </tr>
-        </thead>
-        <tbody>
-          {segments.map((sg, i) => {
-            const tot = rowTotal(sg);
-            const pct = grand > 0 ? (tot / grand) * 100 : 0;
-            return (
-              <tr key={sg.id}>
-                <td>
-                  <span className="row" style={{ gap: 8 }}>
-                    <span className="sw" style={{ width: 10, height: 10, borderRadius: 2, background: colorFor(sg, i) }} />
-                    <span>{sg.name}</span>
-                  </span>
-                </td>
-                {months.map((m, mi) => (
-                  <td key={m} className="num" style={{ color: valueColor }}>
-                    {(data[sg.id]?.[mi] || 0) === 0 ? <span className="faint">–</span> : window.fmtTHB(data[sg.id][mi])}
-                  </td>
-                ))}
-                <td className="num" style={{ fontWeight: 600, background: "var(--bg-subtle)" }}>{window.fmtTHB(tot)}</td>
-                <td className="num small muted">{pct.toFixed(1)}%</td>
-              </tr>
-            );
-          })}
-        </tbody>
-        <tfoot>
-          <tr style={{ background: "var(--bg-subtle)", fontWeight: 600 }}>
-            <td>Grand Total</td>
-            {months.map((m, i) => <td key={m} className="num">{window.fmtTHB(colTotal(i))}</td>)}
-            <td className="num">{window.fmtTHB(grand)}</td>
-            <td className="num">100.0%</td>
-          </tr>
-        </tfoot>
-      </table>
-    </div>
-  );
-}
-
-window.TrendChart = TrendChart;
-window.Sparkline = Sparkline;
-window.BarList = BarList;
-window.Donut = Donut;
-window.StackedBarChart = StackedBarChart;
-window.SegmentTable = SegmentTable;
-window.useSize = useSize;
+window.fmtTHBShort = function (n) {
+  if (n == null) return "—";
+  const abs = Math.abs(n);
+  let v, suf;
+  if (abs >= 1_000_000_000) { v = n / 1_000_000_000; suf = " พันลบ."; }
+  else if (abs >= 1_000_000) { v = n / 1_000_000; suf = " ลบ."; }
+  else if (abs >= 1_000) { v = n / 1_000; suf = " พัน"; }
+  else { v = n; suf = ""; }
+  return v.toLocaleString("en-US", { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + suf;
+};
 
 </script>
+
 <script type="text/babel">
 
 // tweaks-panel.jsx
@@ -4454,128 +3614,7 @@ Object.assign(window, {
 });
 
 </script>
-<script type="text/babel">
-/* Sidebar + Topbar */
 
-const NAV = [
-  {
-    label: "ภาพรวม",
-    items: [
-      { id: "dashboard", name: "Dashboard", icon: "dashboard" },
-    ],
-  },
-  {
-    label: "บันทึกข้อมูล",
-    items: [
-      { id: "finance", name: "ข้อมูลทางการเงิน", icon: "bank", badge: "12" },
-      { id: "accounting", name: "ข้อมูลทางบัญชี", icon: "book", badge: "8" },
-    ],
-  },
-  {
-    label: "งบกระแสเงินสด",
-    items: [
-      { id: "direct", name: "วิธีตรง (Direct)", icon: "chart" },
-      { id: "indirect", name: "วิธีอ้อม (Indirect)", icon: "barChart" },
-      { id: "forecast", name: "Forecast", icon: "forecast" },
-    ],
-  },
-  {
-    label: "อื่นๆ",
-    items: [
-      { id: "export", name: "Export Center", icon: "download" },
-      { id: "settings", name: "Settings", icon: "settings" },
-    ],
-  },
-];
-
-function Sidebar({ active, setActive }) {
-  const d = window.CFData;
-  return (
-    <aside className="sidebar">
-      <div className="sb-brand">
-        <div className="sb-logo">฿</div>
-        <div>
-          <div className="sb-brand-name">CashFlow</div>
-          <div className="sb-brand-sub">{d.company.short} Treasury</div>
-        </div>
-      </div>
-
-      <nav style={{ overflowY: "auto", flex: 1, paddingBottom: 8 }}>
-        {NAV.map((g) => (
-          <div key={g.label} className="sb-section">
-            <div className="sb-section-label">{g.label}</div>
-            {g.items.map((it) => (
-              <button
-                key={it.id}
-                className={"sb-item " + (active === it.id ? "active" : "")}
-                onClick={() => setActive(it.id)}
-              >
-                <Ic name={it.icon} size={15} />
-                <span>{it.name}</span>
-                {it.badge && <span className="sb-item-badge">{it.badge}</span>}
-              </button>
-            ))}
-          </div>
-        ))}
-      </nav>
-
-      <div className="sb-footer">
-        <div className="sb-avatar">ปร</div>
-        <div style={{ minWidth: 0 }}>
-          <div style={{ fontWeight: 500, color: "var(--text)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>K. ปริญญา ส.</div>
-          <div className="tiny faint">CFO Office</div>
-        </div>
-      </div>
-    </aside>
-  );
-}
-
-function Topbar({ crumbs, period, setPeriod, onSearch, companyId, setCompanyId }) {
-  const periods = ["รายสัปดาห์", "เดือนนี้", "ไตรมาส 1/2569", "YTD 2569", "ปี 2568"];
-  const companies = window.CFData.companies;
-  const activeCo = companies.find(c => c.id === companyId) || companies[0];
-  return (
-    <header className="topbar">
-      <div className="crumbs">
-        <span>{activeCo.short}</span>
-        <span className="sep">/</span>
-        {crumbs.map((c, i) => (
-          <React.Fragment key={i}>
-            {i > 0 && <span className="sep">/</span>}
-            <span className={i === crumbs.length - 1 ? "here" : ""}>{c}</span>
-          </React.Fragment>
-        ))}
-      </div>
-      <div className="tb-spacer" />
-      <div className="search-wrap">
-        <Ic name="search" size={14} className="search-ic" />
-        <input className="input search" placeholder="ค้นหา รายการ / บัญชี / ลูกค้า…" style={{ width: 220 }} onChange={(e) => onSearch && onSearch(e.target.value)} />
-      </div>
-
-      {/* Company selector */}
-      <div className="company-picker" title={activeCo.desc}>
-        <Ic name="bank" size={13} />
-        <select className="select co-select" value={companyId} onChange={(e) => setCompanyId(e.target.value)}>
-          {companies.map(c => (
-            <option key={c.id} value={c.id}>
-              {c.id === "CONSO" ? "◆ " : ""}{c.short} — {c.name}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      <select className="select" value={period} onChange={(e) => setPeriod(e.target.value)}>
-        {periods.map((p) => <option key={p}>{p}</option>)}
-      </select>
-      <button className="iconbtn" title="แจ้งเตือน"><Ic name="bell" size={16} /></button>
-    </header>
-  );
-}
-
-window.Sidebar = Sidebar;
-window.Topbar = Topbar;
-
-</script>
 <script type="text/babel">
 /* Dashboard screen */
 
@@ -4795,6 +3834,7 @@ function Kpi({ label, value, delta, deltaUp, deltaDown, spark, color }) {
 window.Dashboard = Dashboard;
 
 </script>
+
 <script type="text/babel">
 /* Finance Input — Bank / Receipts / Payments */
 
@@ -5391,22 +4431,15 @@ function PNPaymentTab({ companyId }) {
 function ReconcileARTab({ companyId }) {
   const d = window.CFData;
   const recon = d.reconcileAR;
-  const reconSeg = d.reconcileARBySegment;
-  const [viewMode, setViewMode] = React.useState("entity"); // "entity" | "segment"
-  const [expanded, setExpanded] = React.useState({});
-
   const entities = recon.entities.filter(e => companyId === "CONSO" || !companyId || e.entity === companyId);
+
+  // Recalculate totals for filtered view
   const sumOpening = entities.reduce((s, e) => s + e.opening, 0);
   const sumSales = entities.reduce((s, e) => s + e.sales, 0);
   const sumCollection = entities.reduce((s, e) => s + e.collection, 0);
   const sumAdjustments = entities.reduce((s, e) => s + e.adjustments, 0);
   const sumClosing = entities.reduce((s, e) => s + e.closing, 0);
   const sumChange = entities.reduce((s, e) => s + e.change, 0);
-
-  const toggleExpand = (ent) => setExpanded(prev => ({ ...prev, [ent]: !prev[ent] }));
-
-  // Segment color by id
-  const segColorMap = { HONDA: "#1F9D55", TOK: "#2A6FF0", INS: "#7C4DFF", INS_OPEN: "#0E97A0", INS_LIM: "#C97A00", FIN: "#D03434", RENT: "#8B5A2B", DEL: "#8B95A1", SVC: "#7C4DFF", MGT_HMW: "#2A6FF0", MGT_CLIK: "#7C4DFF", OTH: "#8B95A1" };
 
   return (
     <>
@@ -5422,83 +4455,42 @@ function ReconcileARTab({ companyId }) {
           <div className="card-title">Reconcile AR — กระทบยอดลูกหนี้การค้า</div>
           <div className="tiny muted" style={{ marginLeft: 8 }}>งวด: {recon.period} • สำหรับ CF Indirect Method</div>
           <div className="grow" />
-          {/* View toggle */}
-          <div className="row" style={{ gap: 4, marginRight: 8 }}>
-            <button className={"btn sm" + (viewMode === "entity" ? " primary" : "")} onClick={() => setViewMode("entity")}>By Entity</button>
-            <button className={"btn sm" + (viewMode === "segment" ? " primary" : "")} onClick={() => { setViewMode("segment"); setExpanded(Object.fromEntries(entities.map(e => [e.entity, true]))); }}>By Segment</button>
-          </div>
           <button className="btn sm"><Ic name="download" size={13} /> Export</button>
         </div>
         <table className="tbl">
           <thead>
             <tr>
-              <th style={{ minWidth: 160 }}>Entity / Segment</th>
+              <th style={{ width: 80 }}>Entity</th>
               <th className="num">เปิดงวด (AR)</th>
-              <th className="num">+ ยอดขาย</th>
-              <th className="num">− เก็บเงิน</th>
+              <th className="num">+ ยอดขาย (Credit)</th>
+              <th className="num">− เก็บเงิน (Collection)</th>
               <th className="num">± ปรับปรุง</th>
               <th className="num">ปิดงวด (AR)</th>
               <th className="num">Δ Change</th>
-              <th style={{ width: 120 }}>ผลกระทบ CF</th>
+              <th>ผลกระทบ CF</th>
             </tr>
           </thead>
           <tbody>
-            {entities.map(e => {
-              const segs = reconSeg.byEntity[e.entity]?.segments || [];
-              const isOpen = expanded[e.entity];
-              return (
-                <React.Fragment key={e.entity}>
-                  {/* Entity row */}
-                  <tr
-                    style={{ background: isOpen && viewMode === "segment" ? "var(--accent-soft)" : undefined, cursor: viewMode === "segment" ? "pointer" : undefined }}
-                    onClick={viewMode === "segment" ? () => toggleExpand(e.entity) : undefined}
-                  >
-                    <td>
-                      <div className="row" style={{ gap: 6, alignItems: "center" }}>
-                        {viewMode === "segment" && (
-                          <span style={{ fontSize: 10, color: "var(--text-muted)", transition: "transform .15s", display: "inline-block", transform: isOpen ? "rotate(90deg)" : "rotate(0deg)" }}>▶</span>
-                        )}
-                        <EntityChip entity={e.entity} />
-                      </div>
-                    </td>
-                    <td className="num">{window.fmtTHB(e.opening)}</td>
-                    <td className="num pos">+{window.fmtTHB(e.sales)}</td>
-                    <td className="num neg">{window.fmtTHB(e.collection)}</td>
-                    <td className="num">{e.adjustments ? window.fmtTHB(e.adjustments) : "—"}</td>
-                    <td className="num" style={{ fontWeight: 500 }}>{window.fmtTHB(e.closing)}</td>
-                    <td className="num" style={{ fontWeight: 600, color: e.change > 0 ? "var(--warning)" : "var(--success)" }}>{e.change > 0 ? "+" : ""}{window.fmtTHB(e.change)}</td>
-                    <td className="small muted">{e.impact}</td>
-                  </tr>
-                  {/* Segment rows — only when expanded in segment mode */}
-                  {viewMode === "segment" && isOpen && segs.map(seg => (
-                    <tr key={seg.id} style={{ background: "var(--bg-subtle)" }}>
-                      <td style={{ paddingLeft: 32 }}>
-                        <div className="row" style={{ gap: 6, alignItems: "center" }}>
-                          <span style={{ width: 8, height: 8, borderRadius: "50%", background: segColorMap[seg.id] || "#8B95A1", flexShrink: 0 }} />
-                          <span className="small">{seg.name}</span>
-                          <span className="tag" style={{ fontSize: 10, padding: "1px 6px", marginLeft: 2 }}>{seg.id}</span>
-                        </div>
-                      </td>
-                      <td className="num tiny">{window.fmtTHB(seg.opening)}</td>
-                      <td className="num tiny pos">+{window.fmtTHB(seg.sales)}</td>
-                      <td className="num tiny neg">{window.fmtTHB(seg.collection)}</td>
-                      <td className="num tiny">{seg.adjustments ? window.fmtTHB(seg.adjustments) : "—"}</td>
-                      <td className="num tiny">{window.fmtTHB(seg.closing)}</td>
-                      <td className="num tiny" style={{ color: seg.change > 0 ? "var(--warning)" : "var(--success)" }}>{seg.change > 0 ? "+" : ""}{window.fmtTHB(seg.change)}</td>
-                      <td className="tiny muted">{seg.change > 0 ? "AR เพิ่ม ↓CF" : "AR ลด ↑CF"}</td>
-                    </tr>
-                  ))}
-                </React.Fragment>
-              );
-            })}
+            {entities.map(e =>
+              <tr key={e.entity}>
+                <td><EntityChip entity={e.entity} /></td>
+                <td className="num">{window.fmtTHB(e.opening)}</td>
+                <td className="num pos">+{window.fmtTHB(e.sales)}</td>
+                <td className="num neg">{window.fmtTHB(e.collection)}</td>
+                <td className="num">{e.adjustments ? window.fmtTHB(e.adjustments) : "—"}</td>
+                <td className="num" style={{ fontWeight: 500 }}>{window.fmtTHB(e.closing)}</td>
+                <td className="num" style={{ fontWeight: 500, color: e.change > 0 ? "var(--warning)" : "var(--success)" }}>{e.change > 0 ? "+" : ""}{window.fmtTHB(e.change)}</td>
+                <td className="small muted">{e.impact}</td>
+              </tr>
+            )}
             <tr style={{ background: "var(--bg-subtle)", fontWeight: 600 }}>
-              <td>รวมทั้งหมด</td>
+              <td>รวม</td>
               <td className="num">{window.fmtTHB(sumOpening)}</td>
               <td className="num pos">+{window.fmtTHB(sumSales)}</td>
               <td className="num neg">{window.fmtTHB(sumCollection)}</td>
               <td className="num">{sumAdjustments ? window.fmtTHB(sumAdjustments) : "—"}</td>
               <td className="num">{window.fmtTHB(sumClosing)}</td>
-              <td className="num" style={{ color: sumChange > 0 ? "var(--warning)" : "var(--success)" }}>{sumChange > 0 ? "+" : ""}{window.fmtTHB(sumChange)}</td>
+              <td className="num">{sumChange > 0 ? "+" : ""}{window.fmtTHB(sumChange)}</td>
               <td></td>
             </tr>
           </tbody>
@@ -5509,7 +4501,6 @@ function ReconcileARTab({ companyId }) {
             <Ic name="info" size={14} style={{ color: "var(--accent-text)" }} />
             <div className="small">
               <strong>สูตร CF Indirect:</strong> AR เพิ่ม = ใช้เงินสด (หักจาก Net Profit) • AR ลด = ได้เงินสด (บวกเข้า Net Profit)
-              {viewMode === "segment" && <span className="muted"> • คลิกที่ Entity เพื่อ expand/collapse segments</span>}
             </div>
           </div>
         </div>
@@ -5524,22 +4515,14 @@ function ReconcileARTab({ companyId }) {
 function ReconcileAPTab({ companyId }) {
   const d = window.CFData;
   const recon = d.reconcileAP;
-  const reconSeg = d.reconcileAPBySegment;
-  const [viewMode, setViewMode] = React.useState("entity");
-  const [expanded, setExpanded] = React.useState({});
-
   const entities = recon.entities.filter(e => companyId === "CONSO" || !companyId || e.entity === companyId);
+
   const sumOpening = entities.reduce((s, e) => s + e.opening, 0);
   const sumPurchases = entities.reduce((s, e) => s + e.purchases, 0);
   const sumPayment = entities.reduce((s, e) => s + e.payment, 0);
   const sumAdjustments = entities.reduce((s, e) => s + e.adjustments, 0);
   const sumClosing = entities.reduce((s, e) => s + e.closing, 0);
   const sumChange = entities.reduce((s, e) => s + e.change, 0);
-
-  const toggleExpand = (ent) => setExpanded(prev => ({ ...prev, [ent]: !prev[ent] }));
-
-  // Expense segment colors (from expenseSegments in data)
-  const segColorMap = { F1: "#D03434", I1: "#C97A00", O1: "#2A6FF0", O2: "#1F9D55", O3: "#7C4DFF", O4: "#0E97A0", O5: "#8B5A2B", O6: "#8B95A1" };
 
   return (
     <>
@@ -5555,83 +4538,42 @@ function ReconcileAPTab({ companyId }) {
           <div className="card-title">Reconcile AP — กระทบยอดเจ้าหนี้การค้า</div>
           <div className="tiny muted" style={{ marginLeft: 8 }}>งวด: {recon.period} • สำหรับ CF Indirect Method</div>
           <div className="grow" />
-          {/* View toggle */}
-          <div className="row" style={{ gap: 4, marginRight: 8 }}>
-            <button className={"btn sm" + (viewMode === "entity" ? " primary" : "")} onClick={() => setViewMode("entity")}>By Entity</button>
-            <button className={"btn sm" + (viewMode === "segment" ? " primary" : "")} onClick={() => { setViewMode("segment"); setExpanded(Object.fromEntries(entities.map(e => [e.entity, true]))); }}>By Segment</button>
-          </div>
           <button className="btn sm"><Ic name="download" size={13} /> Export</button>
         </div>
         <table className="tbl">
           <thead>
             <tr>
-              <th style={{ minWidth: 160 }}>Entity / Segment</th>
+              <th style={{ width: 80 }}>Entity</th>
               <th className="num">เปิดงวด (AP)</th>
               <th className="num">+ ซื้อ (Purchase)</th>
-              <th className="num">− จ่ายเงิน</th>
+              <th className="num">− จ่ายเงิน (Payment)</th>
               <th className="num">± ปรับปรุง</th>
               <th className="num">ปิดงวด (AP)</th>
               <th className="num">Δ Change</th>
-              <th style={{ width: 120 }}>ผลกระทบ CF</th>
+              <th>ผลกระทบ CF</th>
             </tr>
           </thead>
           <tbody>
-            {entities.map(e => {
-              const segs = reconSeg.byEntity[e.entity]?.segments || [];
-              const isOpen = expanded[e.entity];
-              return (
-                <React.Fragment key={e.entity}>
-                  {/* Entity row */}
-                  <tr
-                    style={{ background: isOpen && viewMode === "segment" ? "var(--accent-soft)" : undefined, cursor: viewMode === "segment" ? "pointer" : undefined }}
-                    onClick={viewMode === "segment" ? () => toggleExpand(e.entity) : undefined}
-                  >
-                    <td>
-                      <div className="row" style={{ gap: 6, alignItems: "center" }}>
-                        {viewMode === "segment" && (
-                          <span style={{ fontSize: 10, color: "var(--text-muted)", transition: "transform .15s", display: "inline-block", transform: isOpen ? "rotate(90deg)" : "rotate(0deg)" }}>▶</span>
-                        )}
-                        <EntityChip entity={e.entity} />
-                      </div>
-                    </td>
-                    <td className="num">{window.fmtTHB(e.opening)}</td>
-                    <td className="num pos">+{window.fmtTHB(e.purchases)}</td>
-                    <td className="num neg">{window.fmtTHB(e.payment)}</td>
-                    <td className="num">{e.adjustments ? window.fmtTHB(e.adjustments) : "—"}</td>
-                    <td className="num" style={{ fontWeight: 500 }}>{window.fmtTHB(e.closing)}</td>
-                    <td className="num" style={{ fontWeight: 600, color: e.change > 0 ? "var(--success)" : "var(--warning)" }}>{e.change > 0 ? "+" : ""}{window.fmtTHB(e.change)}</td>
-                    <td className="small muted">{e.impact}</td>
-                  </tr>
-                  {/* Segment rows — only when expanded in segment mode */}
-                  {viewMode === "segment" && isOpen && segs.map(seg => (
-                    <tr key={seg.id} style={{ background: "var(--bg-subtle)" }}>
-                      <td style={{ paddingLeft: 32 }}>
-                        <div className="row" style={{ gap: 6, alignItems: "center" }}>
-                          <span style={{ width: 8, height: 8, borderRadius: "50%", background: segColorMap[seg.id] || "#8B95A1", flexShrink: 0 }} />
-                          <span className="small">{seg.name}</span>
-                          <span className="tag" style={{ fontSize: 10, padding: "1px 6px", marginLeft: 2 }}>{seg.id}</span>
-                        </div>
-                      </td>
-                      <td className="num tiny">{window.fmtTHB(seg.opening)}</td>
-                      <td className="num tiny pos">+{window.fmtTHB(seg.purchases)}</td>
-                      <td className="num tiny neg">{window.fmtTHB(seg.payment)}</td>
-                      <td className="num tiny">{seg.adjustments ? window.fmtTHB(seg.adjustments) : "—"}</td>
-                      <td className="num tiny">{window.fmtTHB(seg.closing)}</td>
-                      <td className="num tiny" style={{ color: seg.change > 0 ? "var(--success)" : "var(--warning)" }}>{seg.change > 0 ? "+" : ""}{window.fmtTHB(seg.change)}</td>
-                      <td className="tiny muted">{seg.change > 0 ? "AP เพิ่ม ↑CF" : "AP ลด ↓CF"}</td>
-                    </tr>
-                  ))}
-                </React.Fragment>
-              );
-            })}
+            {entities.map(e =>
+              <tr key={e.entity}>
+                <td><EntityChip entity={e.entity} /></td>
+                <td className="num">{window.fmtTHB(e.opening)}</td>
+                <td className="num pos">+{window.fmtTHB(e.purchases)}</td>
+                <td className="num neg">{window.fmtTHB(e.payment)}</td>
+                <td className="num">{e.adjustments ? window.fmtTHB(e.adjustments) : "—"}</td>
+                <td className="num" style={{ fontWeight: 500 }}>{window.fmtTHB(e.closing)}</td>
+                <td className="num" style={{ fontWeight: 500, color: e.change > 0 ? "var(--success)" : "var(--warning)" }}>{e.change > 0 ? "+" : ""}{window.fmtTHB(e.change)}</td>
+                <td className="small muted">{e.impact}</td>
+              </tr>
+            )}
             <tr style={{ background: "var(--bg-subtle)", fontWeight: 600 }}>
-              <td>รวมทั้งหมด</td>
+              <td>รวม</td>
               <td className="num">{window.fmtTHB(sumOpening)}</td>
               <td className="num pos">+{window.fmtTHB(sumPurchases)}</td>
               <td className="num neg">{window.fmtTHB(sumPayment)}</td>
               <td className="num">{sumAdjustments ? window.fmtTHB(sumAdjustments) : "—"}</td>
               <td className="num">{window.fmtTHB(sumClosing)}</td>
-              <td className="num" style={{ color: sumChange > 0 ? "var(--success)" : "var(--warning)" }}>{sumChange > 0 ? "+" : ""}{window.fmtTHB(sumChange)}</td>
+              <td className="num">{sumChange > 0 ? "+" : ""}{window.fmtTHB(sumChange)}</td>
               <td></td>
             </tr>
           </tbody>
@@ -5642,7 +4584,6 @@ function ReconcileAPTab({ companyId }) {
             <Ic name="info" size={14} style={{ color: "var(--accent-text)" }} />
             <div className="small">
               <strong>สูตร CF Indirect:</strong> AP เพิ่ม = ได้เงินสด (บวกเข้า Net Profit) • AP ลด = ใช้เงินสด (หักจาก Net Profit)
-              {viewMode === "segment" && <span className="muted"> • คลิกที่ Entity เพื่อ expand/collapse segments</span>}
             </div>
           </div>
         </div>
@@ -5662,6 +4603,7 @@ function PNStatusTag({ s }) {
 window.FinanceInput = FinanceInput;
 
 </script>
+
 <script type="text/babel">
 /* Accounting Input — GL / AR / AP / Inventory */
 
@@ -6055,297 +4997,7 @@ window.AccountingInput = AccountingInput;
 window.TypeTag = TypeTag;
 window.MiniKpi = Mini;
 </script>
-<script type="text/babel">
-/* Cash Flow Reports — Direct + Indirect Method */
 
-function ReportPage({ method, onExport, companyId = "CONSO", chartStyle }) {
-  const d = window.CFData;
-  const report = method === "direct" ? d.directCF : d.indirectCF;
-  const [period, setPeriod] = React.useState("Q1 2569");
-  const [showCompare, setShowCompare] = React.useState(true);
-  const [showFormulas, setShowFormulas] = React.useState(false);
-  const [expandedRows, setExpandedRows] = React.useState(new Set());
-  const activeCo = d.companies.find(c => c.id === companyId) || d.companies[0];
-
-  // Segment matrices (filtered by company)
-  const incMatrix = d.getIncomeMatrix(companyId);
-  const expMatrix = d.getExpenseMatrix(companyId);
-
-  // Q1 sum (last 3 months) per segment
-  const sumQ1 = (arr) => (arr || []).slice(3).reduce((s, v) => s + (v || 0), 0);
-  const sumQ0 = (arr) => (arr || []).slice(0, 3).reduce((s, v) => s + (v || 0), 0);
-
-  const incomeSegRows = incMatrix.segments.map(s => ({
-    id: s.id,
-    name: s.name,
-    current: sumQ1(incMatrix.data[s.id]),
-    prior: sumQ0(incMatrix.data[s.id]),
-  }));
-  const expenseSegRows = expMatrix.segments.map(s => ({
-    id: s.id,
-    name: s.name,
-    current: sumQ1(expMatrix.data[s.id]),
-    prior: sumQ0(expMatrix.data[s.id]),
-  }));
-
-  const toggleRow = (key) => {
-    setExpandedRows(prev => {
-      const next = new Set(prev);
-      if (next.has(key)) next.delete(key);
-      else next.add(key);
-      return next;
-    });
-  };
-
-  // Compute subtotals
-  const sections = report.sections.map((sec) => {
-    const cur = sec.items.filter((i) => !i.header).reduce((s, i) => s + (i.current || 0), 0);
-    const pri = sec.items.filter((i) => !i.header).reduce((s, i) => s + (i.prior || 0), 0);
-    return { ...sec, subtotalCurrent: cur, subtotalPrior: pri };
-  });
-
-  const netCurrent = sections.reduce((s, x) => s + x.subtotalCurrent, 0);
-  const netPrior = sections.reduce((s, x) => s + x.subtotalPrior, 0);
-  const closing = report.opening + netCurrent;
-  const priorClosing = report.priorOpening + netPrior;
-
-  return (
-    <>
-      <div className="page-head">
-        <div>
-          <h1 className="page-title">
-            งบกระแสเงินสด – {method === "direct" ? "วิธีตรง" : "วิธีอ้อม"}
-            <span className="co-chip" style={{ background: activeCo.color }}>{activeCo.short}</span>
-          </h1>
-          <p className="page-sub">
-            {method === "direct"
-              ? "แสดงรายการเงินสดรับและจ่ายโดยตรงจากกิจกรรมดำเนินงาน"
-              : "เริ่มจากกำไรก่อนภาษี และปรับด้วยรายการที่ไม่ใช่เงินสด"} • {activeCo.desc}
-          </p>
-        </div>
-        <div className="page-actions">
-          <button className="btn"><Ic name="eye" size={14} /> ดู Working Paper</button>
-          <button className="btn primary" onClick={onExport}><Ic name="fileExcel" size={14} /> Export Excel</button>
-        </div>
-      </div>
-
-      <div className="row" style={{ marginBottom: 14, gap: 10 }}>
-        <select className="select" value={period} onChange={(e) => setPeriod(e.target.value)}>
-          <option>Q1 2569</option>
-          <option>ม.ค. 2569</option>
-          <option>ก.พ. 2569</option>
-          <option>มี.ค. 2569</option>
-          <option>YTD 2569</option>
-          <option>ปี 2568 (เต็มปี)</option>
-          <option>กำหนดเอง…</option>
-        </select>
-        <select className="select"><option>หน่วย: บาท</option><option>หน่วย: พันบาท</option><option>หน่วย: ล้านบาท</option></select>
-        <label className="row small" style={{ gap: 6, marginLeft: 6 }}>
-          <input type="checkbox" checked={showCompare} onChange={(e) => setShowCompare(e.target.checked)} />
-          เปรียบเทียบกับงวดก่อน
-        </label>
-        {method === "indirect" && (
-          <label className="row small" style={{ gap: 6, marginLeft: 6 }}>
-            <input type="checkbox" checked={showFormulas} onChange={(e) => setShowFormulas(e.target.checked)} />
-            แสดงสูตรคำนวณ
-          </label>
-        )}
-        <div className="grow" />
-        <span className="small muted" style={{ alignSelf: "center" }}>
-          <Ic name="chevronDown" size={11} style={{ marginRight: 4 }} />
-          คลิกแถวเพื่อดู Segment breakdown
-        </span>
-        <span className="tag accent"><Ic name="check" size={11} /> ยืนยันแล้ว • โดย K. ปริญญา ส. • 31 มี.ค. 2026</span>
-      </div>
-
-      <div className="card">
-        <div className="card-head">
-          <div className="card-title">{window.CFData.company.name}</div>
-          <div className="grow" />
-          <div className="small muted">งบกระแสเงินสด • สำหรับงวด {period} • (หน่วย: บาท)</div>
-        </div>
-
-        <div style={{ padding: "8px 0 18px" }}>
-          <table className="report-tbl">
-            <thead>
-              <tr>
-                <th style={{ width: "auto" }}>รายการ</th>
-                <th style={{ width: 180 }}>งวดปัจจุบัน</th>
-                {showCompare && <th style={{ width: 180 }}>งวดก่อนหน้า</th>}
-                {showCompare && <th style={{ width: 130 }}>เปลี่ยนแปลง</th>}
-              </tr>
-            </thead>
-            <tbody>
-              {sections.map((sec, si) => (
-                <React.Fragment key={si}>
-                  <tr className="section">
-                    <td>{sec.title}</td>
-                    <td className="num"></td>
-                    {showCompare && <td className="num"></td>}
-                    {showCompare && <td className="num"></td>}
-                  </tr>
-                  {sec.items.map((it, ii) => {
-                    if (it.header) {
-                      return (
-                        <tr key={ii}>
-                          <td className={"label indent-" + (it.indent || 1)} style={{ fontStyle: "italic", color: "var(--text-secondary)" }}>{it.label}</td>
-                          <td className="num"></td>
-                          {showCompare && <td className="num"></td>}
-                          {showCompare && <td className="num"></td>}
-                        </tr>
-                      );
-                    }
-                    const key = `${si}-${ii}`;
-                    const isExpanded = expandedRows.has(key);
-                    const diff = (it.current || 0) - (it.prior || 0);
-                    const mapping = d.cfMapping[it.label];
-                    const isIncome = mapping ? mapping.type === "income" : (it.current || 0) >= 0;
-                    const allSegRows = isIncome ? incomeSegRows : expenseSegRows;
-                    const segRows = mapping
-                      ? d.filterSegmentsByMapping(allSegRows, it.label, companyId)
-                      : allSegRows;
-                    const segTotal = segRows.reduce((s, r) => s + r.current, 0);
-
-                    return (
-                      <React.Fragment key={ii}>
-                        <tr
-                          className={"drill-row" + (isExpanded ? " drill-open" : "")}
-                          onClick={() => toggleRow(key)}
-                        >
-                          <td className={"label indent-" + (it.indent || 1)}>
-                            <span className="row" style={{ gap: 7, alignItems: "center" }}>
-                              <span className={"drill-chevron" + (isExpanded ? " open" : "")}>
-                                <Ic name="chevron" size={11} />
-                              </span>
-                              <span>
-                                {it.label}
-                                {showFormulas && it.formula && (
-                                  <div className="tiny" style={{ color: "var(--accent-text)", marginTop: 2, fontStyle: "italic", fontWeight: 400 }}>
-                                    <Ic name="sparkles" size={10} style={{ marginRight: 4 }} />
-                                    สูตร: {it.formula}
-                                  </div>
-                                )}
-                              </span>
-                            </span>
-                          </td>
-                          <td className="num">{window.fmtTHB(it.current)}</td>
-                          {showCompare && <td className="num muted">{window.fmtTHB(it.prior)}</td>}
-                          {showCompare && <td className={"num small " + (diff > 0 ? "pos" : diff < 0 ? "neg" : "")}>{diff > 0 ? "+" : ""}{window.fmtTHB(diff)}</td>}
-                        </tr>
-
-                        {isExpanded && (
-                          <React.Fragment>
-                            {/* Segment header */}
-                            <tr className="drill-seg-head">
-                              <td colSpan={showCompare ? 4 : 2}>
-                                <span className="row" style={{ gap: 8, alignItems: "center" }}>
-                                  <Ic name="boxes" size={12} style={{ color: "var(--accent)" }} />
-                                  <span style={{ fontWeight: 600, color: "var(--accent-text)" }}>
-                                    Segment Breakdown — {isIncome ? "รายรับ" : "รายจ่าย"} ({activeCo.short})
-                                  </span>
-                                  <span className="small muted" style={{ marginLeft: 4 }}>
-                                    {segRows.length} segments
-                                  </span>
-                                </span>
-                              </td>
-                            </tr>
-
-                            {/* Segment rows */}
-                            {segRows.length === 0 && (
-                              <tr className="drill-seg-row">
-                                <td colSpan={showCompare ? 4 : 2} style={{ paddingLeft: 52, fontStyle: "italic", color: "var(--text-tertiary)" }}>
-                                  — ยังไม่มี segment ที่ผูกกับรายการนี้ (กำหนดได้ที่ Settings → Cash Flow Mapping)
-                                </td>
-                              </tr>
-                            )}
-                            {segRows.map((sr) => {
-                              const segDiff = sr.current - sr.prior;
-                              return (
-                                <tr key={"seg-" + sr.id} className="drill-seg-row">
-                                  <td className="label" style={{ paddingLeft: 52 }}>
-                                    <span style={{ fontSize: 12.5 }}>{sr.name}</span>
-                                  </td>
-                                  <td className="num small">{window.fmtTHB(sr.current)}</td>
-                                  {showCompare && <td className="num small muted">{window.fmtTHB(sr.prior)}</td>}
-                                  {showCompare && <td className={"num small " + (isIncome ? (segDiff > 0 ? "pos" : segDiff < 0 ? "neg" : "") : (segDiff < 0 ? "pos" : segDiff > 0 ? "neg" : ""))}>{segDiff > 0 ? "+" : ""}{window.fmtTHB(segDiff)}</td>}
-                                </tr>
-                              );
-                            })}
-
-                            {/* Segment subtotal */}
-                            <tr className="drill-seg-total">
-                              <td style={{ paddingLeft: 52, fontSize: 12, fontWeight: 600 }}>รวม Segment ทั้งหมด</td>
-                              <td className="num small" style={{ fontWeight: 600 }}>{window.fmtTHB(segTotal)}</td>
-                              {showCompare && <td className="num small muted" style={{ fontWeight: 600 }}>{window.fmtTHB(segRows.reduce((s, r) => s + r.prior, 0))}</td>}
-                              {showCompare && <td className="num small"></td>}
-                            </tr>
-                          </React.Fragment>
-                        )}
-                      </React.Fragment>
-                    );
-                  })}
-                  <tr className="subtotal">
-                    <td className="label">{sec.subtotalLabel}</td>
-                    <td className="num" style={{ fontWeight: 600 }}>{window.fmtTHB(sec.subtotalCurrent)}</td>
-                    {showCompare && <td className="num muted" style={{ fontWeight: 600 }}>{window.fmtTHB(sec.subtotalPrior)}</td>}
-                    {showCompare && <td className="num small"></td>}
-                  </tr>
-                </React.Fragment>
-              ))}
-              <tr className="total">
-                <td>การเปลี่ยนแปลงสุทธิของเงินสด</td>
-                <td className="num" style={{ fontWeight: 600 }}>{window.fmtTHB(netCurrent)}</td>
-                {showCompare && <td className="num muted" style={{ fontWeight: 600 }}>{window.fmtTHB(netPrior)}</td>}
-                {showCompare && <td className="num"></td>}
-              </tr>
-              <tr>
-                <td className="label">เงินสดและรายการเทียบเท่าเงินสด ณ ต้นงวด</td>
-                <td className="num">{window.fmtTHB(report.opening)}</td>
-                {showCompare && <td className="num muted">{window.fmtTHB(report.priorOpening)}</td>}
-                {showCompare && <td className="num"></td>}
-              </tr>
-              <tr className="grand">
-                <td>เงินสดและรายการเทียบเท่าเงินสด ณ สิ้นงวด</td>
-                <td className="num">{window.fmtTHB(closing)}</td>
-                {showCompare && <td className="num">{window.fmtTHB(priorClosing)}</td>}
-                {showCompare && <td className="num"></td>}
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <div style={{ borderTop: "1px solid var(--border)", padding: "14px 16px", display: "flex", justifyContent: "space-between", alignItems: "center" }} className="small muted">
-          <span>หมายเหตุประกอบงบฯ: ดูหมายเหตุข้อ 12 ถึง 18 สำหรับการแสดงรายการเพิ่มเติม</span>
-          <div className="row" style={{ gap: 6 }}>
-            <button className="btn sm ghost"><Ic name="file" size={13} /> หมายเหตุประกอบ</button>
-            <button className="btn sm"><Ic name="download" size={13} /> Excel</button>
-            <button className="btn sm"><Ic name="file" size={13} /> PDF</button>
-          </div>
-        </div>
-      </div>
-
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 14, marginTop: 14 }}>
-        {sections.map((sec, i) => (
-          <div className="card" key={i}>
-            <div className="card-pad">
-              <div className="small muted">{sec.title.replace("กระแสเงินสดจาก", "")}</div>
-              <div className="kpi-value" style={{ fontSize: 22, marginTop: 6, color: sec.subtotalCurrent >= 0 ? "var(--success)" : "var(--danger)" }}>
-                {sec.subtotalCurrent >= 0 ? "+" : ""}{window.fmtTHB(sec.subtotalCurrent)}
-              </div>
-              <div className="tiny muted" style={{ marginTop: 4 }}>
-                งวดก่อน: {window.fmtTHB(sec.subtotalPrior)}
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-    </>
-  );
-}
-
-window.ReportPage = ReportPage;
-
-</script>
 <script type="text/babel">
 /* Forecast + Reconciliation + Export Center + Settings */
 
@@ -7932,6 +6584,906 @@ window.Settings = Settings;
 window.UploadCenter = UploadCenter;
 
 </script>
+
+<script type="text/babel">
+/* Cash Flow Reports — Direct + Indirect Method + Phase B Report Enhancements */
+
+// ─── Module helpers ───────────────────────────────────────────────────────────
+const _q1 = arr => (arr || []).slice(3).reduce((s, v) => s + (v || 0), 0);
+
+function buildSegmentCF() {
+  const d = window.CFData;
+  const [opSec, invSec, finSec] = d.directCF.sections;
+  const opItems = opSec.items.filter(i => !i.header);
+  const mainLabel = "เงินสดรับจากการขายสินค้าและบริการ";
+  const totalOpOtherIn = opItems.filter(i => (i.current || 0) > 0 && i.label !== mainLabel)
+    .reduce((s, i) => s + i.current, 0);
+  const totalOpOut = opItems.filter(i => (i.current || 0) < 0)
+    .reduce((s, i) => s + i.current, 0);
+  const totalInvCF = invSec.items.filter(i => !i.header).reduce((s, i) => s + (i.current || 0), 0);
+  const totalFinCF = finSec.items.filter(i => !i.header).reduce((s, i) => s + (i.current || 0), 0);
+  const totalIncQ1 = Object.values(d.incomeByCoMonth)
+    .flatMap(co => Object.values(co))
+    .reduce((s, arr) => s + _q1(arr), 0);
+
+  const segs = [];
+  ['HMW', 'CLIK', 'ACG'].forEach(entity => {
+    const co = d.companies.find(c => c.id === entity);
+    const arSegs = (d.reconcileARBySegment.byEntity[entity] || {}).segments || [];
+    (d.incomeSegmentsByCo[entity] || []).forEach(seg => {
+      const incQ1 = _q1((d.incomeByCoMonth[entity] || {})[seg.id] || []);
+      const pct = totalIncQ1 > 0 ? incQ1 / totalIncQ1 : 0;
+      const arSeg = arSegs.find(s => s.id === seg.id);
+      const arCFImpact = arSeg ? -(arSeg.change) : 0;
+      const allocOtherIn = Math.round(totalOpOtherIn * pct);
+      const allocOpOut = Math.round(totalOpOut * pct);
+      const operatingCF = incQ1 + arCFImpact + allocOtherIn + allocOpOut;
+      const investingCF = Math.round(totalInvCF * pct);
+      const financingCF = Math.round(totalFinCF * pct);
+      segs.push({
+        id: seg.id, name: seg.name, entity,
+        entityColor: co?.color || '#888',
+        entityShort: co?.short || entity,
+        incQ1, pct, arSeg, arCFImpact, allocOtherIn, allocOpOut,
+        invItems: invSec.items.filter(i => !i.header).map(i => ({ label: i.label, amt: Math.round((i.current || 0) * pct) })),
+        finItems: finSec.items.filter(i => !i.header).map(i => ({ label: i.label, amt: Math.round((i.current || 0) * pct) })),
+        operatingCF, investingCF, financingCF,
+        netCF: operatingCF + investingCF + financingCF,
+      });
+    });
+  });
+  return segs;
+}
+
+// ─── Req 3.1 – Segment CF Card ────────────────────────────────────────────────
+function SegmentCFCard({ seg }) {
+  const fmt = window.fmtTHB;
+  const nc = v => "num" + (v > 0 ? " pos" : v < 0 ? " neg" : "");
+
+  return (
+    <div className="card" style={{ overflow: "hidden" }}>
+      <div className="card-head" style={{ borderLeft: "4px solid " + seg.entityColor, paddingLeft: 14 }}>
+        <div>
+          <div className="card-title" style={{ fontSize: 13.5 }}>{seg.name}</div>
+          <span className="co-chip" style={{ background: seg.entityColor }}>{seg.entityShort}</span>
+        </div>
+        <div className="grow" />
+        <div style={{ textAlign: "right" }}>
+          <div className="tiny muted">Net CF Q1/2569</div>
+          <div style={{ fontWeight: 700, fontSize: 16, color: seg.netCF >= 0 ? "var(--success)" : "var(--danger)" }}>
+            {seg.netCF >= 0 ? "+" : ""}{fmt(seg.netCF)}
+          </div>
+        </div>
+      </div>
+
+      <table className="report-tbl" style={{ margin: "4px 0 8px" }}>
+        <tbody>
+          <tr className="section"><td colSpan={2} style={{ fontSize: 11 }}>กิจกรรมดำเนินงาน</td></tr>
+          <tr><td className="label indent-1" style={{ fontSize: 12.5 }}>รายรับจากลูกค้า</td><td className={nc(seg.incQ1) + " small"}>{fmt(seg.incQ1)}</td></tr>
+          <tr><td className="label indent-1" style={{ fontSize: 12.5 }}>ผลกระทบลูกหนี้การค้า (AR)</td><td className={nc(seg.arCFImpact) + " small"}>{fmt(seg.arCFImpact)}</td></tr>
+          {seg.allocOtherIn !== 0 && (
+            <tr><td className="label indent-1" style={{ fontSize: 12.5 }}>รายรับอื่น (สัดส่วน)</td><td className={nc(seg.allocOtherIn) + " small"}>{fmt(seg.allocOtherIn)}</td></tr>
+          )}
+          <tr><td className="label indent-1" style={{ fontSize: 12.5 }}>ค่าใช้จ่ายดำเนินงาน (สัดส่วน)</td><td className={nc(seg.allocOpOut) + " small"}>{fmt(seg.allocOpOut)}</td></tr>
+          <tr className="subtotal">
+            <td className="label">รวมกิจกรรมดำเนินงาน</td>
+            <td className={nc(seg.operatingCF)} style={{ fontWeight: 600 }}>{fmt(seg.operatingCF)}</td>
+          </tr>
+          <tr className="section"><td colSpan={2} style={{ fontSize: 11 }}>กิจกรรมลงทุน</td></tr>
+          {seg.invItems.map((it, i) => (
+            <tr key={i}><td className="label indent-1" style={{ fontSize: 12.5 }}>{it.label}</td><td className={nc(it.amt) + " small"}>{fmt(it.amt)}</td></tr>
+          ))}
+          <tr className="subtotal">
+            <td className="label">รวมกิจกรรมลงทุน</td>
+            <td className={nc(seg.investingCF)} style={{ fontWeight: 600 }}>{fmt(seg.investingCF)}</td>
+          </tr>
+          <tr className="section"><td colSpan={2} style={{ fontSize: 11 }}>กิจกรรมจัดหาเงิน</td></tr>
+          {seg.finItems.map((it, i) => (
+            <tr key={i}><td className="label indent-1" style={{ fontSize: 12.5 }}>{it.label}</td><td className={nc(it.amt) + " small"}>{fmt(it.amt)}</td></tr>
+          ))}
+          <tr className="subtotal">
+            <td className="label">รวมกิจกรรมจัดหาเงิน</td>
+            <td className={nc(seg.financingCF)} style={{ fontWeight: 600 }}>{fmt(seg.financingCF)}</td>
+          </tr>
+          <tr className="grand">
+            <td style={{ fontWeight: 700 }}>เงินสดสุทธิ Q1/2569</td>
+            <td className={nc(seg.netCF)} style={{ fontWeight: 700 }}>{seg.netCF >= 0 ? "+" : ""}{fmt(seg.netCF)}</td>
+          </tr>
+        </tbody>
+      </table>
+      {seg.arSeg && (
+        <div style={{ margin: "0 12px 10px", padding: "6px 10px", background: "var(--bg-2,#f5f5f5)", borderRadius: 6, fontSize: 12 }}>
+          <div className="tiny muted" style={{ marginBottom: 3 }}>AR Reconciliation Q1/2569</div>
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
+            <span>เปิด {fmt(seg.arSeg.opening)}</span>
+            <span className="muted">+รายได้ {fmt(seg.arSeg.sales)}</span>
+            <span className="muted">−เก็บ {fmt(Math.abs(seg.arSeg.collection))}</span>
+            <span><strong>ปิด {fmt(seg.arSeg.closing)}</strong></span>
+            <span style={{ marginLeft: "auto", fontWeight: 600, color: seg.arCFImpact >= 0 ? "var(--success)" : "var(--danger)" }}>
+              CF {seg.arCFImpact >= 0 ? "+" : ""}{fmt(seg.arCFImpact)}
+            </span>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Req 3.1 – Segment CF Tab ─────────────────────────────────────────────────
+function SegmentCFTab() {
+  const d = window.CFData;
+  const [filter, setFilter] = React.useState("ALL");
+  const allSegs = React.useMemo(() => buildSegmentCF(), []);
+  const segs = filter === "ALL" ? allSegs : allSegs.filter(s => s.entity === filter);
+
+  return (
+    <>
+      <div className="row" style={{ marginBottom: 14, gap: 8, flexWrap: "wrap" }}>
+        {[["ALL", "ทุกบริษัท", null], ["HMW", "HMW", "#1F9D55"], ["CLIK", "CLIK", "#7C4DFF"], ["ACG", "ACG", "#2A6FF0"]].map(([id, label, color]) => (
+          <button key={id} className={"btn" + (filter === id ? " primary" : "")} onClick={() => setFilter(id)}>
+            {color && <span className="co-chip" style={{ background: color, marginRight: 5 }}>{id}</span>}
+            {label}
+          </button>
+        ))}
+        <span className="grow" />
+        <span className="small muted" style={{ alignSelf: "center" }}>
+          <Ic name="boxes" size={12} style={{ marginRight: 4 }} />
+          {segs.length} segments • Investing/Financing แบ่งสัดส่วนตามยอดรายได้
+        </span>
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(360px, 1fr))", gap: 14 }}>
+        {segs.map(seg => <SegmentCFCard key={seg.entity + seg.id} seg={seg} />)}
+      </div>
+    </>
+  );
+}
+
+// ─── Req 3.2 – WC Reconcile Tab ──────────────────────────────────────────────
+function WCReconcileTab() {
+  const d = window.CFData;
+  const fmt = window.fmtTHB;
+  const [expandedAR, setExpandedAR] = React.useState(new Set());
+  const [expandedAP, setExpandedAP] = React.useState(new Set());
+  const toggleSet = (setter, id) => setter(p => { const n = new Set(p); n.has(id) ? n.delete(id) : n.add(id); return n; });
+
+  const indOp = d.indirectCF.sections[0].items;
+  const invCF = (indOp.find(i => i.label === "สินค้าคงเหลือ (เพิ่มขึ้น)/ลดลง") || {}).current || 0;
+  const accrCF = (indOp.find(i => i.label === "ค่าใช้จ่ายค้างจ่าย เพิ่มขึ้น/(ลดลง)") || {}).current || 0;
+  const ar = d.reconcileAR;
+  const ap = d.reconcileAP;
+  const totalWC = ar.cfImpact + ap.cfImpact + invCF + accrCF;
+
+  const thS = { background: "var(--bg-2,#f3f4f6)", fontSize: 11.5, fontWeight: 600, padding: "6px 10px", whiteSpace: "nowrap" };
+  const tdS = { fontSize: 12.5, padding: "5px 10px" };
+  const numS = right => ({ ...tdS, textAlign: "right" });
+
+  const ReconcileTable = ({ title, entities, bySegData, expandedSet, toggleFn, isAR, cfImpact, totals }) => (
+    <div className="card" style={{ marginBottom: 14 }}>
+      <div className="card-head">
+        <div>
+          <div className="card-title">{title}</div>
+          <div className="small muted">
+            {isAR ? "เปิดงวด + ยอดขาย − เก็บเงิน ± ปรับ = ปิดงวด • AR เพิ่ม = ใช้เงินสด (CF ลด)"
+                  : "เปิดงวด + ซื้อ − จ่าย ± ปรับ = ปิดงวด • AP เพิ่ม = ยังไม่จ่าย (CF เพิ่ม)"}
+          </div>
+        </div>
+        <span className={"tag " + (cfImpact >= 0 ? "success" : "accent")} style={{ alignSelf: "center", marginLeft: 10 }}>
+          ผลต่อ CF: {cfImpact >= 0 ? "+" : ""}{fmt(cfImpact)}
+        </span>
+      </div>
+      <div style={{ overflowX: "auto" }}>
+        <table style={{ width: "100%", borderCollapse: "collapse" }}>
+          <thead>
+            <tr>
+              <th style={{ ...thS, textAlign: "left" }}>บริษัท / Segment</th>
+              <th style={{ ...thS, textAlign: "right" }}>เปิดงวด</th>
+              <th style={{ ...thS, textAlign: "right" }}>{isAR ? "+ยอดขาย" : "+ซื้อ"}</th>
+              <th style={{ ...thS, textAlign: "right" }}>{isAR ? "−เก็บเงิน" : "−จ่าย"}</th>
+              <th style={{ ...thS, textAlign: "right" }}>±ปรับ</th>
+              <th style={{ ...thS, textAlign: "right" }}>ปิดงวด</th>
+              <th style={{ ...thS, textAlign: "right" }}>เปลี่ยนแปลง</th>
+              <th style={{ ...thS, textAlign: "right" }}>ผลต่อ CF</th>
+            </tr>
+          </thead>
+          <tbody>
+            {entities.map(e => {
+              const co = d.companies.find(c => c.id === e.entity);
+              const isExp = expandedSet.has(e.entity);
+              const segRows = (bySegData.byEntity[e.entity] || {}).segments || [];
+              const rowCF = isAR ? -(e.change) : e.change;
+              return (
+                <React.Fragment key={e.entity}>
+                  <tr style={{ cursor: "pointer", background: isExp ? "var(--accent-bg,#eff6ff)" : undefined }}
+                      onClick={() => toggleFn(e.entity)}>
+                    <td style={tdS}>
+                      <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                        <span className={"drill-chevron" + (isExp ? " open" : "")}><Ic name="chevron" size={10} /></span>
+                        <span className="co-chip" style={{ background: co?.color || '#888' }}>{e.entity}</span>
+                        <strong>{e.entity}</strong>
+                      </span>
+                    </td>
+                    <td style={{ ...tdS, textAlign: "right" }}>{fmt(e.opening)}</td>
+                    <td style={{ ...tdS, textAlign: "right" }}>{fmt(isAR ? e.sales : e.purchases)}</td>
+                    <td style={{ ...tdS, textAlign: "right", color: "var(--danger)" }}>{fmt(isAR ? e.collection : e.payment)}</td>
+                    <td style={{ ...tdS, textAlign: "right" }}>{e.adjustments !== 0 ? fmt(e.adjustments) : "—"}</td>
+                    <td style={{ ...tdS, textAlign: "right", fontWeight: 600 }}>{fmt(e.closing)}</td>
+                    <td style={{ ...tdS, textAlign: "right", color: e.change > 0 ? (isAR ? "var(--danger)" : "var(--success)") : (isAR ? "var(--success)" : "var(--danger)") }}>
+                      {e.change > 0 ? "+" : ""}{fmt(e.change)}
+                    </td>
+                    <td style={{ ...tdS, textAlign: "right", fontWeight: 600, color: rowCF >= 0 ? "var(--success)" : "var(--danger)" }}>
+                      {rowCF >= 0 ? "+" : ""}{fmt(rowCF)}
+                    </td>
+                  </tr>
+                  {isExp && segRows.map(seg => {
+                    const segCF = isAR ? -(seg.change) : seg.change;
+                    return (
+                      <tr key={seg.id} style={{ background: "var(--bg-2,#f8f9fa)" }}>
+                        <td style={{ ...tdS, paddingLeft: 36, fontSize: 12, color: "var(--text-secondary)" }}>↳ {seg.name}</td>
+                        <td style={{ ...tdS, textAlign: "right", fontSize: 12 }}>{fmt(seg.opening)}</td>
+                        <td style={{ ...tdS, textAlign: "right", fontSize: 12 }}>{fmt(isAR ? seg.sales : seg.purchases)}</td>
+                        <td style={{ ...tdS, textAlign: "right", fontSize: 12, color: "var(--danger)" }}>{fmt(isAR ? seg.collection : seg.payment)}</td>
+                        <td style={{ ...tdS, textAlign: "right", fontSize: 12 }}>{seg.adjustments !== 0 ? fmt(seg.adjustments) : "—"}</td>
+                        <td style={{ ...tdS, textAlign: "right", fontSize: 12 }}>{fmt(seg.closing)}</td>
+                        <td style={{ ...tdS, textAlign: "right", fontSize: 12, color: seg.change > 0 ? (isAR ? "var(--danger)" : "var(--success)") : (isAR ? "var(--success)" : "var(--danger)") }}>
+                          {seg.change > 0 ? "+" : ""}{fmt(seg.change)}
+                        </td>
+                        <td style={{ ...tdS, textAlign: "right", fontSize: 12, color: segCF >= 0 ? "var(--success)" : "var(--danger)" }}>
+                          {segCF >= 0 ? "+" : ""}{fmt(segCF)}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </React.Fragment>
+              );
+            })}
+            <tr style={{ background: "var(--bg-3,#eef0f4)", fontWeight: 700, borderTop: "2px solid var(--border)" }}>
+              <td style={{ ...tdS, fontWeight: 700 }}>รวมทั้งหมด</td>
+              <td style={{ ...tdS, textAlign: "right" }}>{fmt(totals.opening)}</td>
+              <td style={{ ...tdS, textAlign: "right" }}>{fmt(totals.flowIn)}</td>
+              <td style={{ ...tdS, textAlign: "right", color: "var(--danger)" }}>{fmt(totals.flowOut)}</td>
+              <td style={{ ...tdS, textAlign: "right" }}>{totals.adj !== 0 ? fmt(totals.adj) : "—"}</td>
+              <td style={{ ...tdS, textAlign: "right", fontWeight: 700 }}>{fmt(totals.closing)}</td>
+              <td style={{ ...tdS, textAlign: "right", color: isAR ? "var(--danger)" : "var(--success)" }}>
+                {isAR ? "+" : "+"}{fmt(totals.change)}
+              </td>
+              <td style={{ ...tdS, textAlign: "right", fontWeight: 700, color: cfImpact >= 0 ? "var(--success)" : "var(--danger)" }}>
+                {cfImpact >= 0 ? "+" : ""}{fmt(cfImpact)}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+
+  const invOpen = d.tbBal("2025-Q4", "1200");
+  const invClose = d.tbBal("2026-Q1", "1200");
+  const invChange = invClose - invOpen;
+
+  return (
+    <>
+      <div className="row" style={{ marginBottom: 14, alignItems: "center" }}>
+        <div>
+          <div className="card-title">Working Capital กระทบยอด</div>
+          <div className="small muted">ผลกระทบการเปลี่ยนแปลง AR / AP / สินค้าคงเหลือ ต่อกระแสเงินสด (Indirect Method)</div>
+        </div>
+        <div className="grow" />
+        <span className="tag accent">Q1 2569 • คลิกแถวบริษัทเพื่อดูแยก Segment</span>
+      </div>
+
+      <ReconcileTable
+        title="กระทบยอดลูกหนี้การค้า (Accounts Receivable)"
+        entities={ar.entities} bySegData={d.reconcileARBySegment}
+        expandedSet={expandedAR} toggleFn={id => toggleSet(setExpandedAR, id)}
+        isAR={true} cfImpact={ar.cfImpact}
+        totals={{ opening: ar.totalOpening, flowIn: ar.totalSales, flowOut: ar.totalCollection, adj: ar.totalAdjustments, closing: ar.totalClosing, change: ar.totalChange }}
+      />
+
+      <ReconcileTable
+        title="กระทบยอดเจ้าหนี้การค้า (Accounts Payable)"
+        entities={ap.entities} bySegData={d.reconcileAPBySegment}
+        expandedSet={expandedAP} toggleFn={id => toggleSet(setExpandedAP, id)}
+        isAR={false} cfImpact={ap.cfImpact}
+        totals={{ opening: ap.totalOpening, flowIn: ap.totalPurchases, flowOut: ap.totalPayment, adj: ap.totalAdjustments, closing: ap.totalClosing, change: ap.totalChange }}
+      />
+
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+        <div className="card">
+          <div className="card-head">
+            <div className="card-title">สินค้าคงเหลือ (Inventory Change)</div>
+          </div>
+          <div className="card-pad">
+            <div style={{ display: "flex", gap: 20, alignItems: "center", flexWrap: "wrap" }}>
+              <div><div className="small muted">ต้นงวด</div><div style={{ fontSize: 18, fontWeight: 600 }}>{fmt(invOpen)}</div></div>
+              <span style={{ fontSize: 18, color: "var(--text-secondary)" }}>→</span>
+              <div><div className="small muted">ปลายงวด</div><div style={{ fontSize: 18, fontWeight: 600 }}>{fmt(invClose)}</div></div>
+              <div><div className="small muted">เพิ่มขึ้น</div><div style={{ fontSize: 16, fontWeight: 700, color: "var(--danger)" }}>+{fmt(invChange)}</div></div>
+              <div><div className="small muted">ผลต่อ CF</div><div style={{ fontSize: 16, fontWeight: 700, color: "var(--danger)" }}>{fmt(invCF)}</div></div>
+            </div>
+            <div className="small muted" style={{ marginTop: 8 }}>สินค้าเพิ่มขึ้น = ซื้อมากกว่าขาย → ใช้เงินสด → CF ลด</div>
+          </div>
+        </div>
+
+        <div className="card">
+          <div className="card-head"><div className="card-title">สรุปผลกระทบ Working Capital รวม</div></div>
+          <div className="card-pad">
+            <table style={{ width: "100%", borderCollapse: "collapse" }}>
+              <tbody>
+                {[
+                  ["ลูกหนี้การค้า (AR เพิ่ม = ใช้เงิน)", ar.cfImpact],
+                  ["เจ้าหนี้การค้า (AP เพิ่ม = ยังไม่จ่าย)", ap.cfImpact],
+                  ["สินค้าคงเหลือ (Inv เพิ่ม = ซื้อมาก)", invCF],
+                  ["ค่าใช้จ่ายค้างจ่าย (Accrued เพิ่ม = ยังไม่จ่าย)", accrCF],
+                ].map(([label, val], i) => (
+                  <tr key={i} style={{ borderBottom: "1px solid var(--border)" }}>
+                    <td style={{ fontSize: 12.5, padding: "6px 0" }}>{label}</td>
+                    <td style={{ textAlign: "right", fontWeight: 600, padding: "6px 0", color: val >= 0 ? "var(--success)" : "var(--danger)", fontSize: 13 }}>
+                      {val >= 0 ? "+" : ""}{fmt(val)}
+                    </td>
+                  </tr>
+                ))}
+                <tr>
+                  <td style={{ fontSize: 13, fontWeight: 700, padding: "8px 0 4px" }}>ผลกระทบ WC รวม</td>
+                  <td style={{ textAlign: "right", fontWeight: 700, fontSize: 16, padding: "8px 0 4px", color: totalWC >= 0 ? "var(--success)" : "var(--danger)" }}>
+                    {totalWC >= 0 ? "+" : ""}{fmt(totalWC)}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
+
+// ─── Req 3.4 – Cash Ending Reconcile Tab ─────────────────────────────────────
+function CashEndingTab() {
+  const d = window.CFData;
+  const fmt = window.fmtTHB;
+
+  const cfSections = d.directCF.sections.map(sec => {
+    const sub = sec.items.filter(i => !i.header).reduce((s, i) => s + (i.current || 0), 0);
+    return { ...sec, sub };
+  });
+  const netCF = cfSections.reduce((s, x) => s + x.sub, 0);
+  const opening = d.directCF.opening;
+  const cfClosing = opening + netCF;
+  const bankTotal = d.bankAccounts.reduce((s, b) => s + b.balance, 0);
+  const tbCash = d.tbBal("2026-Q1", "1010");
+  const diff = bankTotal - cfClosing;
+  const isBalanced = Math.abs(diff) < 1_000_000;
+
+  const sectionLabels = ["กิจกรรมดำเนินงาน", "กิจกรรมลงทุน", "กิจกรรมจัดหาเงิน"];
+  const sectionColors = ["var(--success)", "var(--warning,#f59e0b)", "#7C4DFF"];
+
+  return (
+    <>
+      <div className="row" style={{ marginBottom: 14, alignItems: "center" }}>
+        <div>
+          <div className="card-title">กระทบยอดเงินสดปลายงวด</div>
+          <div className="small muted">Operating + Investing + Financing = Net Change → เงินสดปลายงวด vs ยอดเงินฝากธนาคาร</div>
+        </div>
+        <div className="grow" />
+        <span className={"tag " + (isBalanced ? "success" : "accent")}>
+          {isBalanced ? "✓ ยอดตรง" : "⚠ มีผลต่าง"} Q1/2569
+        </span>
+      </div>
+
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, marginBottom: 14 }}>
+        {/* CF Bridge */}
+        <div className="card">
+          <div className="card-head"><div className="card-title">สรุปกระแสเงินสดสุทธิ (Direct Method)</div></div>
+          <div className="card-pad">
+            <table style={{ width: "100%", borderCollapse: "collapse" }}>
+              <tbody>
+                {cfSections.map((sec, i) => (
+                  <tr key={i} style={{ borderBottom: "1px solid var(--border)" }}>
+                    <td style={{ fontSize: 12.5, padding: "7px 0" }}>
+                      <span style={{ display: "inline-block", width: 10, height: 10, borderRadius: 2, background: sectionColors[i], marginRight: 8, verticalAlign: "middle" }} />
+                      {sectionLabels[i]}
+                    </td>
+                    <td style={{ textAlign: "right", fontWeight: 600, padding: "7px 0", fontSize: 13, color: sec.sub >= 0 ? "var(--success)" : "var(--danger)" }}>
+                      {sec.sub >= 0 ? "+" : ""}{fmt(sec.sub)}
+                    </td>
+                  </tr>
+                ))}
+                <tr style={{ borderTop: "2px solid var(--border)" }}>
+                  <td style={{ fontSize: 13, fontWeight: 700, padding: "8px 0 4px" }}>การเปลี่ยนแปลงสุทธิ</td>
+                  <td style={{ textAlign: "right", fontWeight: 700, fontSize: 15, padding: "8px 0 4px", color: netCF >= 0 ? "var(--success)" : "var(--danger)" }}>
+                    {netCF >= 0 ? "+" : ""}{fmt(netCF)}
+                  </td>
+                </tr>
+                <tr>
+                  <td style={{ fontSize: 12.5, padding: "5px 0", color: "var(--text-secondary)" }}>บวก: เงินสดต้นงวด (1 ม.ค. 2569)</td>
+                  <td style={{ textAlign: "right", fontSize: 12.5, padding: "5px 0" }}>{fmt(opening)}</td>
+                </tr>
+                <tr style={{ background: "var(--bg-2,#f5f5f5)", borderRadius: 6 }}>
+                  <td style={{ fontSize: 13, fontWeight: 700, padding: "8px 0 4px" }}>เงินสดปลายงวด (ตามงบ CF)</td>
+                  <td style={{ textAlign: "right", fontWeight: 700, fontSize: 16, padding: "8px 0 4px" }}>{fmt(cfClosing)}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* Reconciliation */}
+        <div className="card">
+          <div className="card-head"><div className="card-title">กระทบยอดเงินสดปลายงวด vs ธนาคาร</div></div>
+          <div className="card-pad">
+            <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: 12 }}>
+              <tbody>
+                <tr style={{ borderBottom: "1px solid var(--border)" }}>
+                  <td style={{ fontSize: 12.5, padding: "7px 0" }}>เงินสดปลายงวด (ตามงบ CF)</td>
+                  <td style={{ textAlign: "right", fontSize: 13, fontWeight: 600, padding: "7px 0" }}>{fmt(cfClosing)}</td>
+                </tr>
+                <tr style={{ borderBottom: "1px solid var(--border)" }}>
+                  <td style={{ fontSize: 12.5, padding: "7px 0" }}>เงินสดตาม Trial Balance (1010)</td>
+                  <td style={{ textAlign: "right", fontSize: 13, fontWeight: 600, padding: "7px 0" }}>{fmt(tbCash)}</td>
+                </tr>
+                <tr style={{ borderBottom: "2px solid var(--border)" }}>
+                  <td style={{ fontSize: 12.5, padding: "7px 0" }}>ยอดรวมเงินฝากธนาคาร</td>
+                  <td style={{ textAlign: "right", fontSize: 13, fontWeight: 600, padding: "7px 0" }}>{fmt(bankTotal)}</td>
+                </tr>
+                <tr>
+                  <td style={{ fontSize: 13, fontWeight: 700, padding: "8px 0 4px" }}>ผลต่าง (ธนาคาร − งบ CF)</td>
+                  <td style={{ textAlign: "right", fontWeight: 700, fontSize: 16, padding: "8px 0 4px", color: isBalanced ? "var(--success)" : "var(--danger)" }}>
+                    {diff >= 0 ? "+" : ""}{fmt(diff)}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+            <div style={{ padding: "10px 14px", borderRadius: 8, background: isBalanced ? "rgba(31,157,85,0.08)" : "rgba(220,38,38,0.08)", border: "1px solid " + (isBalanced ? "var(--success)" : "var(--danger)") }}>
+              <div style={{ fontWeight: 700, color: isBalanced ? "var(--success)" : "var(--danger)", marginBottom: 4 }}>
+                {isBalanced ? "✓ ยอดสอดคล้องกัน" : "⚠ ยอดไม่สอดคล้อง — ต้องตรวจสอบ"}
+              </div>
+              <div className="small muted">
+                {isBalanced
+                  ? "เงินสดตามงบ CF ตรงกับยอดธนาคาร"
+                  : "อาจเกิดจาก: รายการระหว่างทาง (In-transit), เช็คค้างจ่าย, เงินฝากผ่านบัญชีพักชั่วคราว หรือข้อมูลยังไม่ครบ"}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Bank accounts detail */}
+      <div className="card">
+        <div className="card-head">
+          <div className="card-title">รายละเอียดเงินฝากธนาคาร ณ 31 มี.ค. 2569</div>
+          <div className="grow" />
+          <span className="small muted">รวม: <strong>{fmt(bankTotal)}</strong></span>
+        </div>
+        <div style={{ padding: "8px 0 12px" }}>
+          <table className="report-tbl">
+            <thead>
+              <tr>
+                <th>ธนาคาร / บัญชี</th>
+                <th>บริษัท</th>
+                <th>ประเภท</th>
+                <th style={{ width: 160 }}>ยอดคงเหลือ</th>
+              </tr>
+            </thead>
+            <tbody>
+              {d.bankAccounts.map(b => {
+                const co = d.companies.find(c => c.id === b.entity);
+                return (
+                  <tr key={b.id}>
+                    <td className="label indent-1">
+                      <div style={{ fontWeight: 500 }}>{b.name}</div>
+                      <div className="tiny muted">{b.bank} • {b.no}</div>
+                    </td>
+                    <td><span className="co-chip" style={{ background: co?.color || '#888' }}>{b.entity}</span></td>
+                    <td className="small muted">{b.type} • {b.ccy}</td>
+                    <td className="num" style={{ fontWeight: 600 }}>{fmt(b.balance)}</td>
+                  </tr>
+                );
+              })}
+              <tr className="grand">
+                <td colSpan={3} style={{ fontWeight: 700 }}>รวมยอดเงินฝากทั้งหมด</td>
+                <td className="num" style={{ fontWeight: 700 }}>{fmt(bankTotal)}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </>
+  );
+}
+
+// ─── Req 3.3 – Direct vs Indirect Comparison Tab ─────────────────────────────
+function CompareMethodsTab() {
+  const d = window.CFData;
+  const fmt = window.fmtTHB;
+
+  const computeSections = (cfData) => cfData.sections.map(sec => {
+    const sub = sec.items.filter(i => !i.header).reduce((s, i) => s + (i.current || 0), 0);
+    return { title: sec.title, subtotalLabel: sec.subtotalLabel, items: sec.items, sub };
+  });
+
+  const directSecs = computeSections(d.directCF);
+  const indirectSecs = computeSections(d.indirectCF);
+  const directNet = directSecs.reduce((s, x) => s + x.sub, 0);
+  const indirectNet = indirectSecs.reduce((s, x) => s + x.sub, 0);
+  const diff = directNet - indirectNet;
+  const isMatch = Math.abs(diff) < 500_000;
+
+  const colStyle = { width: "50%", verticalAlign: "top", padding: "0 8px" };
+  const secLabels = ["กิจกรรมดำเนินงาน", "กิจกรรมลงทุน", "กิจกรรมจัดหาเงิน"];
+
+  const renderColumn = (secs, method, net, opening) => (
+    <div style={{ flex: 1 }}>
+      <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 10, padding: "8px 12px", background: method === "direct" ? "rgba(31,157,85,0.1)" : "rgba(42,111,240,0.1)", borderRadius: 8, border: "1px solid " + (method === "direct" ? "rgba(31,157,85,0.3)" : "rgba(42,111,240,0.3)") }}>
+        {method === "direct" ? "📥 Direct Method (วิธีตรง)" : "📊 Indirect Method (วิธีอ้อม)"}
+      </div>
+      <table className="report-tbl" style={{ fontSize: 12.5 }}>
+        <tbody>
+          {secs.map((sec, si) => (
+            <React.Fragment key={si}>
+              <tr className="section"><td colSpan={2} style={{ fontSize: 11 }}>{secLabels[si]}</td></tr>
+              {sec.items.map((it, ii) => {
+                if (it.header) return (
+                  <tr key={ii}><td colSpan={2} className="label indent-1" style={{ fontSize: 12, fontStyle: "italic", color: "var(--text-secondary)" }}>{it.label}</td></tr>
+                );
+                return (
+                  <tr key={ii}>
+                    <td className={"label indent-" + (it.indent || 1)} style={{ fontSize: 12 }}>{it.label}</td>
+                    <td className={"num small " + ((it.current || 0) >= 0 ? "pos" : "neg")}>{fmt(it.current || 0)}</td>
+                  </tr>
+                );
+              })}
+              <tr className="subtotal">
+                <td className="label" style={{ fontSize: 12 }}>{sec.subtotalLabel}</td>
+                <td className={"num " + (sec.sub >= 0 ? "pos" : "neg")} style={{ fontWeight: 700 }}>{fmt(sec.sub)}</td>
+              </tr>
+            </React.Fragment>
+          ))}
+          <tr className="total">
+            <td>การเปลี่ยนแปลงสุทธิของเงินสด</td>
+            <td className={"num " + (net >= 0 ? "pos" : "neg")} style={{ fontWeight: 700 }}>{fmt(net)}</td>
+          </tr>
+          <tr>
+            <td className="label">เงินสดต้นงวด</td>
+            <td className="num">{fmt(opening)}</td>
+          </tr>
+          <tr className="grand">
+            <td>เงินสดปลายงวด</td>
+            <td className="num">{fmt(opening + net)}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  );
+
+  return (
+    <>
+      <div className="row" style={{ marginBottom: 14, alignItems: "center" }}>
+        <div>
+          <div className="card-title">เปรียบเทียบ Direct vs Indirect Method</div>
+          <div className="small muted">ทั้งสองวิธีต้องได้ Net CF เท่ากัน • ผลต่างแสดงถึงการปรับปรุงรายการที่ยังไม่ครบ</div>
+        </div>
+        <div className="grow" />
+        <span className={"tag " + (isMatch ? "success" : "accent")}>
+          {isMatch ? "✓ Net CF ตรงกัน" : "⚠ Net CF ต่างกัน " + fmt(Math.abs(diff))}
+        </span>
+      </div>
+
+      <div className="card" style={{ marginBottom: 14 }}>
+        <div className="card-pad">
+          <div style={{ display: "flex", gap: 16 }}>
+            {renderColumn(directSecs, "direct", directNet, d.directCF.opening)}
+            <div style={{ width: 1, background: "var(--border)", flexShrink: 0 }} />
+            {renderColumn(indirectSecs, "indirect", indirectNet, d.indirectCF.opening)}
+          </div>
+        </div>
+      </div>
+
+      {/* Operating CF comparison highlight */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 14 }}>
+        {["กิจกรรมดำเนินงาน", "กิจกรรมลงทุน", "กิจกรรมจัดหาเงิน"].map((label, i) => {
+          const d1 = directSecs[i]?.sub || 0;
+          const d2 = indirectSecs[i]?.sub || 0;
+          const ok = Math.abs(d1 - d2) < 500_000;
+          return (
+            <div className="card" key={i}>
+              <div className="card-pad">
+                <div className="small muted" style={{ marginBottom: 4 }}>{label}</div>
+                <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+                  <div>
+                    <div className="tiny muted">Direct</div>
+                    <div style={{ fontWeight: 700, fontSize: 15, color: d1 >= 0 ? "var(--success)" : "var(--danger)" }}>{d1 >= 0 ? "+" : ""}{fmt(d1)}</div>
+                  </div>
+                  <div style={{ fontSize: 18, color: ok ? "var(--success)" : "var(--danger)" }}>{ok ? "=" : "≠"}</div>
+                  <div>
+                    <div className="tiny muted">Indirect</div>
+                    <div style={{ fontWeight: 700, fontSize: 15, color: d2 >= 0 ? "var(--success)" : "var(--danger)" }}>{d2 >= 0 ? "+" : ""}{fmt(d2)}</div>
+                  </div>
+                </div>
+                {!ok && <div className="tiny" style={{ color: "var(--danger)", marginTop: 4 }}>ผลต่าง {fmt(Math.abs(d1 - d2))}</div>}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </>
+  );
+}
+
+// ─── Main Report Page ─────────────────────────────────────────────────────────
+function ReportPage({ method, onExport, companyId = "CONSO", chartStyle }) {
+  const d = window.CFData;
+  const report = method === "direct" ? d.directCF : d.indirectCF;
+  const [activeTab, setActiveTab] = React.useState(0);
+  const [period, setPeriod] = React.useState("Q1 2569");
+  const [showCompare, setShowCompare] = React.useState(true);
+  const [showFormulas, setShowFormulas] = React.useState(false);
+  const [expandedRows, setExpandedRows] = React.useState(new Set());
+  const activeCo = d.companies.find(c => c.id === companyId) || d.companies[0];
+
+  const incMatrix = d.getIncomeMatrix(companyId);
+  const expMatrix = d.getExpenseMatrix(companyId);
+  const sumQ1 = arr => (arr || []).slice(3).reduce((s, v) => s + (v || 0), 0);
+  const sumQ0 = arr => (arr || []).slice(0, 3).reduce((s, v) => s + (v || 0), 0);
+
+  const incomeSegRows = incMatrix.segments.map(s => ({ id: s.id, name: s.name, current: sumQ1(incMatrix.data[s.id]), prior: sumQ0(incMatrix.data[s.id]) }));
+  const expenseSegRows = expMatrix.segments.map(s => ({ id: s.id, name: s.name, current: sumQ1(expMatrix.data[s.id]), prior: sumQ0(expMatrix.data[s.id]) }));
+
+  const toggleRow = key => setExpandedRows(prev => { const n = new Set(prev); n.has(key) ? n.delete(key) : n.add(key); return n; });
+
+  const sections = report.sections.map(sec => {
+    const cur = sec.items.filter(i => !i.header).reduce((s, i) => s + (i.current || 0), 0);
+    const pri = sec.items.filter(i => !i.header).reduce((s, i) => s + (i.prior || 0), 0);
+    return { ...sec, subtotalCurrent: cur, subtotalPrior: pri };
+  });
+  const netCurrent = sections.reduce((s, x) => s + x.subtotalCurrent, 0);
+  const netPrior = sections.reduce((s, x) => s + x.subtotalPrior, 0);
+  const closing = report.opening + netCurrent;
+  const priorClosing = report.priorOpening + netPrior;
+
+  const tabs = [
+    method === "direct" ? "งบ Direct CF" : "งบ Indirect CF",
+    "CF แยก Segment",
+    "WC กระทบยอด",
+    "กระทบยอด Cash",
+    "Direct vs Indirect",
+  ];
+
+  return (
+    <>
+      <div className="page-head">
+        <div>
+          <h1 className="page-title">
+            งบกระแสเงินสด – {method === "direct" ? "วิธีตรง" : "วิธีอ้อม"}
+            <span className="co-chip" style={{ background: activeCo.color }}>{activeCo.short}</span>
+          </h1>
+          <p className="page-sub">
+            {method === "direct"
+              ? "แสดงรายการเงินสดรับและจ่ายโดยตรงจากกิจกรรมดำเนินงาน"
+              : "เริ่มจากกำไรก่อนภาษี และปรับด้วยรายการที่ไม่ใช่เงินสด"} • {activeCo.desc}
+          </p>
+        </div>
+        <div className="page-actions">
+          <button className="btn"><Ic name="eye" size={14} /> ดู Working Paper</button>
+          <button className="btn primary" onClick={onExport}><Ic name="fileExcel" size={14} /> Export Excel</button>
+        </div>
+      </div>
+
+      {/* Tab navigation */}
+      <div className="row" style={{ gap: 3, marginBottom: 16, borderBottom: "2px solid var(--border)", paddingBottom: 0 }}>
+        {tabs.map((label, i) => (
+          <button
+            key={i}
+            onClick={() => setActiveTab(i)}
+            style={{
+              padding: "7px 14px", fontSize: 13, fontWeight: activeTab === i ? 600 : 400, border: "none",
+              background: activeTab === i ? "var(--accent)" : "transparent",
+              color: activeTab === i ? "var(--accent-text,#fff)" : "var(--text-secondary)",
+              borderRadius: "6px 6px 0 0", cursor: "pointer", marginBottom: -2,
+              borderBottom: activeTab === i ? "2px solid var(--accent)" : "2px solid transparent",
+            }}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {/* Tab 0: CF Statement */}
+      {activeTab === 0 && (
+        <>
+          <div className="row" style={{ marginBottom: 14, gap: 10 }}>
+            <select className="select" value={period} onChange={e => setPeriod(e.target.value)}>
+              <option>Q1 2569</option><option>ม.ค. 2569</option><option>ก.พ. 2569</option>
+              <option>มี.ค. 2569</option><option>YTD 2569</option><option>ปี 2568 (เต็มปี)</option>
+            </select>
+            <select className="select"><option>หน่วย: บาท</option><option>หน่วย: พันบาท</option><option>หน่วย: ล้านบาท</option></select>
+            <label className="row small" style={{ gap: 6, marginLeft: 6 }}>
+              <input type="checkbox" checked={showCompare} onChange={e => setShowCompare(e.target.checked)} />
+              เปรียบเทียบกับงวดก่อน
+            </label>
+            {method === "indirect" && (
+              <label className="row small" style={{ gap: 6, marginLeft: 6 }}>
+                <input type="checkbox" checked={showFormulas} onChange={e => setShowFormulas(e.target.checked)} />
+                แสดงสูตรคำนวณ
+              </label>
+            )}
+            <div className="grow" />
+            <span className="small muted" style={{ alignSelf: "center" }}>
+              <Ic name="chevronDown" size={11} style={{ marginRight: 4 }} />คลิกแถวเพื่อดู Segment breakdown
+            </span>
+            <span className="tag accent"><Ic name="check" size={11} /> ยืนยันแล้ว • โดย K. ปริญญา ส. • 31 มี.ค. 2026</span>
+          </div>
+
+          <div className="card">
+            <div className="card-head">
+              <div className="card-title">{window.CFData.company.name}</div>
+              <div className="grow" />
+              <div className="small muted">งบกระแสเงินสด • สำหรับงวด {period} • (หน่วย: บาท)</div>
+            </div>
+            <div style={{ padding: "8px 0 18px" }}>
+              <table className="report-tbl">
+                <thead>
+                  <tr>
+                    <th style={{ width: "auto" }}>รายการ</th>
+                    <th style={{ width: 180 }}>งวดปัจจุบัน</th>
+                    {showCompare && <th style={{ width: 180 }}>งวดก่อนหน้า</th>}
+                    {showCompare && <th style={{ width: 130 }}>เปลี่ยนแปลง</th>}
+                  </tr>
+                </thead>
+                <tbody>
+                  {sections.map((sec, si) => (
+                    <React.Fragment key={si}>
+                      <tr className="section">
+                        <td>{sec.title}</td>
+                        <td className="num"></td>
+                        {showCompare && <td className="num"></td>}
+                        {showCompare && <td className="num"></td>}
+                      </tr>
+                      {sec.items.map((it, ii) => {
+                        if (it.header) return (
+                          <tr key={ii}>
+                            <td className={"label indent-" + (it.indent || 1)} style={{ fontStyle: "italic", color: "var(--text-secondary)" }}>{it.label}</td>
+                            <td className="num"></td>
+                            {showCompare && <td className="num"></td>}
+                            {showCompare && <td className="num"></td>}
+                          </tr>
+                        );
+                        const key = `${si}-${ii}`;
+                        const isExpanded = expandedRows.has(key);
+                        const diff = (it.current || 0) - (it.prior || 0);
+                        const mapping = d.cfMapping[it.label];
+                        const isIncome = mapping ? mapping.type === "income" : (it.current || 0) >= 0;
+                        const allSegRows = isIncome ? incomeSegRows : expenseSegRows;
+                        const segRows = mapping ? d.filterSegmentsByMapping(allSegRows, it.label, companyId) : allSegRows;
+                        const segTotal = segRows.reduce((s, r) => s + r.current, 0);
+                        return (
+                          <React.Fragment key={ii}>
+                            <tr className={"drill-row" + (isExpanded ? " drill-open" : "")} onClick={() => toggleRow(key)}>
+                              <td className={"label indent-" + (it.indent || 1)}>
+                                <span className="row" style={{ gap: 7, alignItems: "center" }}>
+                                  <span className={"drill-chevron" + (isExpanded ? " open" : "")}><Ic name="chevron" size={11} /></span>
+                                  <span>
+                                    {it.label}
+                                    {showFormulas && it.formula && (
+                                      <div className="tiny" style={{ color: "var(--accent-text)", marginTop: 2, fontStyle: "italic", fontWeight: 400 }}>
+                                        <Ic name="sparkles" size={10} style={{ marginRight: 4 }} />สูตร: {it.formula}
+                                      </div>
+                                    )}
+                                  </span>
+                                </span>
+                              </td>
+                              <td className="num">{window.fmtTHB(it.current)}</td>
+                              {showCompare && <td className="num muted">{window.fmtTHB(it.prior)}</td>}
+                              {showCompare && <td className={"num small " + (diff > 0 ? "pos" : diff < 0 ? "neg" : "")}>{diff > 0 ? "+" : ""}{window.fmtTHB(diff)}</td>}
+                            </tr>
+                            {isExpanded && (
+                              <React.Fragment>
+                                <tr className="drill-seg-head">
+                                  <td colSpan={showCompare ? 4 : 2}>
+                                    <span className="row" style={{ gap: 8, alignItems: "center" }}>
+                                      <Ic name="boxes" size={12} style={{ color: "var(--accent)" }} />
+                                      <span style={{ fontWeight: 600, color: "var(--accent-text)" }}>
+                                        Segment Breakdown — {isIncome ? "รายรับ" : "รายจ่าย"} ({activeCo.short})
+                                      </span>
+                                      <span className="small muted" style={{ marginLeft: 4 }}>{segRows.length} segments</span>
+                                    </span>
+                                  </td>
+                                </tr>
+                                {segRows.length === 0 && (
+                                  <tr className="drill-seg-row">
+                                    <td colSpan={showCompare ? 4 : 2} style={{ paddingLeft: 52, fontStyle: "italic", color: "var(--text-tertiary)" }}>
+                                      — ยังไม่มี segment ที่ผูกกับรายการนี้
+                                    </td>
+                                  </tr>
+                                )}
+                                {segRows.map(sr => {
+                                  const segDiff = sr.current - sr.prior;
+                                  return (
+                                    <tr key={"seg-" + sr.id} className="drill-seg-row">
+                                      <td className="label" style={{ paddingLeft: 52 }}><span style={{ fontSize: 12.5 }}>{sr.name}</span></td>
+                                      <td className="num small">{window.fmtTHB(sr.current)}</td>
+                                      {showCompare && <td className="num small muted">{window.fmtTHB(sr.prior)}</td>}
+                                      {showCompare && <td className={"num small " + (isIncome ? (segDiff > 0 ? "pos" : segDiff < 0 ? "neg" : "") : (segDiff < 0 ? "pos" : segDiff > 0 ? "neg" : ""))}>{segDiff > 0 ? "+" : ""}{window.fmtTHB(segDiff)}</td>}
+                                    </tr>
+                                  );
+                                })}
+                                <tr className="drill-seg-total">
+                                  <td style={{ paddingLeft: 52, fontSize: 12, fontWeight: 600 }}>รวม Segment ทั้งหมด</td>
+                                  <td className="num small" style={{ fontWeight: 600 }}>{window.fmtTHB(segTotal)}</td>
+                                  {showCompare && <td className="num small muted" style={{ fontWeight: 600 }}>{window.fmtTHB(segRows.reduce((s, r) => s + r.prior, 0))}</td>}
+                                  {showCompare && <td className="num small"></td>}
+                                </tr>
+                              </React.Fragment>
+                            )}
+                          </React.Fragment>
+                        );
+                      })}
+                      <tr className="subtotal">
+                        <td className="label">{sec.subtotalLabel}</td>
+                        <td className="num" style={{ fontWeight: 600 }}>{window.fmtTHB(sec.subtotalCurrent)}</td>
+                        {showCompare && <td className="num muted" style={{ fontWeight: 600 }}>{window.fmtTHB(sec.subtotalPrior)}</td>}
+                        {showCompare && <td className="num small"></td>}
+                      </tr>
+                    </React.Fragment>
+                  ))}
+                  <tr className="total">
+                    <td>การเปลี่ยนแปลงสุทธิของเงินสด</td>
+                    <td className="num" style={{ fontWeight: 600 }}>{window.fmtTHB(netCurrent)}</td>
+                    {showCompare && <td className="num muted" style={{ fontWeight: 600 }}>{window.fmtTHB(netPrior)}</td>}
+                    {showCompare && <td className="num"></td>}
+                  </tr>
+                  <tr>
+                    <td className="label">เงินสดและรายการเทียบเท่าเงินสด ณ ต้นงวด</td>
+                    <td className="num">{window.fmtTHB(report.opening)}</td>
+                    {showCompare && <td className="num muted">{window.fmtTHB(report.priorOpening)}</td>}
+                    {showCompare && <td className="num"></td>}
+                  </tr>
+                  <tr className="grand">
+                    <td>เงินสดและรายการเทียบเท่าเงินสด ณ สิ้นงวด</td>
+                    <td className="num">{window.fmtTHB(closing)}</td>
+                    {showCompare && <td className="num">{window.fmtTHB(priorClosing)}</td>}
+                    {showCompare && <td className="num"></td>}
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div style={{ borderTop: "1px solid var(--border)", padding: "14px 16px", display: "flex", justifyContent: "space-between", alignItems: "center" }} className="small muted">
+              <span>หมายเหตุประกอบงบฯ: ดูหมายเหตุข้อ 12 ถึง 18 สำหรับการแสดงรายการเพิ่มเติม</span>
+              <div className="row" style={{ gap: 6 }}>
+                <button className="btn sm ghost"><Ic name="file" size={13} /> หมายเหตุประกอบ</button>
+                <button className="btn sm"><Ic name="download" size={13} /> Excel</button>
+                <button className="btn sm"><Ic name="file" size={13} /> PDF</button>
+              </div>
+            </div>
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 14, marginTop: 14 }}>
+            {sections.map((sec, i) => (
+              <div className="card" key={i}>
+                <div className="card-pad">
+                  <div className="small muted">{sec.title.replace("กระแสเงินสดจาก", "")}</div>
+                  <div className="kpi-value" style={{ fontSize: 22, marginTop: 6, color: sec.subtotalCurrent >= 0 ? "var(--success)" : "var(--danger)" }}>
+                    {sec.subtotalCurrent >= 0 ? "+" : ""}{window.fmtTHB(sec.subtotalCurrent)}
+                  </div>
+                  <div className="tiny muted" style={{ marginTop: 4 }}>งวดก่อน: {window.fmtTHB(sec.subtotalPrior)}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+
+      {activeTab === 1 && <SegmentCFTab />}
+      {activeTab === 2 && <WCReconcileTab />}
+      {activeTab === 3 && <CashEndingTab />}
+      {activeTab === 4 && <CompareMethodsTab />}
+    </>
+  );
+}
+
+window.ReportPage = ReportPage;
+
+</script>
+
 <script type="text/babel">
 /* Main app — orchestration, tweaks, export modal, toast */
 
