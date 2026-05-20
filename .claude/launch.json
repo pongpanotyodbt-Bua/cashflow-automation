@@ -4,7 +4,7 @@
     {
       "name": "cashflow",
       "runtimeExecutable": "powershell.exe",
-      "runtimeArgs": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "C:\\Users\\User\\Desktop\\Cashflow Automation\\start-server.ps1"],
+      "runtimeArgs": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "C:\\Users\\User\\Desktop\\Cashflow Automation\\start-server-local.ps1"],
       "port": 8000
     }
   ]
