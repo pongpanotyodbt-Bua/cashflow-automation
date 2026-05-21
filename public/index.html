@@ -7351,7 +7351,7 @@ function ReportPage({ method, onExport, companyId = "CONSO", chartStyle }) {
           </p>
         </div>
         <div className="page-actions">
-          <button className="btn"><Ic name="eye" size={14} /> ดู Working Paper</button>
+          <a href="/Working_Paper_WC_Drill_Down.xlsx" download className="btn" style={{ textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 6 }}><Ic name="download" size={14} /> ดู Working Paper</a>
           <button className="btn primary" onClick={onExport}><Ic name="fileExcel" size={14} /> Export Excel</button>
         </div>
       </div>
