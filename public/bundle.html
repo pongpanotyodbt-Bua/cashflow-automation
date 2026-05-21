@@ -7096,6 +7096,51 @@ function CompareMethodsTab() {
   const d = window.CFData;
   const fmt = window.fmtTHB;
 
+  // ─ WC Data ─
+  const ar = (() => {
+    const entities = Object.keys(d.reconcileARBySegment.byEntity || {});
+    let totalOpening = 0, totalSales = 0, totalCollection = 0, totalClosing = 0, totalAdjustments = 0;
+    entities.forEach(ent => {
+      const ent_data = d.reconcileARBySegment.byEntity[ent];
+      ent_data.segments.forEach(seg => {
+        totalOpening += seg.opening;
+        totalSales += seg.sales;
+        totalCollection += seg.collection;
+        totalClosing += seg.closing;
+        totalAdjustments += seg.adjustments || 0;
+      });
+    });
+    const totalChange = totalClosing - totalOpening;
+    const cfImpact = -totalChange;
+    return { entities, totalOpening, totalSales, totalCollection, totalClosing, totalAdjustments, totalChange, cfImpact };
+  })();
+
+  const ap = (() => {
+    const entities = Object.keys(d.reconcileAPBySegment.byEntity || {});
+    let totalOpening = 0, totalPurchases = 0, totalPayment = 0, totalClosing = 0, totalAdjustments = 0;
+    entities.forEach(ent => {
+      const ent_data = d.reconcileAPBySegment.byEntity[ent];
+      ent_data.segments.forEach(seg => {
+        totalOpening += seg.opening;
+        totalPurchases += seg.purchases;
+        totalPayment += seg.payment;
+        totalClosing += seg.closing;
+        totalAdjustments += seg.adjustments || 0;
+      });
+    });
+    const totalChange = totalClosing - totalOpening;
+    const cfImpact = totalChange;
+    return { entities, totalOpening, totalPurchases, totalPayment, totalClosing, totalAdjustments, totalChange, cfImpact };
+  })();
+
+  const invOpen = d.tbBal("2025-Q4", "1200");
+  const invClose = d.tbBal("2026-Q1", "1200");
+  const invChange = invClose - invOpen;
+  const invCF = -invChange;
+
+  const accrCF = 0;
+  const totalWC = ar.cfImpact + ap.cfImpact + invCF + accrCF;
+
   const computeSections = (cfData) => cfData.sections.map(sec => {
     const sub = sec.items.filter(i => !i.header).reduce((s, i) => s + (i.current || 0), 0);
     return { title: sec.title, subtotalLabel: sec.subtotalLabel, items: sec.items, sub };
@@ -7179,7 +7224,7 @@ function CompareMethodsTab() {
       </div>
 
       {/* Operating CF comparison highlight */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 14 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 14, marginBottom: 14 }}>
         {["กิจกรรมดำเนินงาน", "กิจกรรมลงทุน", "กิจกรรมจัดหาเงิน"].map((label, i) => {
           const d1 = directSecs[i]?.sub || 0;
           const d2 = indirectSecs[i]?.sub || 0;
@@ -7204,6 +7249,50 @@ function CompareMethodsTab() {
             </div>
           );
         })}
+      </div>
+
+      {/* Working Capital Impact – Indirect Method Adjustments */}
+      <div className="card">
+        <div className="card-head">
+          <div className="card-title">Working Capital Impact (Indirect Method Adjustments)</div>
+          <div className="grow" />
+          <span className="small muted">Q1 2569 • ส่วนปรับปรุงจากการเปลี่ยนแปลง WC</span>
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, padding: "16px" }}>
+          <div>
+            <table style={{ width: "100%", borderCollapse: "collapse" }}>
+              <tbody>
+                {[
+                  ["ลูกหนี้การค้า (AR เพิ่ม = ใช้เงิน)", ar.cfImpact],
+                  ["เจ้าหนี้การค้า (AP เพิ่ม = ยังไม่จ่าย)", ap.cfImpact],
+                  ["สินค้าคงเหลือ (Inv เพิ่ม = ซื้อมาก)", invCF],
+                  ["ค่าใช้จ่ายค้างจ่าย (Accrued เพิ่ม = ยังไม่จ่าย)", accrCF],
+                ].map(([label, val], i) => (
+                  <tr key={i} style={{ borderBottom: "1px solid var(--border)" }}>
+                    <td style={{ fontSize: 12.5, padding: "7px 0" }}>{label}</td>
+                    <td style={{ textAlign: "right", fontWeight: 600, padding: "7px 0", color: val >= 0 ? "var(--success)" : "var(--danger)", fontSize: 13 }}>
+                      {val >= 0 ? "+" : ""}{fmt(val)}
+                    </td>
+                  </tr>
+                ))}
+                <tr style={{ borderTop: "2px solid var(--border)" }}>
+                  <td style={{ fontSize: 13, fontWeight: 700, padding: "8px 0 4px" }}>ผลกระทบ WC รวม</td>
+                  <td style={{ textAlign: "right", fontWeight: 700, fontSize: 16, padding: "8px 0 4px", color: totalWC >= 0 ? "var(--success)" : "var(--danger)" }}>
+                    {totalWC >= 0 ? "+" : ""}{fmt(totalWC)}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div style={{ padding: "12px", background: "var(--bg-2,#f5f5f5)", borderRadius: 8 }}>
+            <div className="small muted" style={{ marginBottom: 8 }}>💡 วิธีการอ่าน:</div>
+            <ul style={{ margin: 0, paddingLeft: 16, fontSize: 12.5 }}>
+              <li><strong>AR เพิ่มขึ้น</strong> = ขายเพิ่มแต่ยังไม่เก็บเงิน → ใช้เงินสด → CF ลด</li>
+              <li><strong>AP เพิ่มขึ้น</strong> = ซื้อเพิ่มแต่ยังไม่จ่าย → ยังมีเงินสด → CF เพิ่ม</li>
+              <li><strong>Inv เพิ่มขึ้น</strong> = ซื้อของมากกว่าขาย → ใช้เงินสด → CF ลด</li>
+            </ul>
+          </div>
+        </div>
       </div>
     </>
   );
@@ -7243,7 +7332,6 @@ function ReportPage({ method, onExport, companyId = "CONSO", chartStyle }) {
   const tabs = [
     method === "direct" ? "งบ Direct CF" : "งบ Indirect CF",
     "CF แยก Segment",
-    "WC กระทบยอด",
     "กระทบยอด Cash",
     "Direct vs Indirect",
   ];
@@ -7473,14 +7561,14 @@ function ReportPage({ method, onExport, companyId = "CONSO", chartStyle }) {
       )}
 
       {activeTab === 1 && <SegmentCFTab />}
-      {activeTab === 2 && <WCReconcileTab />}
-      {activeTab === 3 && <CashEndingTab />}
-      {activeTab === 4 && <CompareMethodsTab />}
+      {activeTab === 2 && <CashEndingTab />}
+      {activeTab === 3 && <CompareMethodsTab />}
     </>
   );
 }
 
 window.ReportPage = ReportPage;
+
 
 </script>
 
