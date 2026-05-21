@@ -7298,6 +7298,233 @@ function CompareMethodsTab() {
   );
 }
 
+// ─── Task #33 – Cross-validation Panel ───────────────────────────────────────
+function CrossValidationTab() {
+  const d = window.CFData;
+  const fmt = window.fmtTHB;
+
+  // ─ Direct CF ─
+  const opItems = d.directCF.sections[0].items;
+  const cfCashFromSales = opItems.find(i => i.label.includes("ขายสินค้า"))?.current || 0;
+  const cfCashIn  = opItems.filter(i => (i.current || 0) > 0).reduce((s, i) => s + i.current, 0);
+  const cfCashOut = opItems.filter(i => (i.current || 0) < 0).reduce((s, i) => s + i.current, 0);
+  const cfNetOp   = opItems.reduce((s, i) => s + (i.current || 0), 0);
+  const cfNetAll  = d.directCF.sections.flatMap(s => s.items).filter(i => !i.header).reduce((s, i) => s + (i.current || 0), 0);
+  const cfOpening = d.directCF.opening;
+  const cfClosing = cfOpening + cfNetAll;
+
+  // ─ AR ─
+  const arCollections = Math.abs(d.reconcileAR.totalCollection);
+  const arSales       = d.reconcileAR.totalSales;
+  const arChange      = d.reconcileAR.totalChange;
+  const arCFImpact    = d.reconcileAR.cfImpact;
+
+  // ─ AP ─
+  const apPayments = Math.abs(d.reconcileAP.totalPayment);
+  const apChange   = d.reconcileAP.totalChange;
+  const apCFImpact = d.reconcileAP.cfImpact;
+
+  // ─ Bank ─
+  const bankInflowQ1  = d.totals.inflowQ1;
+  const bankOutflowQ1 = d.totals.outflowQ1;
+  const bankNetQ1     = bankInflowQ1 - bankOutflowQ1;
+  const bankClosing   = d.bankAccounts.reduce((s, b) => s + b.balance, 0);
+
+  // ─ Gap calculations ─
+  // Cash from sales via CF vs AR reconcile
+  const cashSalesGap = cfCashFromSales - arCollections;
+  // Theoretical AR: Revenue - AR change = cash expected
+  const theoreticalCash = arSales - arChange;
+  const theoreticalGap  = cfCashFromSales - theoreticalCash;
+
+  // AP: CF cash out vs AP payments
+  const apGap = Math.abs(cfCashOut) - apPayments;
+
+  // Net CF vs Bank net
+  const cfNetOpFmtd = cfNetAll;
+  const bankVsCFGap = bankNetQ1 - cfNetAll;
+
+  // Closing balance check
+  const closingVsBankGap = bankClosing - cfClosing;
+
+  // Status helpers
+  const isOk  = v => Math.abs(v) < 5_000_000;
+  const isMed = v => Math.abs(v) < 30_000_000;
+  const tag = (v, label) => {
+    const ok = isOk(v);
+    const med = isMed(v);
+    return React.createElement('span', {
+      className: 'tag ' + (ok ? 'success' : med ? 'accent' : 'danger'),
+    }, ok ? '✓ ตรงกัน' : med ? '⚠ ต่างเล็กน้อย' : '✗ ต่างมาก');
+  };
+
+  const metricCard = (title, value, sub, color) => (
+    <div className="card" style={{ flex: 1 }}>
+      <div className="card-pad">
+        <div className="small muted" style={{ marginBottom: 4 }}>{title}</div>
+        <div style={{ fontSize: 20, fontWeight: 700, color }}>{fmt(value)}</div>
+        <div className="tiny muted" style={{ marginTop: 4 }}>{sub}</div>
+      </div>
+    </div>
+  );
+
+  const row = (label, cfVal, arVal, bankVal, note) => {
+    const gap1 = cfVal != null && arVal  != null ? cfVal - arVal  : null;
+    const gap2 = cfVal != null && bankVal != null ? cfVal - bankVal : null;
+    return (
+      <tr>
+        <td style={{ fontSize: 12.5, padding: "6px 4px" }}>{label}</td>
+        <td style={{ textAlign: "right", padding: "6px 8px", fontWeight: 600, fontSize: 12.5, color: cfVal >= 0 ? "var(--success)" : "var(--danger)" }}>{cfVal != null ? fmt(cfVal) : "—"}</td>
+        <td style={{ textAlign: "right", padding: "6px 8px", fontSize: 12.5, color: arVal >= 0 ? "var(--success)" : "var(--danger)" }}>{arVal != null ? fmt(arVal) : "—"}</td>
+        <td style={{ textAlign: "right", padding: "6px 8px", fontSize: 12.5, color: bankVal >= 0 ? "var(--success)" : "var(--danger)" }}>{bankVal != null ? fmt(bankVal) : "—"}</td>
+        <td style={{ textAlign: "right", padding: "6px 8px" }}>
+          {gap1 != null && <span style={{ fontSize: 11, color: isOk(gap1) ? "var(--success)" : isMed(gap1) ? "#E67700" : "var(--danger)" }}>Δ {fmt(gap1)}</span>}
+        </td>
+        <td style={{ padding: "6px 4px", fontSize: 11, color: "var(--text-secondary)" }}>{note}</td>
+      </tr>
+    );
+  };
+
+  return (
+    <>
+      <div className="row" style={{ marginBottom: 14, alignItems: "center" }}>
+        <div>
+          <div className="card-title">Cross-Validation: Direct CF vs AR vs Bank</div>
+          <div className="small muted">ตรวจสอบความสอดคล้องระหว่าง 3 แหล่งข้อมูล • Q1 2569</div>
+        </div>
+      </div>
+
+      {/* 3 metric cards */}
+      <div style={{ display: "flex", gap: 14, marginBottom: 14 }}>
+        {metricCard("เงินสดรับ (Direct CF)", cfCashIn, "Operating Cash Inflows", "var(--success)")}
+        {metricCard("เก็บหนี้จริง (AR Reconcile)", arCollections, "Q1 Collections per AR system", "#2A6FF0")}
+        {metricCard("เงินเข้าธนาคาร (Bank)", bankInflowQ1, "Q1 Bank Inflows (Monthly statement)", "#7C4DFF")}
+      </div>
+
+      {/* Main comparison table */}
+      <div className="card" style={{ marginBottom: 14 }}>
+        <div className="card-head">
+          <div className="card-title">ตาราง 3-Way Cross-Check</div>
+          <div className="grow" />
+          <span className="small muted">CF Statement | AR/AP System | Bank Statement</span>
+        </div>
+        <div style={{ overflowX: "auto" }}>
+          <table style={{ width: "100%", borderCollapse: "collapse" }}>
+            <thead>
+              <tr style={{ borderBottom: "2px solid var(--border)" }}>
+                {["รายการ", "Direct CF", "AR/AP System", "Bank", "Δ (CF−AR)", "หมายเหตุ"].map((h, i) => (
+                  <th key={i} style={{ textAlign: i > 0 ? "right" : "left", padding: "8px 8px", fontSize: 11.5, fontWeight: 700, color: "var(--text-secondary)", whiteSpace: "nowrap" }}>{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              <tr style={{ background: "var(--bg-2,#f5f5f5)" }}>
+                <td colSpan={6} style={{ padding: "6px 8px", fontSize: 11, fontWeight: 700, color: "var(--text-secondary)" }}>เงินสดรับ (Cash Inflows)</td>
+              </tr>
+              {row("รับจากการขายสินค้าและบริการ", cfCashFromSales, arCollections, null, "CF vs เก็บหนี้ AR")}
+              {row("รับดอกเบี้ย + ปันผล + อื่นๆ", cfCashIn - cfCashFromSales, null, null, "Non-sales inflows")}
+              {row("รวมเงินสดรับ (Operating)", cfCashIn, arCollections, bankInflowQ1, "Bank = รวมทุกประเภท")}
+
+              <tr style={{ background: "var(--bg-2,#f5f5f5)" }}>
+                <td colSpan={6} style={{ padding: "6px 8px", fontSize: 11, fontWeight: 700, color: "var(--text-secondary)" }}>เงินสดจ่าย (Cash Outflows)</td>
+              </tr>
+              {row("จ่ายผู้จัดจำหน่ายและพนักงาน", cfCashOut, -apPayments, null, "CF vs จ่าย AP")}
+              {row("รวมเงินสดจ่าย (Operating)", cfCashOut, -apPayments, -bankOutflowQ1, "Bank = รวมทุกประเภท")}
+
+              <tr style={{ background: "var(--bg-2,#f5f5f5)" }}>
+                <td colSpan={6} style={{ padding: "6px 8px", fontSize: 11, fontWeight: 700, color: "var(--text-secondary)" }}>ยอดสุทธิ (Net)</td>
+              </tr>
+              {row("Net Cash (Operating)", cfNetOp, null, null, "เฉพาะ Operating")}
+              {row("Net Cash (All Activities)", cfNetAll, null, bankNetQ1, "Bank Q1 Net")}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Balance reconciliation */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, marginBottom: 14 }}>
+        <div className="card">
+          <div className="card-pad">
+            <div className="card-title" style={{ marginBottom: 12 }}>เงินสดรับ: CF vs AR Reconcile</div>
+            <table style={{ width: "100%", borderCollapse: "collapse" }}>
+              <tbody>
+                {[
+                  ["CF: เงินสดรับจากการขาย", cfCashFromSales],
+                  ["AR: ยอดเก็บหนี้ Q1", arCollections],
+                  ["ผลต่าง (Cash Customers)", cashSalesGap],
+                ].map(([l, v], i) => (
+                  <tr key={i} style={{ borderBottom: "1px solid var(--border)" }}>
+                    <td style={{ fontSize: 12.5, padding: "6px 0" }}>{l}</td>
+                    <td style={{ textAlign: "right", fontWeight: i === 2 ? 700 : 500, fontSize: 12.5, padding: "6px 0",
+                      color: i === 2 ? (isOk(v) ? "var(--success)" : "#E67700") : (v >= 0 ? "var(--success)" : "var(--danger)") }}>
+                      {fmt(v)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <div style={{ marginTop: 10, padding: "8px 10px", background: "var(--bg-2,#f5f5f5)", borderRadius: 6, fontSize: 11.5, color: "var(--text-secondary)" }}>
+              💡 ผลต่าง = ลูกค้าจ่ายสดโดยตรง หรือ เก็บหนี้งวดก่อน
+            </div>
+          </div>
+        </div>
+
+        <div className="card">
+          <div className="card-pad">
+            <div className="card-title" style={{ marginBottom: 12 }}>ยอดปิด: CF vs Bank Balance</div>
+            <table style={{ width: "100%", borderCollapse: "collapse" }}>
+              <tbody>
+                {[
+                  ["เงินสดเปิดงวด (CF Opening)", cfOpening],
+                  ["Net Change per CF Statement", cfNetAll],
+                  ["เงินสดปิดงวด (CF Closing)", cfClosing],
+                  ["ยอดรวมบัญชีธนาคาร (Q1 End)", bankClosing],
+                  ["ผลต่าง", closingVsBankGap],
+                ].map(([l, v], i) => (
+                  <tr key={i} style={{ borderBottom: "1px solid var(--border)", background: i === 4 ? "rgba(255,200,0,0.08)" : "transparent" }}>
+                    <td style={{ fontSize: 12.5, padding: "6px 0", fontWeight: i === 2 || i === 4 ? 700 : 400 }}>{l}</td>
+                    <td style={{ textAlign: "right", fontWeight: i === 2 || i === 4 ? 700 : 500, fontSize: 12.5, padding: "6px 0",
+                      color: i === 4 ? (isOk(v) ? "var(--success)" : "#E67700") : (v >= 0 ? "var(--success)" : "var(--danger)") }}>
+                      {fmt(v)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      {/* Status summary */}
+      <div className="card">
+        <div className="card-head">
+          <div className="card-title">ผลการตรวจสอบ</div>
+          <div className="grow" />
+          <span className="small muted">Tolerance: ±5M = ตรง, ±30M = ต่างเล็กน้อย, >30M = ต้องตรวจสอบ</span>
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, padding: "16px" }}>
+          {[
+            { label: "CF Cash from Sales vs AR Collections", gap: cashSalesGap, note: "ผลต่าง = ลูกค้าสด / เก็บหนี้งวดก่อน" },
+            { label: "CF Net vs Bank Net Q1", gap: cfNetAll - bankNetQ1, note: "ผลต่าง = Investing/Financing items" },
+            { label: "CF Closing vs Bank Balance", gap: closingVsBankGap, note: "ตรวจ Bank Reconciliation" },
+          ].map(({ label, gap, note }, i) => (
+            <div key={i} style={{ padding: "12px 14px", borderRadius: 8, border: "1px solid var(--border)", background: isOk(gap) ? "rgba(31,157,85,0.06)" : isMed(gap) ? "rgba(230,119,0,0.06)" : "rgba(208,52,52,0.06)" }}>
+              <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 6 }}>{label}</div>
+              <div style={{ fontSize: 15, fontWeight: 700, color: isOk(gap) ? "var(--success)" : isMed(gap) ? "#E67700" : "var(--danger)" }}>
+                {gap >= 0 ? "+" : ""}{fmt(gap)}
+              </div>
+              <div style={{ marginTop: 6 }}>
+                {tag(gap)}
+              </div>
+              <div style={{ fontSize: 11, color: "var(--text-secondary)", marginTop: 6 }}>{note}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </>
+  );
+}
+
 // ─── Main Report Page ─────────────────────────────────────────────────────────
 function ReportPage({ method, onExport, companyId = "CONSO", chartStyle }) {
   const d = window.CFData;
@@ -7334,6 +7561,7 @@ function ReportPage({ method, onExport, companyId = "CONSO", chartStyle }) {
     "CF แยก Segment",
     "กระทบยอด Cash",
     "Direct vs Indirect",
+    "Cross-Check",
   ];
 
   return (
@@ -7563,11 +7791,14 @@ function ReportPage({ method, onExport, companyId = "CONSO", chartStyle }) {
       {activeTab === 1 && <SegmentCFTab />}
       {activeTab === 2 && <CashEndingTab />}
       {activeTab === 3 && <CompareMethodsTab />}
+      {activeTab === 4 && <CrossValidationTab />}
     </>
   );
 }
 
 window.ReportPage = ReportPage;
+
+
 
 
 </script>
