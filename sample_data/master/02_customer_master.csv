@@ -1,0 +1,51 @@
+customer_id,customer_name,customer_type,segment,credit_term_days,credit_limit,tax_id,province,sales_rep,active,opening_ar_balance,notes
+CUST-0001,ลูกค้าเงินสด (Walk-in Cash),CASH,Retail,0,0,,,Showroom,Y,0,รวมรายการขายสดที่โชว์รูม
+CUST-0002,บริษัท ไทยพาณิชย์ลีสซิ่ง จำกัด,CREDIT,Finance,7,80000000,0105540045230,กรุงเทพ,Finance Team,Y,2850000,SCB Auto
+CUST-0003,บริษัท กรุงศรี ออโต้ จำกัด,CREDIT,Finance,7,80000000,0105545089123,กรุงเทพ,Finance Team,Y,3120000,Krungsri Auto
+CUST-0004,บริษัท ทิสโก้ลีสซิ่ง จำกัด,CREDIT,Finance,7,60000000,0105537023345,กรุงเทพ,Finance Team,Y,2640000,TISCO
+CUST-0005,บริษัท ธนชาตประกันภัย ออโต้ จำกัด,CREDIT,Finance,15,50000000,0105528012398,กรุงเทพ,Finance Team,Y,1980000,Thanachart
+CUST-0006,บริษัท เกียรตินาคินภัทร ออโต้ จำกัด,CREDIT,Finance,15,40000000,0105536078912,กรุงเทพ,Finance Team,Y,1560000,KKP Auto
+CUST-0007,บริษัท ทีทีบี ลีสซิ่ง จำกัด,CREDIT,Finance,7,45000000,0105535123456,กรุงเทพ,Finance Team,Y,1320000,TTB
+CUST-0008,บริษัท โตโยต้า ลีสซิ่ง (ประเทศไทย) จำกัด,CREDIT,Finance,15,35000000,0105538234567,กรุงเทพ,Finance Team,Y,980000,Toyota Leasing
+CUST-0009,บริษัท ฮอนด้า ลีสซิ่ง (ประเทศไทย) จำกัด,CREDIT,Finance,7,55000000,0105539345678,กรุงเทพ,Finance Team,Y,1450000,Honda Leasing
+CUST-0010,บริษัท ซีไอเอ็มบี ไทย ออโต้ จำกัด,CREDIT,Finance,15,30000000,0105540456789,กรุงเทพ,Finance Team,Y,540000,CIMB Auto
+CUST-0011,บริษัท ปตท. จำกัด (มหาชน),CREDIT,Corporate,30,15000000,0107544000175,กรุงเทพ,Fleet Team,Y,580000,PTT Fleet
+CUST-0012,บริษัท ปูนซิเมนต์ไทย จำกัด (มหาชน),CREDIT,Corporate,45,12000000,0107537000223,กรุงเทพ,Fleet Team,Y,420000,SCG Fleet
+CUST-0013,บริษัท เครือเจริญโภคภัณฑ์ จำกัด,CREDIT,Corporate,30,18000000,0105533123421,กรุงเทพ,Fleet Team,Y,650000,CP Group
+CUST-0014,บริษัท การไฟฟ้าฝ่ายผลิตแห่งประเทศไทย,CREDIT,Government,60,8000000,0994000158441,นนทบุรี,Fleet Team,Y,280000,EGAT
+CUST-0015,บริษัท การไฟฟ้านครหลวง,CREDIT,Government,60,6000000,0994000158333,กรุงเทพ,Fleet Team,Y,210000,MEA
+CUST-0016,บริษัท ทรู คอร์ปอเรชั่น จำกัด (มหาชน),CREDIT,Corporate,45,8000000,0107535000257,กรุงเทพ,Fleet Team,Y,180000,True
+CUST-0017,บริษัท เซ็นทรัล รีเทล คอร์ปอเรชั่น จำกัด (มหาชน),CREDIT,Corporate,45,7000000,0107561000269,กรุงเทพ,Fleet Team,Y,140000,Central
+CUST-0018,บริษัท ไมเนอร์ อินเตอร์เนชั่นแนล จำกัด (มหาชน),CREDIT,Corporate,30,5000000,0107536000273,กรุงเทพ,Fleet Team,Y,95000,Minor
+CUST-0019,บริษัท แอดวานซ์ อินโฟร์ เซอร์วิส จำกัด (มหาชน),CREDIT,Corporate,30,6000000,0107535000211,กรุงเทพ,Fleet Team,Y,120000,AIS
+CUST-0020,บริษัท สหพัฒนพิบูล จำกัด (มหาชน),CREDIT,Corporate,45,4000000,0107536000231,กรุงเทพ,Fleet Team,Y,80000,Saha
+CUST-0021,หจก. นครศรีธรรมราช ยานยนต์,CREDIT,Dealer,45,3500000,0803525001234,นครศรีธรรมราช,Wholesale,Y,145000,Sub-dealer
+CUST-0022,หจก. สุราษฎร์ ออโต้ เซอร์วิส,CREDIT,Dealer,45,3000000,0843530002345,สุราษฎร์ธานี,Wholesale,Y,118000,Sub-dealer
+CUST-0023,หจก. ภูเก็ตการาจ,CREDIT,Dealer,45,2800000,0833527003456,ภูเก็ต,Wholesale,Y,98000,Sub-dealer
+CUST-0024,หจก. หาดใหญ่ มอเตอร์,CREDIT,Dealer,30,2500000,0903528004567,สงขลา,Wholesale,Y,76000,Sub-dealer
+CUST-0025,หจก. ระนอง ออโต้พาร์ท,CREDIT,Dealer,30,1800000,0853529005678,ระนอง,Wholesale,Y,52000,Sub-dealer
+CUST-0026,นาย สมชาย ใจดี,CASH,Retail,0,0,1100200012345,กรุงเทพ,Showroom,Y,0,Walk-in
+CUST-0027,นาย วิชัย รุ่งเรือง,CASH,Retail,0,0,1100200023456,กรุงเทพ,Showroom,Y,0,Walk-in
+CUST-0028,นาง สุพรรณี ทองดี,CASH,Retail,0,0,1100200034567,นนทบุรี,Showroom,Y,0,Walk-in
+CUST-0029,นางสาว ปรียา สุขใจ,CASH,Retail,0,0,1100200045678,ปทุมธานี,Showroom,Y,0,Walk-in
+CUST-0030,นาย ธนากร พงษ์ศักดิ์,CASH,Retail,0,0,1100200056789,สมุทรปราการ,Showroom,Y,0,Walk-in
+CUST-0031,บริษัท เอเชียมอเตอร์เซลส์ จำกัด,CREDIT,Corporate,30,3200000,0105540067890,กรุงเทพ,Fleet Team,Y,89000,Fleet customer
+CUST-0032,บริษัท ขนส่งโลจิสติก ไทย จำกัด,CREDIT,Corporate,45,2800000,0105541078901,สมุทรปราการ,Fleet Team,Y,75000,Logistics
+CUST-0033,บริษัท ไทยรุ่งเรือง อะไหล่ จำกัด,CREDIT,Dealer,30,1500000,0105542089012,กรุงเทพ,Wholesale,Y,42000,Parts dealer
+CUST-0034,บริษัท ออโต้ ซัพพลาย เซ็นเตอร์ จำกัด,CREDIT,Dealer,30,1800000,0105543090123,กรุงเทพ,Wholesale,Y,55000,Parts dealer
+CUST-0035,ลูกค้าบริการศูนย์ (Service Walk-in),CASH,Service,0,0,,กรุงเทพ,Service Center,Y,0,รวมงานบริการศูนย์
+CUST-0036,บริษัท ประกันภัยไทยวิวัฒน์ จำกัด (มหาชน),CREDIT,Insurance,30,5000000,0107536000312,กรุงเทพ,Body Shop,Y,165000,Insurance claim
+CUST-0037,บริษัท วิริยะประกันภัย จำกัด (มหาชน),CREDIT,Insurance,30,6000000,0107535000334,กรุงเทพ,Body Shop,Y,210000,Insurance claim
+CUST-0038,บริษัท ทิพยประกันภัย จำกัด (มหาชน),CREDIT,Insurance,30,4500000,0107536000356,กรุงเทพ,Body Shop,Y,135000,Insurance claim
+CUST-0039,บริษัท เมืองไทยประกันภัย จำกัด (มหาชน),CREDIT,Insurance,45,5500000,0107537000378,กรุงเทพ,Body Shop,Y,156000,Insurance claim
+CUST-0040,บริษัท สินมั่นคงประกันภัย จำกัด (มหาชน),CREDIT,Insurance,30,3500000,0107538000390,กรุงเทพ,Body Shop,Y,98000,Insurance claim
+CUST-0041,หจก. ชลบุรี ออโต้,CREDIT,Dealer,30,1200000,0203530006789,ชลบุรี,Wholesale,Y,38000,Sub-dealer
+CUST-0042,หจก. ระยอง ยานยนต์,CREDIT,Dealer,30,1000000,0213531007890,ระยอง,Wholesale,Y,32000,Sub-dealer
+CUST-0043,บริษัท ขนส่งมวลชนกรุงเทพ จำกัด (มหาชน),CREDIT,Government,90,3000000,0107536000412,กรุงเทพ,Fleet Team,Y,68000,BMTA
+CUST-0044,กรมการขนส่งทางบก,CREDIT,Government,90,2500000,0994000158555,กรุงเทพ,Fleet Team,Y,45000,DLT
+CUST-0045,บริษัท การบินไทย จำกัด (มหาชน),CREDIT,Corporate,60,3500000,0107537000456,กรุงเทพ,Fleet Team,Y,52000,Thai Airways
+CUST-0046,นาย ประยุทธ ขยันงาน,CASH,Retail,0,0,1100200067890,กรุงเทพ,Showroom,Y,0,Walk-in
+CUST-0047,นาง ศิริพร มั่งคั่ง,CASH,Retail,0,0,1100200078901,เชียงใหม่,Showroom,Y,0,Walk-in
+CUST-0048,บริษัท ไทยออยล์ จำกัด (มหาชน),CREDIT,Corporate,45,4500000,0107536000478,กรุงเทพ,Fleet Team,Y,72000,Thai Oil fleet
+CUST-0049,บริษัท บ้านปู จำกัด (มหาชน),CREDIT,Corporate,45,3000000,0107536000490,กรุงเทพ,Fleet Team,Y,48000,Banpu fleet
+CUST-0050,บริษัท เอสซีจี โลจิสติกส์ จำกัด,CREDIT,Corporate,30,2200000,0105541091234,กรุงเทพ,Fleet Team,Y,36000,SCG Logistics

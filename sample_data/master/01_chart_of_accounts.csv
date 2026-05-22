@@ -1,0 +1,84 @@
+account_code,account_name_th,account_name_en,account_type,statement,normal_balance,parent_code
+1000,สินทรัพย์,Assets,HEADER,BS,DR,
+1100,สินทรัพย์หมุนเวียน,Current Assets,HEADER,BS,DR,1000
+1110,เงินสดและรายการเทียบเท่าเงินสด,Cash and Cash Equivalents,ASSET,BS,DR,1100
+1111,เงินสดย่อย,Petty Cash,ASSET,BS,DR,1110
+1112,เงินฝากธนาคาร - กระแสรายวัน,Bank - Current Account,ASSET,BS,DR,1110
+1113,เงินฝากธนาคาร - ออมทรัพย์,Bank - Savings Account,ASSET,BS,DR,1110
+1114,เงินฝากประจำ,Bank - Fixed Deposit,ASSET,BS,DR,1110
+1120,ลูกหนี้การค้ากิจการอื่น,Trade AR - Third Parties,ASSET,BS,DR,1100
+1121,ลูกหนี้การค้า - ลูกค้าเงินสด,Trade AR - Cash Customer,ASSET,BS,DR,1120
+1122,ลูกหนี้การค้า - ไฟแนนซ์,Trade AR - Finance Co,ASSET,BS,DR,1120
+1123,ลูกหนี้การค้า - องค์กร/ฟลีท,Trade AR - Corporate/Fleet,ASSET,BS,DR,1120
+1124,ค่าเผื่อหนี้สงสัยจะสูญ,Allowance for Doubtful Accounts,CONTRA_ASSET,BS,CR,1120
+1130,ลูกหนี้หมุนเวียนอื่น,Other Current Receivables,ASSET,BS,DR,1100
+1140,สินค้าคงเหลือ,Inventory,ASSET,BS,DR,1100
+1141,สินค้าคงเหลือ - รถใหม่,Inventory - New Vehicles,ASSET,BS,DR,1140
+1142,สินค้าคงเหลือ - อะไหล่,Inventory - Spare Parts,ASSET,BS,DR,1140
+1143,สินค้าคงเหลือ - รถมือสอง,Inventory - Used Vehicles,ASSET,BS,DR,1140
+1150,สินทรัพย์หมุนเวียนอื่น,Other Current Assets,ASSET,BS,DR,1100
+1200,สินทรัพย์ไม่หมุนเวียน,Non-Current Assets,HEADER,BS,DR,1000
+1210,เงินลงทุนในบริษัทย่อย,Investment in Subsidiary,ASSET,BS,DR,1200
+1220,ลูกหนี้ไม่หมุนเวียนอื่น,Other Non-Current Receivables,ASSET,BS,DR,1200
+1230,อสังหาริมทรัพย์เพื่อการลงทุน,Investment Property,ASSET,BS,DR,1200
+1310,ที่ดิน อาคารและอุปกรณ์,Property Plant and Equipment,HEADER,BS,DR,1200
+1311,ที่ดิน,Land,ASSET,BS,DR,1310
+1312,อาคารและสิ่งปลูกสร้าง,Buildings,ASSET,BS,DR,1310
+1313,ยานพาหนะ,Vehicles,ASSET,BS,DR,1310
+1314,เครื่องตกแต่งและอุปกรณ์สำนักงาน,Furniture and Office Equipment,ASSET,BS,DR,1310
+1319,ค่าเสื่อมราคาสะสม,Accumulated Depreciation,CONTRA_ASSET,BS,CR,1310
+1320,สินทรัพย์สิทธิการใช้,Right-of-Use Assets,ASSET,BS,DR,1200
+1330,สินทรัพย์ไม่มีตัวตน,Intangible Assets,ASSET,BS,DR,1200
+1340,สินทรัพย์ภาษีเงินได้รอการตัดบัญชี,Deferred Tax Assets,ASSET,BS,DR,1200
+1350,สินทรัพย์ไม่หมุนเวียนอื่น,Other Non-Current Assets,ASSET,BS,DR,1200
+2000,หนี้สิน,Liabilities,HEADER,BS,CR,
+2100,หนี้สินหมุนเวียน,Current Liabilities,HEADER,BS,CR,2000
+2110,เงินกู้ยืมระยะสั้นจากสถาบันการเงิน,Short-term Loan from FI,LIABILITY,BS,CR,2100
+2120,เจ้าหนี้การค้า,Trade AP,LIABILITY,BS,CR,2100
+2121,เจ้าหนี้การค้า - ฮอนด้า,AP - Honda,LIABILITY,BS,CR,2120
+2122,เจ้าหนี้การค้า - อะไหล่,AP - Spare Parts Vendors,LIABILITY,BS,CR,2120
+2123,เจ้าหนี้การค้า - บริการ,AP - Service Vendors,LIABILITY,BS,CR,2120
+2130,เจ้าหนี้หมุนเวียนอื่น,Other Current Payables,LIABILITY,BS,CR,2100
+2140,ส่วนเงินกู้ยืมระยะยาวที่ถึงกำหนดภายในหนึ่งปี,Current Portion of LT Loan,LIABILITY,BS,CR,2100
+2150,ส่วนหนี้สินตามสัญญาเช่าที่ถึงกำหนดภายในหนึ่งปี,Current Portion of Lease Liability,LIABILITY,BS,CR,2100
+2160,ภาษีเงินได้นิติบุคคลค้างจ่าย,Accrued Income Tax,LIABILITY,BS,CR,2100
+2170,หนี้สินหมุนเวียนอื่น,Other Current Liabilities,LIABILITY,BS,CR,2100
+2200,หนี้สินไม่หมุนเวียน,Non-Current Liabilities,HEADER,BS,CR,2000
+2210,เงินกู้ยืมระยะยาวจากสถาบันการเงิน,LT Loan from FI,LIABILITY,BS,CR,2200
+2220,หนี้สินตามสัญญาเช่า,Lease Liability,LIABILITY,BS,CR,2200
+2230,ประมาณการหนี้สินผลประโยชน์พนักงาน,Provision for Employee Benefits,LIABILITY,BS,CR,2200
+2240,หนี้สินไม่หมุนเวียนอื่น,Other Non-Current Liabilities,LIABILITY,BS,CR,2200
+3000,ส่วนของผู้ถือหุ้น,Equity,HEADER,BS,CR,
+3110,ทุนจดทะเบียน,Share Capital - Registered,EQUITY,BS,CR,3000
+3120,ส่วนเกินมูลค่าหุ้นสามัญ,Share Premium,EQUITY,BS,CR,3000
+3130,ส่วนเกินทุนจากการจัดโครงสร้างทางธุรกิจ,Premium from Business Restructure,EQUITY,BS,CR,3000
+3140,สำคัญแสดงสิทธิที่จะซื้อหุ้น,Warrants,EQUITY,BS,CR,3000
+3150,กำไรสะสม - จัดสรรแล้ว - สำรองตามกฎหมาย,Retained Earnings - Legal Reserve,EQUITY,BS,CR,3000
+3160,กำไรสะสม - ยังไม่ได้จัดสรร,Retained Earnings - Unappropriated,EQUITY,BS,CR,3000
+3170,ส่วนของผู้ถือหุ้นส่วนน้อย,Non-Controlling Interest,EQUITY,BS,CR,3000
+4000,รายได้,Revenue,HEADER,PL,CR,
+4110,รายได้จากการขายรถยนต์,Revenue - Vehicle Sales,REVENUE,PL,CR,4000
+4120,รายได้จากการบริการ (ศูนย์บริการ),Revenue - Service Center,REVENUE,PL,CR,4000
+4130,รายได้จากการขายอะไหล่,Revenue - Spare Parts,REVENUE,PL,CR,4000
+4140,รายได้ค่าก่อสร้าง / งานตัวถัง,Revenue - Body Shop/Construction,REVENUE,PL,CR,4000
+4150,เงินปันผลรับ,Dividend Income,REVENUE,PL,CR,4000
+4160,รายได้ค่าคอมมิชชั่นประกัน,Insurance Commission Income,REVENUE,PL,CR,4000
+4170,กำไรจากการปรับมูลค่าสินค้าคงเหลือ,Gain on Inventory Revaluation,REVENUE,PL,CR,4000
+4180,กำไรจากการจำหน่ายอุปกรณ์,Gain on Disposal of Equipment,REVENUE,PL,CR,4000
+4190,รายได้อื่น,Other Income,REVENUE,PL,CR,4000
+5000,ค่าใช้จ่าย,Expenses,HEADER,PL,DR,
+5110,ต้นทุนขาย - รถยนต์,COGS - Vehicles,EXPENSE,PL,DR,5000
+5120,ต้นทุนขาย - อะไหล่,COGS - Spare Parts,EXPENSE,PL,DR,5000
+5130,ต้นทุนการให้บริการ,Cost of Services,EXPENSE,PL,DR,5000
+5210,ต้นทุนในการจัดจำหน่าย,Cost of Distribution,EXPENSE,PL,DR,5000
+5310,ค่าใช้จ่ายในการขาย,Selling Expenses,EXPENSE,PL,DR,5000
+5410,ค่าใช้จ่ายในการบริหาร,Administrative Expenses,EXPENSE,PL,DR,5000
+5411,เงินเดือนและสวัสดิการ,Salaries and Benefits,EXPENSE,PL,DR,5410
+5412,ค่าเช่า,Rent,EXPENSE,PL,DR,5410
+5413,ค่าสาธารณูปโภค,Utilities,EXPENSE,PL,DR,5410
+5414,ค่าเสื่อมราคา,Depreciation,EXPENSE,PL,DR,5410
+5415,ค่าตัดจำหน่าย,Amortization,EXPENSE,PL,DR,5410
+5416,ค่าธรรมเนียมและบริการวิชาชีพ,Professional Fees,EXPENSE,PL,DR,5410
+5417,ค่าใช้จ่ายในการบริหารอื่น,Other Admin Expenses,EXPENSE,PL,DR,5410
+5510,ต้นทุนทางการเงิน,Finance Cost,EXPENSE,PL,DR,5000
+5610,ค่าใช้จ่ายภาษีเงินได้,Income Tax Expense,EXPENSE,PL,DR,5000
