@@ -4,6 +4,7 @@ function AccountingInput({ toast, companyId = "CONSO" }) {
   const d = window.CFData;
   const [tab, setTab] = React.useState("gl");
   const [showImport, setShowImport] = React.useState(false);
+  const [glData, setGlData] = React.useState(window.glImported || null);
   const activeCo = d.companies.find(c => c.id === companyId) || d.companies[0];
 
   return (
@@ -29,19 +30,94 @@ function AccountingInput({ toast, companyId = "CONSO" }) {
         <button className={"tab " + (tab === "inv" ? "active" : "")} onClick={() => setTab("inv")}>สินค้าคงเหลือ</button>
       </div>
 
-      {tab === "gl" && <GLTab />}
+      {tab === "gl" && <GLTab glData={glData} onClear={() => { window.glImported = null; setGlData(null); }} />}
       {tab === "ar" && <ARTab companyId={companyId} />}
       {tab === "ap" && <APTab companyId={companyId} />}
       {tab === "inv" && <InvTab />}
 
-      {showImport && <ImportLedgerModal onClose={() => setShowImport(false)} onDone={() => {setShowImport(false);toast("นำเข้าข้อมูลจาก ERP สำเร็จ");}} />}
+      {showImport && <ImportLedgerModal onClose={() => setShowImport(false)} onDone={(rows) => {
+        window.glImported = rows;
+        setGlData(rows);
+        setShowImport(false);
+        toast(`นำเข้า GL สำเร็จ ${rows.length.toLocaleString()} รายการ`);
+      }} />}
     </>);
 
 }
 
-function GLTab() {
+function GLTab({ glData, onClear }) {
   const d = window.CFData;
-  // Mock GL balances
+  const [search, setSearch] = React.useState("");
+
+  // ── Imported GL data from Business Central ──
+  if (glData && glData.length > 0) {
+    const byAccount = {};
+    glData.forEach(r => {
+      if (!r.glAccount) return;
+      if (!byAccount[r.glAccount]) {
+        byAccount[r.glAccount] = { code: r.glAccount, description: r.description, debit: 0, credit: 0, entries: 0 };
+      }
+      byAccount[r.glAccount].debit += r.debit;
+      byAccount[r.glAccount].credit += r.credit;
+      byAccount[r.glAccount].entries++;
+    });
+    let rows = Object.values(byAccount).sort((a, b) => a.code.localeCompare(b.code));
+    if (search) rows = rows.filter(r => r.code.includes(search) || r.description.toLowerCase().includes(search.toLowerCase()));
+    const totDebit = rows.reduce((s, r) => s + r.debit, 0);
+    const totCredit = rows.reduce((s, r) => s + r.credit, 0);
+
+    return (
+      <>
+        <div style={{ background: "var(--success-soft)", border: "1px solid var(--success)", borderRadius: 8, padding: "8px 14px", marginBottom: 14, fontSize: 13, color: "var(--success)", display: "flex", alignItems: "center", gap: 8 }}>
+          <Ic name="check" size={14} />
+          <span>ข้อมูล GL จาก Business Central — {glData.length.toLocaleString()} รายการ • {rows.length} GL accounts</span>
+          <button className="btn sm" style={{ marginLeft: "auto" }} onClick={onClear}>ล้างข้อมูล</button>
+        </div>
+        <div className="row" style={{ marginBottom: 14 }}>
+          <div className="search-wrap">
+            <Ic name="search" size={14} className="search-ic" />
+            <input className="input search" placeholder="ค้นหารหัสหรือชื่อบัญชี…" style={{ width: 280 }} value={search} onChange={(e) => setSearch(e.target.value)} />
+          </div>
+          <div className="grow" />
+          <button className="btn sm"><Ic name="download" size={13} /> Export GL</button>
+        </div>
+        <div className="card">
+          <table className="tbl">
+            <thead>
+              <tr>
+                <th style={{ width: 110 }}>รหัส GL</th>
+                <th>ชื่อบัญชี / รายละเอียด</th>
+                <th className="num">รายการ</th>
+                <th className="num">รวมเดบิต</th>
+                <th className="num">รวมเครดิต</th>
+                <th className="num">Net</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((r) => (
+                <tr key={r.code}>
+                  <td className="mono small">{r.code}</td>
+                  <td style={{ fontWeight: 500 }}>{r.description}</td>
+                  <td className="num muted small">{r.entries.toLocaleString()}</td>
+                  <td className="num">{window.fmtTHB(r.debit)}</td>
+                  <td className="num neg">{window.fmtTHB(r.credit)}</td>
+                  <td className="num" style={{ fontWeight: 600, color: r.debit - r.credit >= 0 ? "var(--success)" : "var(--danger)" }}>{window.fmtTHB(r.debit - r.credit)}</td>
+                </tr>
+              ))}
+              <tr style={{ background: "var(--bg-subtle)", fontWeight: 600 }}>
+                <td colSpan="3">รวม ({rows.length} accounts)</td>
+                <td className="num">{window.fmtTHB(totDebit)}</td>
+                <td className="num neg">{window.fmtTHB(totCredit)}</td>
+                <td className="num">{window.fmtTHB(totDebit - totCredit)}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </>
+    );
+  }
+
+  // ── Mock GL data (default) ──
   const balances = {
     "1110": 28_400_000, "1120": 469_220_000, "1140": 235_400_000, "1150": 18_200_000,
     "1160": 139_422_800, "1210": 1_240_800_000, "2110": 144_500_000, "2120": 28_400_000,
@@ -339,51 +415,214 @@ function Mini({ label, value, color, accent }) {
 
 }
 
+// ── Business Central GL column mapping ──
+const BC_GL_COLUMNS = {
+  postingDate: ["Posting Date"],
+  glAccount:   ["G/L Account No.", "G/L Account No"],
+  description: ["Description"],
+  description2:["Description 2"],
+  amount:      ["Amount"],
+  documentType:["Document Type"],
+  documentNo:  ["Document No.", "Document No"],
+  genPostingType: ["Gen. Posting Type"],
+  customerNo:  ["Cutomer No", "Customer No.", "Customer No"],
+  customerName:["Cutomer Name", "Customer Name"],
+  vendorName:  ["Vendor Name"],
+  departmentCode: ["Department Code"],
+  entryNo:     ["Entry No.", "Entry No"],
+};
+
+function findColIndex(headers, aliases) {
+  for (const alias of aliases) {
+    const idx = headers.findIndex(h => h && h.toString().trim() === alias);
+    if (idx !== -1) return idx;
+  }
+  return -1;
+}
+
+function parseGLExcel(arrayBuffer) {
+  const wb = XLSX.read(arrayBuffer, { type: "array", cellDates: true });
+  const ws = wb.Sheets[wb.SheetNames[0]];
+  const raw = XLSX.utils.sheet_to_json(ws, { header: 1, raw: false, defval: "" });
+  if (raw.length < 2) return { rows: [], colMap: {} };
+
+  const headers = raw[0];
+  const colMap = {};
+  for (const [key, aliases] of Object.entries(BC_GL_COLUMNS)) {
+    const idx = findColIndex(headers, aliases);
+    if (idx !== -1) colMap[key] = idx;
+  }
+
+  const rows = [];
+  for (let i = 1; i < raw.length; i++) {
+    const r = raw[i];
+    const acct = colMap.glAccount !== undefined ? r[colMap.glAccount] : "";
+    if (!acct || acct.toString().trim() === "") continue;
+    const amt = parseFloat((r[colMap.amount] || "0").toString().replace(/,/g, "")) || 0;
+    rows.push({
+      postingDate:    colMap.postingDate  !== undefined ? r[colMap.postingDate]  : "",
+      glAccount:      acct.toString().trim(),
+      description:    colMap.description  !== undefined ? r[colMap.description]  : "",
+      description2:   colMap.description2 !== undefined ? r[colMap.description2] : "",
+      amount:         amt,
+      debit:          amt > 0 ? amt : 0,
+      credit:         amt < 0 ? Math.abs(amt) : 0,
+      documentType:   colMap.documentType !== undefined ? r[colMap.documentType] : "",
+      documentNo:     colMap.documentNo   !== undefined ? r[colMap.documentNo]   : "",
+      genPostingType: colMap.genPostingType !== undefined ? r[colMap.genPostingType] : "",
+      customerNo:     colMap.customerNo   !== undefined ? r[colMap.customerNo]   : "",
+      customerName:   colMap.customerName !== undefined ? r[colMap.customerName] : "",
+      vendorName:     colMap.vendorName   !== undefined ? r[colMap.vendorName]   : "",
+      departmentCode: colMap.departmentCode !== undefined ? r[colMap.departmentCode] : "",
+      entryNo:        colMap.entryNo      !== undefined ? r[colMap.entryNo]      : "",
+    });
+  }
+  return { rows, colMap };
+}
+
 function ImportLedgerModal({ onClose, onDone }) {
-  const [source, setSource] = React.useState("erp-sap");
+  const [source, setSource] = React.useState("bc");
+  const [step, setStep] = React.useState(1);
+  const [fileName, setFileName] = React.useState("");
+  const [parsed, setParsed] = React.useState(null);
+  const [error, setError] = React.useState("");
+  const fileRef = React.useRef();
+
+  const handleFile = (file) => {
+    if (!file) return;
+    setFileName(file.name);
+    setError("");
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const result = parseGLExcel(e.target.result);
+        if (result.rows.length === 0) { setError("ไม่พบข้อมูลในไฟล์ หรือ format ไม่ถูกต้อง — ตรวจสอบว่ามี column: Posting Date, G/L Account No., Amount"); return; }
+        setParsed(result);
+        setStep(2);
+      } catch (err) { setError("อ่านไฟล์ไม่ได้: " + err.message); }
+    };
+    reader.readAsArrayBuffer(file);
+  };
+
+  const handleDrop = (e) => { e.preventDefault(); handleFile(e.dataTransfer.files[0]); };
+
+  const handleConfirm = () => {
+    setStep(3);
+    setTimeout(() => onDone(parsed.rows), 400);
+  };
+
+  const stats = parsed ? {
+    totalRows:  parsed.rows.length,
+    glAccounts: [...new Set(parsed.rows.map(r => r.glAccount))].length,
+    totalDebit: parsed.rows.reduce((s, r) => s + r.debit, 0),
+    totalCredit: parsed.rows.reduce((s, r) => s + r.credit, 0),
+    dateMin: parsed.rows.map(r => r.postingDate).filter(Boolean).sort()[0] || "—",
+    dateMax: parsed.rows.map(r => r.postingDate).filter(Boolean).sort().slice(-1)[0] || "—",
+  } : null;
+
+  const sources = [
+    { id: "bc",          n: "Business Central (D365)", sub: "Excel GL Entries export" },
+    { id: "express",     n: "Express Accounting",      sub: "เชื่อมต่อระบบ" },
+    { id: "flowaccount", n: "FlowAccount",             sub: "เชื่อมต่อระบบ" },
+    { id: "peak",        n: "PEAK Account",            sub: "เชื่อมต่อระบบ" },
+    { id: "excel",       n: "Excel / CSV ทั่วไป",       sub: "อัปโหลดไฟล์" },
+    { id: "api",         n: "API Endpoint (Custom)",   sub: "เชื่อมต่อระบบ" },
+  ];
+  const canUpload = source === "bc" || source === "excel";
+
   return (
     <div className="modal-backdrop" onClick={onClose}>
       <div className="modal lg" onClick={(e) => e.stopPropagation()}>
         <div className="modal-head">
-          <div className="modal-title">นำเข้าข้อมูลจากระบบบัญชี</div>
+          <div className="modal-title">นำเข้าข้อมูล GL จากระบบบัญชี</div>
+          <span className="tag" style={{ marginLeft: 10 }}>ขั้นตอน {step}/3</span>
           <button className="iconbtn" style={{ marginLeft: "auto" }} onClick={onClose}><Ic name="x" size={16} /></button>
         </div>
         <div className="modal-body">
-          <div className="small muted" style={{ marginBottom: 8 }}>เลือกระบบต้นทาง</div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10, marginBottom: 18 }}>
-            {[
-            { id: "erp-sap", n: "ERP ภายในองค์กร" },
-            { id: "express", n: "Express Accounting" },
-            { id: "flowaccount", n: "FlowAccount" },
-            { id: "excel", n: "Excel / CSV Template" },
-            { id: "peak", n: "PEAK Account" },
-            { id: "api", n: "API Endpoint (Custom)" }].
-            map((s) =>
-            <button key={s.id} className="card" style={{
-              padding: 14, textAlign: "left", cursor: "pointer",
-              borderColor: source === s.id ? "var(--accent)" : "var(--border)",
-              background: source === s.id ? "var(--accent-soft)" : "var(--bg)"
-            }} onClick={() => setSource(s.id)}>
-                <div style={{ fontWeight: 500 }}>{s.n}</div>
-                <div className="tiny faint" style={{ marginTop: 2 }}>{s.id === "excel" ? "อัปโหลดไฟล์" : "เชื่อมต่อระบบ"}</div>
-              </button>
-            )}
-          </div>
-          <div className="form-grid">
-            <label className="field">งวดบัญชี<select className="select"><option>มี.ค. 2026</option><option>ก.พ. 2026</option><option>ม.ค. 2026</option></select></label>
-            <label className="field">ประเภทข้อมูล
-              <select className="select"><option>General Ledger (เต็ม)</option><option>เฉพาะลูกหนี้ (AR)</option><option>เฉพาะเจ้าหนี้ (AP)</option><option>สินค้าคงเหลือ</option></select>
-            </label>
-            <label className="field full"><span className="row" style={{ gap: 6 }}><input type="checkbox" defaultChecked />อัปเดต Mapping CF อัตโนมัติตามรหัส GL ที่ตั้งไว้</span></label>
-          </div>
+
+          {step === 1 && (
+            <>
+              <div className="small muted" style={{ marginBottom: 8 }}>เลือกระบบต้นทาง</div>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10, marginBottom: 18 }}>
+                {sources.map((s) => (
+                  <button key={s.id} className="card" style={{ padding: 14, textAlign: "left", cursor: "pointer", borderColor: source === s.id ? "var(--accent)" : "var(--border)", background: source === s.id ? "var(--accent-soft)" : "var(--bg)" }} onClick={() => setSource(s.id)}>
+                    <div style={{ fontWeight: 500 }}>{s.n}</div>
+                    <div className="tiny faint" style={{ marginTop: 2 }}>{s.sub}</div>
+                  </button>
+                ))}
+              </div>
+              {canUpload && (
+                <div style={{ border: "1.5px dashed var(--border-strong)", borderRadius: 10, padding: 38, textAlign: "center", background: "var(--bg-subtle)", cursor: "pointer" }}
+                  onDrop={handleDrop} onDragOver={(e) => e.preventDefault()} onClick={() => fileRef.current.click()}>
+                  <Ic name="upload" size={24} style={{ color: "var(--text-tertiary)" }} />
+                  <div style={{ marginTop: 8, fontWeight: 500 }}>ลากไฟล์มาวาง หรือ คลิกเลือกไฟล์</div>
+                  <div className="small muted" style={{ marginTop: 4 }}>รองรับ .xlsx — General Ledger Entries จาก Business Central</div>
+                  <button className="btn primary" style={{ marginTop: 14 }} onClick={(e) => { e.stopPropagation(); fileRef.current.click(); }}>เลือกไฟล์</button>
+                  <input ref={fileRef} type="file" accept=".xlsx,.xls" style={{ display: "none" }} onChange={(e) => handleFile(e.target.files[0])} />
+                </div>
+              )}
+              {error && <div style={{ color: "var(--danger)", marginTop: 10, fontSize: 13 }}>{error}</div>}
+              <div className="small muted" style={{ marginTop: 12 }}>
+                <strong>Columns ที่ต้องการ:</strong> <code>Posting Date</code> · <code>G/L Account No.</code> · <code>Description</code> · <code>Amount</code> (ลำดับคอลัมน์ไม่สำคัญ)
+              </div>
+            </>
+          )}
+
+          {step === 2 && parsed && (
+            <>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10, marginBottom: 16 }}>
+                <div className="kpi" style={{ padding: "10px 14px" }}><div className="kpi-label">รายการทั้งหมด</div><div className="kpi-value" style={{ fontSize: 20 }}>{stats.totalRows.toLocaleString()}</div></div>
+                <div className="kpi" style={{ padding: "10px 14px" }}><div className="kpi-label">รหัส GL</div><div className="kpi-value" style={{ fontSize: 20 }}>{stats.glAccounts}</div></div>
+                <div className="kpi" style={{ padding: "10px 14px" }}><div className="kpi-label">รวมเดบิต</div><div className="kpi-value" style={{ fontSize: 20, color: "var(--success)" }}>{window.fmtTHB(stats.totalDebit)}</div></div>
+                <div className="kpi" style={{ padding: "10px 14px" }}><div className="kpi-label">รวมเครดิต</div><div className="kpi-value" style={{ fontSize: 20, color: "var(--danger)" }}>{window.fmtTHB(stats.totalCredit)}</div></div>
+              </div>
+              <div className="small muted" style={{ marginBottom: 8 }}>ตัวอย่างข้อมูล (10 รายการแรก) · ช่วงเวลา: {stats.dateMin} — {stats.dateMax} · ไฟล์: {fileName}</div>
+              <div style={{ overflowX: "auto", maxHeight: 240, overflowY: "auto" }}>
+                <table className="tbl">
+                  <thead>
+                    <tr>
+                      <th>Posting Date</th><th>GL Account</th><th>Description</th><th>Doc Type</th><th className="num">Debit</th><th className="num">Credit</th><th>Dept</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {parsed.rows.slice(0, 10).map((r, i) => (
+                      <tr key={i}>
+                        <td className="mono small">{r.postingDate}</td>
+                        <td className="mono small">{r.glAccount}</td>
+                        <td className="small">{r.description}</td>
+                        <td className="small muted">{r.documentType}</td>
+                        <td className="num small">{r.debit > 0 ? window.fmtTHB(r.debit) : "—"}</td>
+                        <td className="num small neg">{r.credit > 0 ? window.fmtTHB(r.credit) : "—"}</td>
+                        <td className="small muted">{r.departmentCode}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
+          )}
+
+          {step === 3 && (
+            <div style={{ textAlign: "center", padding: "20px 0" }}>
+              <div style={{ width: 56, height: 56, borderRadius: "50%", background: "var(--success-soft)", color: "var(--success)", display: "inline-grid", placeItems: "center", marginBottom: 12 }}>
+                <Ic name="check" size={26} />
+              </div>
+              <div style={{ fontSize: 16, fontWeight: 600 }}>นำเข้าสำเร็จ</div>
+              <div className="muted" style={{ marginTop: 4 }}>{stats?.totalRows.toLocaleString()} รายการ · {stats?.glAccounts} GL accounts</div>
+            </div>
+          )}
+
         </div>
         <div className="modal-foot">
-          <button className="btn" onClick={onClose}>ยกเลิก</button>
-          <button className="btn primary" onClick={onDone}>เริ่มนำเข้า</button>
+          {step === 1 && <button className="btn" onClick={onClose}>ยกเลิก</button>}
+          {step === 2 && <>
+            <button className="btn" onClick={() => { setParsed(null); setStep(1); }}>← เลือกใหม่</button>
+            <button className="btn primary" onClick={handleConfirm}>นำเข้า {stats?.totalRows.toLocaleString()} รายการ →</button>
+          </>}
         </div>
       </div>
-    </div>);
-
+    </div>
+  );
 }
 
 window.AccountingInput = AccountingInput;
