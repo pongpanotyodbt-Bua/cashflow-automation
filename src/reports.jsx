@@ -550,7 +550,8 @@ function CompareMethodsTab() {
   const invChange = invClose - invOpen;
   const invCF = -invChange;
 
-  const accrCF = 0;
+  const indOpItems = d.indirectCF.sections[0].items;
+  const accrCF = (indOpItems.find(i => i.label === "ค่าใช้จ่ายค้างจ่าย เพิ่มขึ้น/(ลดลง)") || {}).current || 0;
   const totalWC = ar.cfImpact + ap.cfImpact + invCF + accrCF;
 
   const computeSections = (cfData) => cfData.sections.map(sec => {

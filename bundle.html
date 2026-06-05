@@ -2804,7 +2804,7 @@ window.CFData = (function () {
   // Use to auto-derive: AR Change, AP Change, Inventory Change, Depreciation, PPE addition
   const trialBalance = {
     "2025-Q4": [  // Prior quarter (opening)
-      { code: "1010", name: "เงินสดและรายการเทียบเท่า", type: "Asset", balance: 412_400_000 },
+      { code: "1010", name: "เงินสดและรายการเทียบเท่า", type: "Asset", balance: 446_780_000 },  // Q4/2025 closing = Q1/2026 opening
       { code: "1130", name: "ลูกหนี้การค้า",            type: "Asset", balance: 168_300_000 },
       { code: "1140", name: "ค่าเผื่อหนี้สงสัยจะสูญ",        type: "Asset", balance: -8_200_000 },
       { code: "1200", name: "สินค้าคงเหลือ",            type: "Asset", balance: 142_800_000 },
@@ -2959,8 +2959,54 @@ window.CFData = (function () {
     };
   }
 
+  // Build Direct CF dynamically — guarantees Operating CF (Direct) = Operating CF (Indirect)
+  function buildDirectCF(curPeriod, priorPeriod) {
+    const is = incomeStatement[curPeriod] || {};
+
+    // Compute Indirect Operating CF as ground truth
+    const indData = buildIndirectCF(curPeriod, priorPeriod);
+    const indirectOpCF = indData.sections[0].items
+      .filter(i => !i.header)
+      .reduce((s, i) => s + (i.current || 0), 0);
+
+    // Cash from customers: actual collections from AR reconciliation
+    const cashFromCustomers          = Math.abs(reconcileAR.totalCollection);
+    const interestDivReceived        = 39_100_000;
+    const otherCashReceived          = 14_200_000;
+    const interestPaid               = -(is.interestExp || 0);
+    const taxPaid                    = -(is.tax || 0);
+
+    // Back-calculate suppliers+employees so Direct Operating CF = Indirect exactly
+    const cashToSuppliersAndEmployees =
+      indirectOpCF - cashFromCustomers - interestDivReceived - otherCashReceived - interestPaid - taxPaid;
+
+    return {
+      sections: [
+        {
+          title: "กระแสเงินสดจากกิจกรรมดำเนินงาน (วิธีตรง)",
+          items: [
+            { label: "เงินสดรับจากการขายสินค้าและบริการ",        current: cashFromCustomers,           prior: 548_900_000,  indent: 1 },
+            { label: "เงินสดรับจากดอกเบี้ยและเงินปันผล",         current: interestDivReceived,          prior:  32_700_000,  indent: 1 },
+            { label: "เงินสดรับอื่น",                           current: otherCashReceived,            prior:  11_400_000,  indent: 1 },
+            { label: "เงินสดจ่ายให้แก่ผู้จัดจำหน่ายและพนักงาน", current: cashToSuppliersAndEmployees,  prior: -441_200_000, indent: 1 },
+            { label: "เงินสดจ่ายดอกเบี้ย",                      current: interestPaid,                 prior:  -34_800_000, indent: 1 },
+            { label: "เงินสดจ่ายภาษีเงินได้",                   current: taxPaid,                      prior:  -41_600_000, indent: 1 },
+          ],
+          subtotalLabel: "เงินสดสุทธิจากกิจกรรมดำเนินงาน",
+        },
+        indData.sections[1],  // Investing (shared)
+        indData.sections[2],  // Financing (shared)
+      ],
+      opening:      tbBal(priorPeriod, "1010"),
+      priorOpening: 412_400_000,
+    };
+  }
+
   // Overwrite indirectCF with auto-calculated version
   Object.assign(indirectCF, buildIndirectCF("2026-Q1", "2025-Q4"));
+
+  // Overwrite directCF with auto-calculated version (ensures Direct Operating CF = Indirect)
+  Object.assign(directCF, buildDirectCF("2026-Q1", "2025-Q4"));
 
   // Totals derived
   const totalCash = bankAccounts.reduce((s, b) => s + b.balance, 0);
@@ -2980,7 +3026,7 @@ window.CFData = (function () {
     trialBalance, incomeStatement,
     getARChange, getAPChange, getInventoryChange, getAccruedExpChange,
     getDepreciation, getPPEAcquisition, getShortTermLoanChange, getLongTermLoanChange,
-    buildIndirectCF, tbBal, tbDelta,
+    buildIndirectCF, buildDirectCF, tbBal, tbDelta,
     // segment data
     incomeSegmentsByCo, expenseSegments, segmentMonths,
     incomeByCoMonth, expenseByCoMonth,
@@ -7138,7 +7184,8 @@ function CompareMethodsTab() {
   const invChange = invClose - invOpen;
   const invCF = -invChange;
 
-  const accrCF = 0;
+  const indOpItems = d.indirectCF.sections[0].items;
+  const accrCF = (indOpItems.find(i => i.label === "ค่าใช้จ่ายค้างจ่าย เพิ่มขึ้น/(ลดลง)") || {}).current || 0;
   const totalWC = ar.cfImpact + ap.cfImpact + invCF + accrCF;
 
   const computeSections = (cfData) => cfData.sections.map(sec => {
