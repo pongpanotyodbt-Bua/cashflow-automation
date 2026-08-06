@@ -3,11 +3,13 @@
 // ─── Module helpers ───────────────────────────────────────────────────────────
 const _q1 = arr => (arr || []).slice(3).reduce((s, v) => s + (v || 0), 0);
 
-function buildSegmentCF() {
+function buildSegmentCF(cfDataOverride) {
   const d = window.CFData;
-  const [opSec, invSec, finSec] = d.directCF.sections;
+  const cf = cfDataOverride || { direct: d.directCF };
+  const [opSec, invSec, finSec] = cf.direct.sections;
   const opItems = opSec.items.filter(i => !i.header);
   const mainLabel = "เงินสดรับจากการขายสินค้าและบริการ";
+  const cfMainCur = (opSec.items.find(i => i.label === mainLabel) || {}).current || 0;
   const totalOpOtherIn = opItems.filter(i => (i.current || 0) > 0 && i.label !== mainLabel)
     .reduce((s, i) => s + i.current, 0);
   const totalOpOut = opItems.filter(i => (i.current || 0) < 0)
@@ -25,18 +27,20 @@ function buildSegmentCF() {
     (d.incomeSegmentsByCo[entity] || []).forEach(seg => {
       const incQ1 = _q1((d.incomeByCoMonth[entity] || {})[seg.id] || []);
       const pct = totalIncQ1 > 0 ? incQ1 / totalIncQ1 : 0;
+      // Scale income proportionally from current-period CF main item
+      const scaledInc = Math.round(cfMainCur * pct);
       const arSeg = arSegs.find(s => s.id === seg.id);
       const arCFImpact = arSeg ? -(arSeg.change) : 0;
       const allocOtherIn = Math.round(totalOpOtherIn * pct);
       const allocOpOut = Math.round(totalOpOut * pct);
-      const operatingCF = incQ1 + arCFImpact + allocOtherIn + allocOpOut;
+      const operatingCF = scaledInc + arCFImpact + allocOtherIn + allocOpOut;
       const investingCF = Math.round(totalInvCF * pct);
       const financingCF = Math.round(totalFinCF * pct);
       segs.push({
         id: seg.id, name: seg.name, entity,
         entityColor: co?.color || '#888',
         entityShort: co?.short || entity,
-        incQ1, pct, arSeg, arCFImpact, allocOtherIn, allocOpOut,
+        incQ1: scaledInc, pct, arSeg, arCFImpact, allocOtherIn, allocOpOut,
         invItems: invSec.items.filter(i => !i.header).map(i => ({ label: i.label, amt: Math.round((i.current || 0) * pct) })),
         finItems: finSec.items.filter(i => !i.header).map(i => ({ label: i.label, amt: Math.round((i.current || 0) * pct) })),
         operatingCF, investingCF, financingCF,
@@ -48,9 +52,10 @@ function buildSegmentCF() {
 }
 
 // ─── Req 3.1 – Segment CF Card ────────────────────────────────────────────────
-function SegmentCFCard({ seg }) {
+function SegmentCFCard({ seg, periodLabel }) {
   const fmt = window.fmtTHB;
   const nc = v => "num" + (v > 0 ? " pos" : v < 0 ? " neg" : "");
+  const pLabel = periodLabel || "Q1/2569";
 
   return (
     <div className="card" style={{ overflow: "hidden" }}>
@@ -61,7 +66,7 @@ function SegmentCFCard({ seg }) {
         </div>
         <div className="grow" />
         <div style={{ textAlign: "right" }}>
-          <div className="tiny muted">Net CF Q1/2569</div>
+          <div className="tiny muted">Net CF {pLabel}</div>
           <div style={{ fontWeight: 700, fontSize: 16, color: seg.netCF >= 0 ? "var(--success)" : "var(--danger)" }}>
             {seg.netCF >= 0 ? "+" : ""}{fmt(seg.netCF)}
           </div>
@@ -98,14 +103,14 @@ function SegmentCFCard({ seg }) {
             <td className={nc(seg.financingCF)} style={{ fontWeight: 600 }}>{fmt(seg.financingCF)}</td>
           </tr>
           <tr className="grand">
-            <td style={{ fontWeight: 700 }}>เงินสดสุทธิ Q1/2569</td>
+            <td style={{ fontWeight: 700 }}>เงินสดสุทธิ {pLabel}</td>
             <td className={nc(seg.netCF)} style={{ fontWeight: 700 }}>{seg.netCF >= 0 ? "+" : ""}{fmt(seg.netCF)}</td>
           </tr>
         </tbody>
       </table>
       {seg.arSeg && (
         <div style={{ margin: "0 12px 10px", padding: "6px 10px", background: "var(--bg-2,#f5f5f5)", borderRadius: 6, fontSize: 12 }}>
-          <div className="tiny muted" style={{ marginBottom: 3 }}>AR Reconciliation Q1/2569</div>
+          <div className="tiny muted" style={{ marginBottom: 3 }}>AR Reconciliation (อ้างอิง Q1/2569)</div>
           <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
             <span>เปิด {fmt(seg.arSeg.opening)}</span>
             <span className="muted">+รายได้ {fmt(seg.arSeg.sales)}</span>
@@ -121,11 +126,34 @@ function SegmentCFCard({ seg }) {
   );
 }
 
+// ─── Daily Tab Notice (shared by all CF statement tabs when granularity = daily) ─
+function DailyTabNotice({ tabName }) {
+  return (
+    <div style={{ padding: 48, textAlign: "center", color: "var(--text-secondary)" }}>
+      <div style={{ fontSize: 36, marginBottom: 12 }}>📅</div>
+      <div style={{ fontWeight: 600, fontSize: 15, marginBottom: 6, color: "var(--text)" }}>
+        {tabName} ไม่รองรับมุมมองรายวัน
+      </div>
+      <div className="small muted" style={{ lineHeight: 1.8 }}>
+        งบกระแสเงินสดและการวิเคราะห์ต้องการงวดเดือน ไตรมาส หรือรายปี<br />
+        กรุณาเลือก Granularity เป็น รายเดือน / รายไตรมาส / รายปี ที่ Tab 0
+      </div>
+    </div>
+  );
+}
+
 // ─── Req 3.1 – Segment CF Tab ─────────────────────────────────────────────────
-function SegmentCFTab() {
+function SegmentCFTab({ period, isDaily }) {
   const d = window.CFData;
   const [filter, setFilter] = React.useState("ALL");
-  const allSegs = React.useMemo(() => buildSegmentCF(), []);
+  const periodLabel = window.getPeriodLabel ? window.getPeriodLabel(period || "2026-Q1") : "Q1/2569";
+  const allSegs = React.useMemo(() => {
+    if (isDaily) return [];
+    const cfData = d.getCFData ? d.getCFData(period) : { direct: d.directCF };
+    return buildSegmentCF(cfData);
+  }, [period, isDaily]);
+
+  if (isDaily) return <DailyTabNotice tabName="CF แยก Segment" />;
   const segs = filter === "ALL" ? allSegs : allSegs.filter(s => s.entity === filter);
 
   return (
@@ -144,26 +172,38 @@ function SegmentCFTab() {
         </span>
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(360px, 1fr))", gap: 14 }}>
-        {segs.map(seg => <SegmentCFCard key={seg.entity + seg.id} seg={seg} />)}
+        {segs.map(seg => <SegmentCFCard key={seg.entity + seg.id} seg={seg} periodLabel={periodLabel} />)}
       </div>
     </>
   );
 }
 
 // ─── Req 3.2 – WC Reconcile Tab ──────────────────────────────────────────────
-function WCReconcileTab() {
+function WCReconcileTab({ period, cfData, isDaily }) {
   const d = window.CFData;
   const fmt = window.fmtTHB;
   const [expandedAR, setExpandedAR] = React.useState(new Set());
   const [expandedAP, setExpandedAP] = React.useState(new Set());
   const toggleSet = (setter, id) => setter(p => { const n = new Set(p); n.has(id) ? n.delete(id) : n.add(id); return n; });
 
-  const indOp = d.indirectCF.sections[0].items;
-  const invCF = (indOp.find(i => i.label === "สินค้าคงเหลือ (เพิ่มขึ้น)/ลดลง") || {}).current || 0;
+  if (isDaily) return <DailyTabNotice tabName="กระทบยอด Working Capital" />;
+
+  const periodLabel = window.getPeriodLabel ? window.getPeriodLabel(period || "2026-Q1") : "Q1/2569";
+  const isQ1 = !period || period === "2026-Q1";
+
+  // Use period-scaled indirect CF items for WC summary
+  const effectiveCF = cfData || { indirect: d.indirectCF };
+  const indOp = effectiveCF.indirect.sections[0].items;
+  const arCFItem  = indOp.find(i => i.label === "ลูกหนี้การค้า (เพิ่มขึ้น)/ลดลง");
+  const apCFItem  = indOp.find(i => i.label === "เจ้าหนี้การค้า เพิ่มขึ้น/(ลดลง)");
+  const invCF  = (indOp.find(i => i.label === "สินค้าคงเหลือ (เพิ่มขึ้น)/ลดลง")     || {}).current || 0;
   const accrCF = (indOp.find(i => i.label === "ค่าใช้จ่ายค้างจ่าย เพิ่มขึ้น/(ลดลง)") || {}).current || 0;
+  const scaledArCF = arCFItem ? arCFItem.current : d.reconcileAR.cfImpact;
+  const scaledApCF = apCFItem ? apCFItem.current : d.reconcileAP.cfImpact;
+  // AR/AP reconcile table data always shows Q1 reference (backend will provide period-specific data)
   const ar = d.reconcileAR;
   const ap = d.reconcileAP;
-  const totalWC = ar.cfImpact + ap.cfImpact + invCF + accrCF;
+  const totalWC = window.CFLogic.calcWCImpact({ arCF: scaledArCF, apCF: scaledApCF, invCF, accrCF });
 
   const thS = { background: "var(--bg-2,#f3f4f6)", fontSize: 11.5, fontWeight: 600, padding: "6px 10px", whiteSpace: "nowrap" };
   const tdS = { fontSize: 12.5, padding: "5px 10px" };
@@ -268,9 +308,10 @@ function WCReconcileTab() {
     </div>
   );
 
-  const invOpen = d.tbBal("2025-Q4", "1200");
-  const invClose = d.tbBal("2026-Q1", "1200");
-  const invChange = invClose - invOpen;
+  // Inventory: use Q1 TB for Q1, derive from scaled CF items for other periods
+  const invOpen  = isQ1 ? d.tbBal("2025-Q4", "1200") : 0;
+  const invClose = isQ1 ? d.tbBal("2026-Q1", "1200") : 0;
+  const invChange = isQ1 ? (invClose - invOpen) : invCF;
 
   return (
     <>
@@ -280,7 +321,9 @@ function WCReconcileTab() {
           <div className="small muted">ผลกระทบการเปลี่ยนแปลง AR / AP / สินค้าคงเหลือ ต่อกระแสเงินสด (Indirect Method)</div>
         </div>
         <div className="grow" />
-        <span className="tag accent">Q1 2569 • คลิกแถวบริษัทเพื่อดูแยก Segment</span>
+        <span className="tag accent">
+          {isQ1 ? "Q1/2569" : periodLabel + " (AR/AP อ้างอิง Q1/2569)"} • คลิกแถวบริษัทเพื่อดูแยก Segment
+        </span>
       </div>
 
       <ReconcileTable
@@ -322,8 +365,8 @@ function WCReconcileTab() {
             <table style={{ width: "100%", borderCollapse: "collapse" }}>
               <tbody>
                 {[
-                  ["ลูกหนี้การค้า (AR เพิ่ม = ใช้เงิน)", ar.cfImpact],
-                  ["เจ้าหนี้การค้า (AP เพิ่ม = ยังไม่จ่าย)", ap.cfImpact],
+                  ["ลูกหนี้การค้า (AR เพิ่ม = ใช้เงิน)", scaledArCF],
+                  ["เจ้าหนี้การค้า (AP เพิ่ม = ยังไม่จ่าย)", scaledApCF],
                   ["สินค้าคงเหลือ (Inv เพิ่ม = ซื้อมาก)", invCF],
                   ["ค่าใช้จ่ายค้างจ่าย (Accrued เพิ่ม = ยังไม่จ่าย)", accrCF],
                 ].map(([label, val], i) => (
@@ -350,21 +393,21 @@ function WCReconcileTab() {
 }
 
 // ─── Req 3.4 – Cash Ending Reconcile Tab ─────────────────────────────────────
-function CashEndingTab() {
+function CashEndingTab({ period, cfData, isDaily }) {
   const d = window.CFData;
   const fmt = window.fmtTHB;
 
-  const cfSections = d.directCF.sections.map(sec => {
-    const sub = sec.items.filter(i => !i.header).reduce((s, i) => s + (i.current || 0), 0);
-    return { ...sec, sub };
-  });
-  const netCF = cfSections.reduce((s, x) => s + x.sub, 0);
-  const opening = d.directCF.opening;
-  const cfClosing = opening + netCF;
-  const bankTotal = d.bankAccounts.reduce((s, b) => s + b.balance, 0);
-  const tbCash = d.tbBal("2026-Q1", "1010");
-  const diff = bankTotal - cfClosing;
-  const isBalanced = Math.abs(diff) < 1_000_000;
+  if (isDaily) return <DailyTabNotice tabName="กระทบยอดเงินสดปลายงวด" />;
+
+  const periodLabel = window.getPeriodLabel ? window.getPeriodLabel(period || "2026-Q1") : "Q1/2569";
+  const isQ1 = !period || period === "2026-Q1";
+  const effectiveDirect = cfData ? cfData.direct : d.directCF;
+
+  const cfSections = window.CFLogic.calcSectionSubtotals(effectiveDirect);
+  const { netCF, opening, closing: cfClosing } = window.CFLogic.calcNetCF(effectiveDirect);
+  const { bankTotal, diff, isBalanced } = window.CFLogic.calcCashEndingReconcile(effectiveDirect, d.bankAccounts);
+  // TB cash: available from Trial Balance for Q1 only; otherwise use CF closing as reference
+  const tbCash = isQ1 ? d.tbBal("2026-Q1", "1010") : cfClosing;
 
   const sectionLabels = ["กิจกรรมดำเนินงาน", "กิจกรรมลงทุน", "กิจกรรมจัดหาเงิน"];
   const sectionColors = ["var(--success)", "var(--warning,#f59e0b)", "#7C4DFF"];
@@ -378,7 +421,7 @@ function CashEndingTab() {
         </div>
         <div className="grow" />
         <span className={"tag " + (isBalanced ? "success" : "accent")}>
-          {isBalanced ? "✓ ยอดตรง" : "⚠ มีผลต่าง"} Q1/2569
+          {isBalanced ? "✓ ยอดตรง" : "⚠ มีผลต่าง"} {periodLabel}
         </span>
       </div>
 
@@ -407,7 +450,7 @@ function CashEndingTab() {
                   </td>
                 </tr>
                 <tr>
-                  <td style={{ fontSize: 12.5, padding: "5px 0", color: "var(--text-secondary)" }}>บวก: เงินสดต้นงวด (1 ม.ค. 2569)</td>
+                  <td style={{ fontSize: 12.5, padding: "5px 0", color: "var(--text-secondary)" }}>บวก: เงินสดต้นงวด ({periodLabel})</td>
                   <td style={{ textAlign: "right", fontSize: 12.5, padding: "5px 0" }}>{fmt(opening)}</td>
                 </tr>
                 <tr style={{ background: "var(--bg-2,#f5f5f5)", borderRadius: 6 }}>
@@ -430,7 +473,10 @@ function CashEndingTab() {
                   <td style={{ textAlign: "right", fontSize: 13, fontWeight: 600, padding: "7px 0" }}>{fmt(cfClosing)}</td>
                 </tr>
                 <tr style={{ borderBottom: "1px solid var(--border)" }}>
-                  <td style={{ fontSize: 12.5, padding: "7px 0" }}>เงินสดตาม Trial Balance (1010)</td>
+                  <td style={{ fontSize: 12.5, padding: "7px 0" }}>
+                    เงินสดตาม Trial Balance (1010)
+                    {!isQ1 && <span className="tag" style={{ marginLeft: 6, fontSize: 10 }}>อ้างอิง</span>}
+                  </td>
                   <td style={{ textAlign: "right", fontSize: 13, fontWeight: 600, padding: "7px 0" }}>{fmt(tbCash)}</td>
                 </tr>
                 <tr style={{ borderBottom: "2px solid var(--border)" }}>
@@ -462,7 +508,7 @@ function CashEndingTab() {
       {/* Bank accounts detail */}
       <div className="card">
         <div className="card-head">
-          <div className="card-title">รายละเอียดเงินฝากธนาคาร ณ 31 มี.ค. 2569</div>
+          <div className="card-title">รายละเอียดเงินฝากธนาคาร ({periodLabel})</div>
           <div className="grow" />
           <span className="small muted">รวม: <strong>{fmt(bankTotal)}</strong></span>
         </div>
@@ -504,67 +550,42 @@ function CashEndingTab() {
 }
 
 // ─── Req 3.3 – Direct vs Indirect Comparison Tab ─────────────────────────────
-function CompareMethodsTab() {
+function CompareMethodsTab({ period, cfData, isDaily }) {
   const d = window.CFData;
   const fmt = window.fmtTHB;
 
-  // ─ WC Data ─
+  if (isDaily) return <DailyTabNotice tabName="เปรียบเทียบ Direct vs Indirect" />;
+
+  const periodLabel = window.getPeriodLabel ? window.getPeriodLabel(period || "2026-Q1") : "Q1/2569";
+  const isQ1 = !period || period === "2026-Q1";
+  const effectiveCF = cfData || { direct: d.directCF, indirect: d.indirectCF };
+
+  // ─ WC Data (Q1 AR/AP reference for detail tables) ─
   const ar = (() => {
-    const entities = Object.keys(d.reconcileARBySegment.byEntity || {});
-    let totalOpening = 0, totalSales = 0, totalCollection = 0, totalClosing = 0, totalAdjustments = 0;
-    entities.forEach(ent => {
-      const ent_data = d.reconcileARBySegment.byEntity[ent];
-      ent_data.segments.forEach(seg => {
-        totalOpening += seg.opening;
-        totalSales += seg.sales;
-        totalCollection += seg.collection;
-        totalClosing += seg.closing;
-        totalAdjustments += seg.adjustments || 0;
-      });
-    });
-    const totalChange = totalClosing - totalOpening;
-    const cfImpact = -totalChange;
-    return { entities, totalOpening, totalSales, totalCollection, totalClosing, totalAdjustments, totalChange, cfImpact };
+    const entityKeys = Object.keys(d.reconcileARBySegment.byEntity || {});
+    const allSegs = entityKeys.flatMap(ent => (d.reconcileARBySegment.byEntity[ent] || {}).segments || []);
+    return { entities: entityKeys, ...window.CFLogic.calcARReconcileTotals(allSegs) };
   })();
 
   const ap = (() => {
-    const entities = Object.keys(d.reconcileAPBySegment.byEntity || {});
-    let totalOpening = 0, totalPurchases = 0, totalPayment = 0, totalClosing = 0, totalAdjustments = 0;
-    entities.forEach(ent => {
-      const ent_data = d.reconcileAPBySegment.byEntity[ent];
-      ent_data.segments.forEach(seg => {
-        totalOpening += seg.opening;
-        totalPurchases += seg.purchases;
-        totalPayment += seg.payment;
-        totalClosing += seg.closing;
-        totalAdjustments += seg.adjustments || 0;
-      });
-    });
-    const totalChange = totalClosing - totalOpening;
-    const cfImpact = totalChange;
-    return { entities, totalOpening, totalPurchases, totalPayment, totalClosing, totalAdjustments, totalChange, cfImpact };
+    const entityKeys = Object.keys(d.reconcileAPBySegment.byEntity || {});
+    const allSegs = entityKeys.flatMap(ent => (d.reconcileAPBySegment.byEntity[ent] || {}).segments || []);
+    return { entities: entityKeys, ...window.CFLogic.calcAPReconcileTotals(allSegs) };
   })();
 
-  const invOpen = d.tbBal("2025-Q4", "1200");
-  const invClose = d.tbBal("2026-Q1", "1200");
-  const invChange = invClose - invOpen;
-  const invCF = -invChange;
-
-  const indOpItems = d.indirectCF.sections[0].items;
+  // ─ WC items from period-scaled indirect CF ─
+  const indOpItems = effectiveCF.indirect.sections[0].items;
+  const arCFItem  = indOpItems.find(i => i.label === "ลูกหนี้การค้า (เพิ่มขึ้น)/ลดลง");
+  const apCFItem  = indOpItems.find(i => i.label === "เจ้าหนี้การค้า เพิ่มขึ้น/(ลดลง)");
+  const scaledArCF = arCFItem ? arCFItem.current : ar.cfImpact;
+  const scaledApCF = apCFItem ? apCFItem.current : ap.cfImpact;
+  const invCF  = (indOpItems.find(i => i.label === "สินค้าคงเหลือ (เพิ่มขึ้น)/ลดลง")     || {}).current || 0;
   const accrCF = (indOpItems.find(i => i.label === "ค่าใช้จ่ายค้างจ่าย เพิ่มขึ้น/(ลดลง)") || {}).current || 0;
-  const totalWC = ar.cfImpact + ap.cfImpact + invCF + accrCF;
+  const totalWC = window.CFLogic.calcWCImpact({ arCF: scaledArCF, apCF: scaledApCF, invCF, accrCF });
 
-  const computeSections = (cfData) => cfData.sections.map(sec => {
-    const sub = sec.items.filter(i => !i.header).reduce((s, i) => s + (i.current || 0), 0);
-    return { title: sec.title, subtotalLabel: sec.subtotalLabel, items: sec.items, sub };
-  });
-
-  const directSecs = computeSections(d.directCF);
-  const indirectSecs = computeSections(d.indirectCF);
-  const directNet = directSecs.reduce((s, x) => s + x.sub, 0);
-  const indirectNet = indirectSecs.reduce((s, x) => s + x.sub, 0);
-  const diff = directNet - indirectNet;
-  const isMatch = Math.abs(diff) < 500_000;
+  const directSecs   = window.CFLogic.calcSectionSubtotals(effectiveCF.direct);
+  const indirectSecs = window.CFLogic.calcSectionSubtotals(effectiveCF.indirect);
+  const { directNet, indirectNet, diff, isMatch } = window.CFLogic.compareDirectIndirect(effectiveCF.direct, effectiveCF.indirect);
 
   const colStyle = { width: "50%", verticalAlign: "top", padding: "0 8px" };
   const secLabels = ["กิจกรรมดำเนินงาน", "กิจกรรมลงทุน", "กิจกรรมจัดหาเงิน"];
@@ -629,9 +650,9 @@ function CompareMethodsTab() {
       <div className="card" style={{ marginBottom: 14 }}>
         <div className="card-pad">
           <div style={{ display: "flex", gap: 16 }}>
-            {renderColumn(directSecs, "direct", directNet, d.directCF.opening)}
+            {renderColumn(directSecs, "direct", directNet, effectiveCF.direct.opening)}
             <div style={{ width: 1, background: "var(--border)", flexShrink: 0 }} />
-            {renderColumn(indirectSecs, "indirect", indirectNet, d.indirectCF.opening)}
+            {renderColumn(indirectSecs, "indirect", indirectNet, effectiveCF.indirect.opening)}
           </div>
         </div>
       </div>
@@ -669,15 +690,15 @@ function CompareMethodsTab() {
         <div className="card-head">
           <div className="card-title">Working Capital Impact (Indirect Method Adjustments)</div>
           <div className="grow" />
-          <span className="small muted">Q1 2569 • ส่วนปรับปรุงจากการเปลี่ยนแปลง WC</span>
+          <span className="small muted">{periodLabel}{!isQ1 ? " (AR/AP อ้างอิง Q1/2569)" : ""} • ส่วนปรับปรุงจากการเปลี่ยนแปลง WC</span>
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, padding: "16px" }}>
           <div>
             <table style={{ width: "100%", borderCollapse: "collapse" }}>
               <tbody>
                 {[
-                  ["ลูกหนี้การค้า (AR เพิ่ม = ใช้เงิน)", ar.cfImpact],
-                  ["เจ้าหนี้การค้า (AP เพิ่ม = ยังไม่จ่าย)", ap.cfImpact],
+                  ["ลูกหนี้การค้า (AR เพิ่ม = ใช้เงิน)", scaledArCF],
+                  ["เจ้าหนี้การค้า (AP เพิ่ม = ยังไม่จ่าย)", scaledApCF],
                   ["สินค้าคงเหลือ (Inv เพิ่ม = ซื้อมาก)", invCF],
                   ["ค่าใช้จ่ายค้างจ่าย (Accrued เพิ่ม = ยังไม่จ่าย)", accrCF],
                 ].map(([label, val], i) => (
@@ -712,19 +733,20 @@ function CompareMethodsTab() {
 }
 
 // ─── Task #33 – Cross-validation Panel ───────────────────────────────────────
-function CrossValidationTab() {
+function CrossValidationTab({ period, cfData, isDaily }) {
   const d = window.CFData;
   const fmt = window.fmtTHB;
 
+  if (isDaily) return <DailyTabNotice tabName="Cross-Validation (3-Way Check)" />;
+
+  const periodLabel = window.getPeriodLabel ? window.getPeriodLabel(period || "2026-Q1") : "Q1/2569";
+  const effectiveDirect = cfData ? cfData.direct : d.directCF;
+
   // ─ Direct CF ─
-  const opItems = d.directCF.sections[0].items;
-  const cfCashFromSales = opItems.find(i => i.label.includes("ขายสินค้า"))?.current || 0;
-  const cfCashIn  = opItems.filter(i => (i.current || 0) > 0).reduce((s, i) => s + i.current, 0);
-  const cfCashOut = opItems.filter(i => (i.current || 0) < 0).reduce((s, i) => s + i.current, 0);
-  const cfNetOp   = opItems.reduce((s, i) => s + (i.current || 0), 0);
-  const cfNetAll  = d.directCF.sections.flatMap(s => s.items).filter(i => !i.header).reduce((s, i) => s + (i.current || 0), 0);
-  const cfOpening = d.directCF.opening;
-  const cfClosing = cfOpening + cfNetAll;
+  const opItems = effectiveDirect.sections[0].items;
+  const cfCashFromSales = (opItems.find(i => i.label.includes("ขายสินค้า")) || {}).current || 0;
+  const { cashIn: cfCashIn, cashOut: cfCashOut, netOp: cfNetOp } = window.CFLogic.calcOperatingItems(opItems);
+  const { netCF: cfNetAll, opening: cfOpening, closing: cfClosing } = window.CFLogic.calcNetCF(effectiveDirect);
 
   // ─ AR ─
   const arCollections = Math.abs(d.reconcileAR.totalCollection);
@@ -744,21 +766,15 @@ function CrossValidationTab() {
   const bankClosing   = d.bankAccounts.reduce((s, b) => s + b.balance, 0);
 
   // ─ Gap calculations ─
-  // Cash from sales via CF vs AR reconcile
-  const cashSalesGap = cfCashFromSales - arCollections;
+  const { cashSalesGap, bankVsCFGap, closingVsBankGap } = window.CFLogic.calcCrossValidationGaps(
+    { cfCashFromSales, cfNetAll, cfOpening },
+    { arCollections, bankInflowQ1, bankNetQ1, bankClosing }
+  );
   // Theoretical AR: Revenue - AR change = cash expected
   const theoreticalCash = arSales - arChange;
   const theoreticalGap  = cfCashFromSales - theoreticalCash;
-
   // AP: CF cash out vs AP payments
   const apGap = Math.abs(cfCashOut) - apPayments;
-
-  // Net CF vs Bank net
-  const cfNetOpFmtd = cfNetAll;
-  const bankVsCFGap = bankNetQ1 - cfNetAll;
-
-  // Closing balance check
-  const closingVsBankGap = bankClosing - cfClosing;
 
   // Status helpers
   const isOk  = v => Math.abs(v) < 5_000_000;
@@ -803,7 +819,7 @@ function CrossValidationTab() {
       <div className="row" style={{ marginBottom: 14, alignItems: "center" }}>
         <div>
           <div className="card-title">Cross-Validation: Direct CF vs AR vs Bank</div>
-          <div className="small muted">ตรวจสอบความสอดคล้องระหว่าง 3 แหล่งข้อมูล • Q1 2569</div>
+          <div className="small muted">ตรวจสอบความสอดคล้องระหว่าง 3 แหล่งข้อมูล • {periodLabel}</div>
         </div>
       </div>
 
@@ -938,12 +954,282 @@ function CrossValidationTab() {
   );
 }
 
+// ─── Granularity bar ──────────────────────────────────────────────────────────
+// Maps each granularity key → which CF_PERIODS types it includes
+const GRAN_TYPES = {
+  daily:   ["daily"],
+  month:   ["month"],
+  quarter: ["quarter"],
+  annual:  ["annual", "ytd"],
+};
+
+const GRAN_LABELS = [
+  { key: "daily",   label: "รายวัน",     icon: "📅" },
+  { key: "month",   label: "รายเดือน",   icon: "📆" },
+  { key: "quarter", label: "รายไตรมาส",  icon: "📊" },
+  { key: "annual",  label: "รายปี",      icon: "📈" },
+];
+
+function GranularityBar({ value, onChange }) {
+  return (
+    <div className="segmented" style={{ marginRight: 8 }}>
+      {GRAN_LABELS.map(g => (
+        <button key={g.key} className={value === g.key ? "active" : ""} onClick={() => onChange(g.key)}>
+          {g.icon} {g.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+// ─── Daily CF Summary (mini statement for one day) ────────────────────────────
+function DailyCFSummary({ dateCode, companyId }) {
+  const d   = window.CFData;
+  const fmt = window.fmtTHB;
+
+  const raw = React.useMemo(() => d.getDailyData ? d.getDailyData(dateCode) : { opening: 0, inflow: 0, outflow: 0, net: 0, closing: 0 }, [dateCode]);
+  const opening  = raw.opening;
+  const inflow   = raw.inflow;
+  const outflow  = raw.outflow;
+  const net      = raw.net;
+  const closing  = raw.closing;
+
+  const dateLabel = window.getPeriodLabel ? window.getPeriodLabel(dateCode) : dateCode;
+
+  return (
+    <div className="card" style={{ marginBottom: 14, background: "linear-gradient(135deg, rgba(42,111,240,0.04) 0%, rgba(31,157,85,0.04) 100%)", borderLeft: "4px solid var(--accent)" }}>
+      <div className="card-pad">
+        <div style={{ marginBottom: 12 }}>
+          <div className="small muted" style={{ marginBottom: 4 }}>Daily Cash Flow Summary</div>
+          <div style={{ fontWeight: 600, fontSize: 15, color: "var(--text)" }}>{dateLabel}</div>
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 12 }}>
+          <div>
+            <div className="tiny muted">เปิด</div>
+            <div style={{ fontSize: 16, fontWeight: 600, color: "var(--text)", marginTop: 4 }}>{fmt(opening)}</div>
+          </div>
+          <div style={{ textAlign: "center", display: "flex", flexDirection: "column", justifyContent: "flex-end" }}>
+            <div className="tiny" style={{ color: "var(--text-secondary)", marginBottom: 4 }}>+</div>
+          </div>
+          <div>
+            <div className="tiny muted">เข้า</div>
+            <div style={{ fontSize: 16, fontWeight: 600, color: "var(--success)", marginTop: 4 }}>+{fmt(inflow)}</div>
+          </div>
+          <div style={{ textAlign: "center", display: "flex", flexDirection: "column", justifyContent: "flex-end" }}>
+            <div className="tiny" style={{ color: "var(--text-secondary)", marginBottom: 4 }}>+</div>
+          </div>
+          <div>
+            <div className="tiny muted">ออก</div>
+            <div style={{ fontSize: 16, fontWeight: 600, color: "var(--danger)", marginTop: 4 }}>{fmt(outflow)}</div>
+          </div>
+        </div>
+        <div style={{ borderTop: "1px solid var(--border)", marginTop: 12, paddingTop: 12, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div>
+            <div className="small muted">Net วันนี้</div>
+            <div style={{ fontSize: 18, fontWeight: 700, color: net >= 0 ? "var(--success)" : "var(--danger)", marginTop: 2 }}>
+              {net >= 0 ? "+" : ""}{fmt(net)}
+            </div>
+          </div>
+          <div style={{ fontSize: 20, color: "var(--text-secondary)" }}>→</div>
+          <div>
+            <div className="small muted">ปิด</div>
+            <div style={{ fontSize: 18, fontWeight: 700, color: "var(--text)", marginTop: 2 }}>{fmt(closing)}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Daily Cash Treasury View ──────────────────────────────────────────────────
+function DailyCashView({ dateCode, companyId }) {
+  const d   = window.CFData;
+  const fmt = window.fmtTHB;
+  const S   = window.CF_STATUS.TXN;
+
+  const raw  = React.useMemo(() => d.getDailyData ? d.getDailyData(dateCode) : { txns:[], opening:0, inflow:0, outflow:0, net:0, closing:0, byCategory:[] }, [dateCode]);
+  const txns = companyId === "CONSO" || !companyId ? raw.txns : raw.txns.filter(t => t.entity === companyId);
+  const inflow  = txns.filter(t => t.amount > 0).reduce((s, t) => s + t.amount, 0);
+  const outflow = txns.filter(t => t.amount < 0).reduce((s, t) => s + t.amount, 0);
+  const net     = inflow + outflow;
+  const closing = raw.opening + net;
+
+  // Re-group by category after entity filter
+  const byCat = {};
+  txns.forEach(t => {
+    if (!byCat[t.category]) byCat[t.category] = { label: t.category, inflow: 0, outflow: 0 };
+    if (t.amount > 0) byCat[t.category].inflow  += t.amount;
+    else              byCat[t.category].outflow += t.amount;
+  });
+  const cats = Object.values(byCat).sort((a, b) => (b.inflow + Math.abs(b.outflow)) - (a.inflow + Math.abs(a.outflow)));
+
+  // Max for bar
+  const maxAmt = cats.reduce((m, c) => Math.max(m, c.inflow, Math.abs(c.outflow)), 1);
+
+  return (
+    <>
+      {/* KPI row */}
+      <div className="kpi-grid" style={{ marginBottom: 14 }}>
+        {[
+          { label: "ยอดเปิดวัน",              value: raw.opening, color: "var(--text)",     sign: false },
+          { label: "เงินสดรับ",               value: inflow,      color: "var(--success)",  sign: true  },
+          { label: "เงินสดจ่าย",              value: outflow,     color: "var(--danger)",   sign: true  },
+          { label: "Net วันนี้",              value: net,         color: net >= 0 ? "var(--success)" : "var(--danger)", sign: true },
+          { label: "ยอดปิดวัน (ประมาณ)",      value: closing,     color: "var(--text)",     sign: false },
+        ].map((k, i) => (
+          <div className="kpi" key={i}>
+            <div className="kpi-label">{k.label}</div>
+            <div className="kpi-value" style={{ fontSize: 19, color: k.color }}>
+              {k.sign && k.value > 0 ? "+" : ""}{fmt(k.value)}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1.6fr", gap: 14, marginBottom: 14 }}>
+        {/* Category breakdown */}
+        <div className="card">
+          <div className="card-head">
+            <div className="card-title">สรุปตามหมวด</div>
+            <div className="card-sub">{cats.length} หมวด</div>
+          </div>
+          <div style={{ padding: "8px 14px 14px" }}>
+            {cats.map((cat, i) => {
+              const barIn  = cat.inflow  > 0 ? (cat.inflow  / maxAmt) * 100 : 0;
+              const barOut = cat.outflow < 0 ? (Math.abs(cat.outflow) / maxAmt) * 100 : 0;
+              return (
+                <div key={i} style={{ marginBottom: 10 }}>
+                  <div style={{ display:"flex", justifyContent:"space-between", marginBottom: 3 }}>
+                    <span style={{ fontSize: 12.5 }}>{cat.label}</span>
+                    <span className={"num small " + ((cat.inflow + cat.outflow) >= 0 ? "pos" : "neg")} style={{ fontWeight: 600 }}>
+                      {(cat.inflow + cat.outflow) >= 0 ? "+" : ""}{fmt(cat.inflow + cat.outflow)}
+                    </span>
+                  </div>
+                  <div style={{ display:"flex", gap: 3, height: 6, borderRadius: 4, overflow:"hidden", background:"var(--bg-muted)" }}>
+                    {barIn  > 0 && <div style={{ width: barIn  + "%", background:"var(--success)", borderRadius:4 }} />}
+                    {barOut > 0 && <div style={{ width: barOut + "%", background:"var(--danger)",  borderRadius:4 }} />}
+                  </div>
+                  <div style={{ display:"flex", gap:12, marginTop: 2 }}>
+                    {cat.inflow  > 0 && <span className="tiny pos">+{fmt(cat.inflow)}</span>}
+                    {cat.outflow < 0 && <span className="tiny neg">{fmt(cat.outflow)}</span>}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Transaction list */}
+        <div className="card">
+          <div className="card-head">
+            <div className="card-title">รายการทั้งหมด</div>
+            <div className="card-sub">{txns.length} รายการ</div>
+          </div>
+          <table className="tbl">
+            <thead>
+              <tr>
+                <th style={{ width: 56 }}>เวลา</th>
+                <th>รายละเอียด</th>
+                <th style={{ width: 90 }}>แหล่ง</th>
+                <th className="num" style={{ width: 140 }}>จำนวน (THB)</th>
+                <th style={{ width: 90 }}>สถานะ</th>
+              </tr>
+            </thead>
+            <tbody>
+              {txns.map(t => (
+                <tr key={t.id}>
+                  <td className="num small muted">{t.time}</td>
+                  <td>
+                    <div style={{ fontSize: 13 }}>{t.desc}</div>
+                    <div className="tiny muted">{t.category}</div>
+                  </td>
+                  <td><span className="tag">{t.source}</span></td>
+                  <td className={"num " + (t.amount > 0 ? "pos" : "neg")} style={{ fontWeight: 500 }}>
+                    {t.amount > 0 ? "+" : ""}{fmt(t.amount)}
+                  </td>
+                  <td>
+                    {t.status === S.MATCHED && <span className="tag success"><span className="dot" />Matched</span>}
+                    {t.status === S.PENDING && <span className="tag warning"><span className="dot" />Pending</span>}
+                    {t.status === S.REVIEW  && <span className="tag danger"><span className="dot"  />Review</span>}
+                    {t.status === S.VOID    && <span className="tag"><span className="dot" />Void</span>}
+                  </td>
+                </tr>
+              ))}
+              {txns.length === 0 && (
+                <tr><td colSpan={5} style={{ textAlign:"center", padding:24, color:"var(--text-secondary)" }}>ไม่มีรายการในวันที่เลือก</td></tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </>
+  );
+}
+
 // ─── Main Report Page ─────────────────────────────────────────────────────────
-function ReportPage({ method, onExport, companyId = "CONSO", chartStyle }) {
+function ReportPage({ method, onExport, companyId = "CONSO", chartStyle, period: periodProp }) {
   const d = window.CFData;
-  const report = method === "direct" ? d.directCF : d.indirectCF;
+
+  // ── Period & granularity state ─────────────────────────────────────────────
+  const initMeta = window.getPeriodMeta(periodProp || window.CF_PERIOD_DEFAULT) || { type: "quarter" };
+  const initGran = initMeta.type === "daily" ? "daily"
+    : initMeta.type === "month"   ? "month"
+    : initMeta.type === "annual" || initMeta.type === "ytd" ? "annual"
+    : "quarter";
+
+  const [granularity, setGranularity] = React.useState(initGran);
+  const [localPeriod, setLocalPeriod] = React.useState(periodProp || window.CF_PERIOD_DEFAULT);
+
+  // Sync when the topbar period prop changes
+  React.useEffect(() => {
+    if (!periodProp) return;
+    const m = window.getPeriodMeta(periodProp);
+    if (!m) return;
+    const g = m.type === "daily" ? "daily"
+            : m.type === "month" ? "month"
+            : m.type === "annual" || m.type === "ytd" ? "annual"
+            : "quarter";
+    setGranularity(g);
+    setLocalPeriod(periodProp);
+  }, [periodProp]);
+
+  // When granularity changes, pick first matching period
+  const handleGranChange = (g) => {
+    setGranularity(g);
+    const first = window.CF_PERIODS.find(p => GRAN_TYPES[g].includes(p.type));
+    if (first) setLocalPeriod(first.code);
+  };
+
+  const availablePeriods = window.CF_PERIODS.filter(p => GRAN_TYPES[granularity].includes(p.type));
+  const periodMeta = window.getPeriodMeta(localPeriod) || initMeta;
+  const isDaily    = periodMeta.type === "daily";
+
+  // ── CF data for selected period ────────────────────────────────────────────
+  const cfData = React.useMemo(() => {
+    if (isDaily) return null;
+    return d.getCFData ? d.getCFData(localPeriod) : { direct: d.directCF, indirect: d.indirectCF };
+  }, [localPeriod, isDaily]);
+
+  const report = cfData ? (method === "direct" ? cfData.direct : cfData.indirect) : null;
+
+  // ── Prior-period column label ──────────────────────────────────────────────
+  const priorLabel = React.useMemo(() => {
+    if (!periodMeta) return "งวดก่อนหน้า";
+    if (periodMeta.type === "month") {
+      const m = periodMeta.month, y = periodMeta.year;
+      const prev = window.CF_PERIODS.find(p =>
+        p.type === "month" &&
+        p.year  === (m === 1 ? y - 1 : y) &&
+        p.month === (m === 1 ? 12 : m - 1)
+      );
+      return prev ? prev.label : "เดือนก่อน";
+    }
+    if (periodMeta.type === "quarter") return "ไตรมาสก่อน";
+    if (periodMeta.type === "annual" || periodMeta.type === "ytd") return `ปีก่อนหน้า`;
+    return "งวดก่อนหน้า";
+  }, [periodMeta]);
+
   const [activeTab, setActiveTab] = React.useState(0);
-  const [period, setPeriod] = React.useState("Q1 2569");
   const [showCompare, setShowCompare] = React.useState(true);
   const [showFormulas, setShowFormulas] = React.useState(false);
   const [expandedRows, setExpandedRows] = React.useState(new Set());
@@ -954,24 +1240,27 @@ function ReportPage({ method, onExport, companyId = "CONSO", chartStyle }) {
   const sumQ1 = arr => (arr || []).slice(3).reduce((s, v) => s + (v || 0), 0);
   const sumQ0 = arr => (arr || []).slice(0, 3).reduce((s, v) => s + (v || 0), 0);
 
-  const incomeSegRows = incMatrix.segments.map(s => ({ id: s.id, name: s.name, current: sumQ1(incMatrix.data[s.id]), prior: sumQ0(incMatrix.data[s.id]) }));
+  const incomeSegRows  = incMatrix.segments.map(s => ({ id: s.id, name: s.name, current: sumQ1(incMatrix.data[s.id]), prior: sumQ0(incMatrix.data[s.id]) }));
   const expenseSegRows = expMatrix.segments.map(s => ({ id: s.id, name: s.name, current: sumQ1(expMatrix.data[s.id]), prior: sumQ0(expMatrix.data[s.id]) }));
 
   const toggleRow = key => setExpandedRows(prev => { const n = new Set(prev); n.has(key) ? n.delete(key) : n.add(key); return n; });
 
-  const sections = report.sections.map(sec => {
+  const sections = report ? report.sections.map(sec => {
     const cur = sec.items.filter(i => !i.header).reduce((s, i) => s + (i.current || 0), 0);
     const pri = sec.items.filter(i => !i.header).reduce((s, i) => s + (i.prior || 0), 0);
     return { ...sec, subtotalCurrent: cur, subtotalPrior: pri };
-  });
-  const netCurrent = sections.reduce((s, x) => s + x.subtotalCurrent, 0);
-  const netPrior = sections.reduce((s, x) => s + x.subtotalPrior, 0);
-  const closing = report.opening + netCurrent;
-  const priorClosing = report.priorOpening + netPrior;
+  }) : [];
+  const netCurrent  = sections.reduce((s, x) => s + x.subtotalCurrent, 0);
+  const netPrior    = sections.reduce((s, x) => s + x.subtotalPrior, 0);
+  const opening     = report ? report.opening      : 0;
+  const priorOpening= report ? report.priorOpening : 0;
+  const closing     = opening + netCurrent;
+  const priorClosing= priorOpening + netPrior;
 
   const tabs = [
     method === "direct" ? "งบ Direct CF" : "งบ Indirect CF",
     "CF แยก Segment",
+    "Working Capital",
     "กระทบยอด Cash",
     "Direct vs Indirect",
     "Cross-Check",
@@ -999,62 +1288,93 @@ function ReportPage({ method, onExport, companyId = "CONSO", chartStyle }) {
 
       {/* Tab navigation */}
       <div className="row" style={{ gap: 3, marginBottom: 16, borderBottom: "2px solid var(--border)", paddingBottom: 0 }}>
-        {tabs.map((label, i) => (
-          <button
-            key={i}
-            onClick={() => setActiveTab(i)}
-            style={{
-              padding: "7px 14px", fontSize: 13, fontWeight: activeTab === i ? 600 : 400, border: "none",
-              background: activeTab === i ? "var(--accent)" : "transparent",
-              color: activeTab === i ? "var(--accent-text,#fff)" : "var(--text-secondary)",
-              borderRadius: "6px 6px 0 0", cursor: "pointer", marginBottom: -2,
-              borderBottom: activeTab === i ? "2px solid var(--accent)" : "2px solid transparent",
-            }}
-          >
-            {label}
-          </button>
-        ))}
+        {tabs.map((label, i) => {
+          const cfTabDisabled = isDaily && i > 0;
+          return (
+            <button
+              key={i}
+              onClick={() => !cfTabDisabled && setActiveTab(i)}
+              title={cfTabDisabled ? "ไม่รองรับมุมมองรายวัน" : undefined}
+              style={{
+                padding: "7px 14px", fontSize: 13, fontWeight: activeTab === i ? 600 : 400, border: "none",
+                background: activeTab === i ? "var(--accent)" : "transparent",
+                color: activeTab === i ? "var(--accent-text,#fff)" : cfTabDisabled ? "var(--text-tertiary,#bbb)" : "var(--text-secondary)",
+                borderRadius: "6px 6px 0 0", cursor: cfTabDisabled ? "not-allowed" : "pointer", marginBottom: -2,
+                borderBottom: activeTab === i ? "2px solid var(--accent)" : "2px solid transparent",
+                opacity: cfTabDisabled ? 0.5 : 1,
+              }}
+            >
+              {label}
+            </button>
+          );
+        })}
       </div>
 
-      {/* Tab 0: CF Statement */}
+      {/* Tab 0: CF Statement / Daily View */}
       {activeTab === 0 && (
         <>
-          <div className="row" style={{ marginBottom: 14, gap: 10 }}>
-            <select className="select" value={period} onChange={e => setPeriod(e.target.value)}>
-              <option>Q1 2569</option><option>ม.ค. 2569</option><option>ก.พ. 2569</option>
-              <option>มี.ค. 2569</option><option>YTD 2569</option><option>ปี 2568 (เต็มปี)</option>
+          {/* ── Toolbar: Granularity + Period + Options ── */}
+          <div style={{ marginBottom: 14, display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
+            <GranularityBar value={granularity} onChange={handleGranChange} />
+
+            <select className="select" value={localPeriod} onChange={e => setLocalPeriod(e.target.value)}>
+              {availablePeriods.map(p => (
+                <option key={p.code} value={p.code}>{p.label}</option>
+              ))}
             </select>
-            <select className="select"><option>หน่วย: บาท</option><option>หน่วย: พันบาท</option><option>หน่วย: ล้านบาท</option></select>
-            <label className="row small" style={{ gap: 6, marginLeft: 6 }}>
-              <input type="checkbox" checked={showCompare} onChange={e => setShowCompare(e.target.checked)} />
-              เปรียบเทียบกับงวดก่อน
-            </label>
-            {method === "indirect" && (
-              <label className="row small" style={{ gap: 6, marginLeft: 6 }}>
-                <input type="checkbox" checked={showFormulas} onChange={e => setShowFormulas(e.target.checked)} />
-                แสดงสูตรคำนวณ
-              </label>
+
+            {!isDaily && (
+              <>
+                <select className="select">
+                  <option>หน่วย: บาท</option>
+                  <option>หน่วย: พันบาท</option>
+                  <option>หน่วย: ล้านบาท</option>
+                </select>
+                <label className="row small" style={{ gap: 6, marginLeft: 4 }}>
+                  <input type="checkbox" checked={showCompare} onChange={e => setShowCompare(e.target.checked)} />
+                  เปรียบเทียบกับ{priorLabel}
+                </label>
+                {method === "indirect" && (
+                  <label className="row small" style={{ gap: 6 }}>
+                    <input type="checkbox" checked={showFormulas} onChange={e => setShowFormulas(e.target.checked)} />
+                    แสดงสูตรคำนวณ
+                  </label>
+                )}
+              </>
             )}
+
             <div className="grow" />
-            <span className="small muted" style={{ alignSelf: "center" }}>
-              <Ic name="chevronDown" size={11} style={{ marginRight: 4 }} />คลิกแถวเพื่อดู Segment breakdown
-            </span>
-            <span className="tag accent"><Ic name="check" size={11} /> ยืนยันแล้ว • โดย K. ปริญญา ส. • 31 มี.ค. 2026</span>
+            {!isDaily && (
+              <span className="small muted" style={{ alignSelf:"center" }}>
+                <Ic name="chevronDown" size={11} style={{ marginRight: 4 }} />คลิกแถวเพื่อดู Segment breakdown
+              </span>
+            )}
           </div>
 
+          {/* ── Daily treasury view ── */}
+          {isDaily && (
+            <>
+              <DailyCFSummary dateCode={localPeriod} companyId={companyId} />
+              <DailyCashView dateCode={localPeriod} companyId={companyId} />
+            </>
+          )}
+
+          {/* ── CF Statement (monthly / quarterly / annual) ── */}
+          {!isDaily && (
+          <>
           <div className="card">
             <div className="card-head">
               <div className="card-title">{window.CFData.company.name}</div>
               <div className="grow" />
-              <div className="small muted">งบกระแสเงินสด • สำหรับงวด {period} • (หน่วย: บาท)</div>
+              <div className="small muted">งบกระแสเงินสด • {window.getPeriodLabel(localPeriod)} • (หน่วย: บาท)</div>
             </div>
             <div style={{ padding: "8px 0 18px" }}>
               <table className="report-tbl">
                 <thead>
                   <tr>
                     <th style={{ width: "auto" }}>รายการ</th>
-                    <th style={{ width: 180 }}>งวดปัจจุบัน</th>
-                    {showCompare && <th style={{ width: 180 }}>งวดก่อนหน้า</th>}
+                    <th style={{ width: 180 }}>{window.getPeriodLabel(localPeriod)}</th>
+                    {showCompare && <th style={{ width: 180 }}>{priorLabel}</th>}
                     {showCompare && <th style={{ width: 130 }}>เปลี่ยนแปลง</th>}
                   </tr>
                 </thead>
@@ -1162,8 +1482,8 @@ function ReportPage({ method, onExport, companyId = "CONSO", chartStyle }) {
                   </tr>
                   <tr>
                     <td className="label">เงินสดและรายการเทียบเท่าเงินสด ณ ต้นงวด</td>
-                    <td className="num">{window.fmtTHB(report.opening)}</td>
-                    {showCompare && <td className="num muted">{window.fmtTHB(report.priorOpening)}</td>}
+                    <td className="num">{window.fmtTHB(opening)}</td>
+                    {showCompare && <td className="num muted">{window.fmtTHB(priorOpening)}</td>}
                     {showCompare && <td className="num"></td>}
                   </tr>
                   <tr className="grand">
@@ -1185,26 +1505,41 @@ function ReportPage({ method, onExport, companyId = "CONSO", chartStyle }) {
             </div>
           </div>
 
+          {/* Summary KPI cards per activity */}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 14, marginTop: 14 }}>
-            {sections.map((sec, i) => (
-              <div className="card" key={i}>
-                <div className="card-pad">
-                  <div className="small muted">{sec.title.replace("กระแสเงินสดจาก", "")}</div>
-                  <div className="kpi-value" style={{ fontSize: 22, marginTop: 6, color: sec.subtotalCurrent >= 0 ? "var(--success)" : "var(--danger)" }}>
-                    {sec.subtotalCurrent >= 0 ? "+" : ""}{window.fmtTHB(sec.subtotalCurrent)}
+            {sections.map((sec, i) => {
+              const chg = sec.subtotalCurrent - sec.subtotalPrior;
+              const pct = sec.subtotalPrior !== 0 ? ((chg / Math.abs(sec.subtotalPrior)) * 100).toFixed(1) : null;
+              return (
+                <div className="card" key={i}>
+                  <div className="card-pad">
+                    <div className="small muted">{sec.title.replace("กระแสเงินสดจาก", "")}</div>
+                    <div className="kpi-value" style={{ fontSize: 22, marginTop: 6, color: sec.subtotalCurrent >= 0 ? "var(--success)" : "var(--danger)" }}>
+                      {sec.subtotalCurrent >= 0 ? "+" : ""}{window.fmtTHB(sec.subtotalCurrent)}
+                    </div>
+                    <div className="tiny muted" style={{ marginTop: 4 }}>
+                      {priorLabel}: {window.fmtTHB(sec.subtotalPrior)}
+                      {pct !== null && (
+                        <span style={{ marginLeft: 6, color: chg >= 0 ? "var(--success)" : "var(--danger)" }}>
+                          {chg >= 0 ? "▲" : "▼"}{Math.abs(pct)}%
+                        </span>
+                      )}
+                    </div>
                   </div>
-                  <div className="tiny muted" style={{ marginTop: 4 }}>งวดก่อน: {window.fmtTHB(sec.subtotalPrior)}</div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
+          </>
+          )}
         </>
       )}
 
-      {activeTab === 1 && <SegmentCFTab />}
-      {activeTab === 2 && <CashEndingTab />}
-      {activeTab === 3 && <CompareMethodsTab />}
-      {activeTab === 4 && <CrossValidationTab />}
+      {activeTab === 1 && <SegmentCFTab   period={localPeriod} cfData={cfData} isDaily={isDaily} />}
+      {activeTab === 2 && <WCReconcileTab  period={localPeriod} cfData={cfData} isDaily={isDaily} />}
+      {activeTab === 3 && <CashEndingTab   period={localPeriod} cfData={cfData} isDaily={isDaily} />}
+      {activeTab === 4 && <CompareMethodsTab period={localPeriod} cfData={cfData} isDaily={isDaily} />}
+      {activeTab === 5 && <CrossValidationTab period={localPeriod} cfData={cfData} isDaily={isDaily} />}
     </>
   );
 }

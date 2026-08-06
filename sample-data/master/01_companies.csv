@@ -1,0 +1,5 @@
+﻿company_code,company_name_th,company_name_en,role,parent_code,reporting_currency,functional_currency
+ACG,บริษัท ออโตคอร์ป โฮลดิ้ง จำกัด (มหาชน),Autocorp Holding PCL,HOLDING,,THB,THB
+HMW,บริษัท ฮอนด้ามะลิวัลย์ จำกัด,Honda Maliwan Co Ltd,SUBSIDIARY,ACG,THB,THB
+CLIK,บริษัท ออโตคลิกบายเอซีจี จำกัด,Autoclick by ACG Co Ltd,SUBSIDIARY,ACG,THB,THB
+CONSO,งบการเงินรวม ACG Group,ACG Group Consolidated,CONSOLIDATED,,THB,THB

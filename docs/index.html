@@ -1,0 +1,1110 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cashflow Automation — System Documentation</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--blue:#2A6FF0;--blue-dark:#1a4fb0;--blue-light:#EBF2FF;--gray:#F8F9FA;--border:#E2E8F0;--text:#1A202C;--muted:#64748B;--green:#16A34A;--red:#DC2626;--yellow:#D97706;--sidebar:260px}
+body{font-family:'Segoe UI',Sarabun,sans-serif;font-size:14px;color:var(--text);background:#fff;display:flex;min-height:100vh}
+a{color:var(--blue);text-decoration:none}
+a:hover{text-decoration:underline}
+
+/* Sidebar */
+#sidebar{width:var(--sidebar);min-height:100vh;background:#0F172A;color:#CBD5E1;position:fixed;top:0;left:0;overflow-y:auto;z-index:100;display:flex;flex-direction:column}
+#sidebar-header{padding:20px 16px 16px;border-bottom:1px solid #1E293B}
+#sidebar-header h2{font-size:13px;font-weight:700;color:#fff;letter-spacing:.5px;line-height:1.4}
+#sidebar-header p{font-size:11px;color:#64748B;margin-top:4px}
+#search-box{padding:12px 16px;border-bottom:1px solid #1E293B}
+#search-input{width:100%;padding:6px 10px;background:#1E293B;border:1px solid #334155;border-radius:6px;color:#CBD5E1;font-size:12px;outline:none}
+#search-input::placeholder{color:#64748B}
+#search-input:focus{border-color:var(--blue)}
+nav{flex:1;padding:8px 0}
+nav .nav-group{margin-bottom:4px}
+nav .nav-group-label{padding:8px 16px 4px;font-size:10px;font-weight:700;color:#475569;letter-spacing:.8px;text-transform:uppercase}
+nav a.nav-item{display:block;padding:6px 16px 6px 24px;font-size:12.5px;color:#94A3B8;border-left:2px solid transparent;transition:all .15s}
+nav a.nav-item:hover,nav a.nav-item.active{color:#fff;background:#1E293B;border-left-color:var(--blue);text-decoration:none}
+nav a.nav-item.sub{padding-left:36px;font-size:12px;color:#64748B}
+nav a.nav-item.sub:hover,nav a.nav-item.sub.active{color:#CBD5E1;background:#1E293B}
+
+/* Main */
+#main{margin-left:var(--sidebar);flex:1;min-height:100vh}
+#topbar{position:sticky;top:0;background:#fff;border-bottom:1px solid var(--border);padding:12px 32px;display:flex;align-items:center;justify-content:space-between;z-index:50}
+#topbar h1{font-size:15px;font-weight:600;color:var(--text)}
+#topbar .badge{background:var(--blue-light);color:var(--blue);font-size:11px;padding:3px 8px;border-radius:12px;font-weight:600}
+#content{padding:32px;max-width:960px}
+
+/* Sections */
+.doc-section{margin-bottom:56px;scroll-margin-top:70px}
+.section-header{display:flex;align-items:center;gap:10px;margin-bottom:20px;padding-bottom:12px;border-bottom:2px solid var(--blue)}
+.section-icon{width:32px;height:32px;background:var(--blue);color:#fff;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.section-header h2{font-size:20px;font-weight:700;color:var(--text)}
+.section-header .section-sub{font-size:12px;color:var(--muted);margin-left:auto;flex-shrink:0}
+h3{font-size:15px;font-weight:600;color:var(--text);margin:24px 0 10px;padding-left:10px;border-left:3px solid var(--blue)}
+h4{font-size:13px;font-weight:600;color:var(--text);margin:16px 0 8px}
+p{line-height:1.7;color:#334155;margin-bottom:10px}
+
+/* Tables */
+.table-wrap{overflow-x:auto;margin:10px 0 16px;border-radius:8px;border:1px solid var(--border)}
+table{width:100%;border-collapse:collapse;font-size:13px}
+thead tr{background:var(--blue);color:#fff}
+thead th{padding:9px 12px;text-align:left;font-weight:600;font-size:12px}
+tbody tr{border-bottom:1px solid var(--border)}
+tbody tr:last-child{border-bottom:none}
+tbody tr:nth-child(even){background:#F8FAFC}
+tbody td{padding:8px 12px;vertical-align:top;line-height:1.5}
+td code,th code{font-size:11px;background:#EFF6FF;color:var(--blue-dark);padding:1px 5px;border-radius:4px;font-family:monospace}
+
+/* Code blocks */
+pre{background:#0F172A;color:#E2E8F0;padding:16px;border-radius:8px;overflow-x:auto;font-size:12px;line-height:1.6;margin:10px 0 16px;white-space:pre-wrap;word-break:break-word}
+code.inline{font-size:12px;background:#F1F5F9;color:#334155;padding:1px 5px;border-radius:4px;font-family:monospace}
+
+/* Callouts */
+.callout{padding:12px 16px;border-radius:8px;margin:12px 0;border-left:4px solid;font-size:13px}
+.callout.info{background:#EFF6FF;border-color:var(--blue);color:#1E40AF}
+.callout.warn{background:#FFFBEB;border-color:var(--yellow);color:#92400E}
+.callout.danger{background:#FEF2F2;border-color:var(--red);color:#991B1B}
+.callout.success{background:#F0FDF4;border-color:var(--green);color:#166534}
+
+/* Cards grid */
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin:12px 0}
+.card{background:var(--gray);border:1px solid var(--border);border-radius:8px;padding:14px}
+.card h5{font-size:12px;font-weight:700;color:var(--blue);margin-bottom:6px}
+.card p{font-size:12px;margin:0;color:var(--muted)}
+
+/* Badges */
+.badge-green{background:#DCFCE7;color:#166534;padding:2px 7px;border-radius:10px;font-size:11px;font-weight:600}
+.badge-red{background:#FEE2E2;color:#991B1B;padding:2px 7px;border-radius:10px;font-size:11px;font-weight:600}
+.badge-yellow{background:#FEF3C7;color:#92400E;padding:2px 7px;border-radius:10px;font-size:11px;font-weight:600}
+.badge-blue{background:#DBEAFE;color:#1E40AF;padding:2px 7px;border-radius:10px;font-size:11px;font-weight:600}
+.badge-gray{background:#F1F5F9;color:#475569;padding:2px 7px;border-radius:10px;font-size:11px;font-weight:600}
+
+/* Priority */
+.priority-critical{color:var(--red);font-weight:700}
+.priority-high{color:var(--yellow);font-weight:700}
+.priority-medium{color:var(--blue);font-weight:600}
+.priority-low{color:var(--muted);font-weight:600}
+
+/* Search highlight */
+.highlight{background:#FEF08A;padding:0 2px;border-radius:2px}
+
+/* TOC */
+.toc{background:var(--gray);border:1px solid var(--border);border-radius:8px;padding:16px 20px;margin-bottom:32px}
+.toc h4{font-size:12px;font-weight:700;color:var(--muted);margin:0 0 10px;border:none;padding:0;text-transform:uppercase;letter-spacing:.5px}
+.toc ul{list-style:none;display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:4px}
+.toc li a{font-size:13px;color:var(--blue)}
+
+/* Score */
+.score-bar{display:flex;align-items:center;gap:10px;margin:6px 0}
+.score-bar .label{font-size:12px;color:var(--muted);width:200px;flex-shrink:0}
+.score-bar .bar{flex:1;height:8px;background:#E2E8F0;border-radius:4px;overflow:hidden}
+.score-bar .fill{height:100%;border-radius:4px;background:var(--blue)}
+.score-bar .value{font-size:12px;font-weight:700;color:var(--text);width:40px;text-align:right;flex-shrink:0}
+
+/* Responsive */
+@media(max-width:768px){
+  #sidebar{transform:translateX(-100%);transition:transform .2s}
+  #sidebar.open{transform:translateX(0)}
+  #main{margin-left:0}
+  #content{padding:16px}
+}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<div id="sidebar">
+  <div id="sidebar-header">
+    <h2>📊 Cashflow Automation</h2>
+    <p>System Documentation — MVP v1</p>
+  </div>
+  <div id="search-box">
+    <input type="text" id="search-input" placeholder="🔍 ค้นหาในเอกสาร..." oninput="searchDocs(this.value)">
+  </div>
+  <nav>
+    <div class="nav-group">
+      <div class="nav-group-label">ภาพรวมระบบ</div>
+      <a href="#system-map" class="nav-item" onclick="setActive(this)">🗺 System Map</a>
+      <a href="#module-spec" class="nav-item" onclick="setActive(this)">📦 Module Specification</a>
+    </div>
+    <div class="nav-group">
+      <div class="nav-group-label">UI &amp; Navigation</div>
+      <a href="#screen-doc" class="nav-item" onclick="setActive(this)">🖥 Screen Documentation</a>
+      <a href="#user-journey" class="nav-item" onclick="setActive(this)">🧭 User Journey</a>
+    </div>
+    <div class="nav-group">
+      <div class="nav-group-label">ข้อมูล &amp; กระบวนการ</div>
+      <a href="#data-dict" class="nav-item" onclick="setActive(this)">📖 Data Dictionary</a>
+      <a href="#workflow" class="nav-item" onclick="setActive(this)">⚙️ Workflow Diagrams</a>
+    </div>
+    <div class="nav-group">
+      <div class="nav-group-label">คู่มือ &amp; ทบทวน</div>
+      <a href="#user-manual" class="nav-item" onclick="setActive(this)">📋 User Manual (SOP)</a>
+      <a href="#arch-review" class="nav-item" onclick="setActive(this)">🔍 Architecture Review</a>
+    </div>
+  </nav>
+</div>
+
+<!-- MAIN -->
+<div id="main">
+  <div id="topbar">
+    <h1>Cashflow Automation System — เอกสารระบบฉบับสมบูรณ์</h1>
+    <span class="badge">MVP v1 · 6 มิ.ย. 2569</span>
+  </div>
+  <div id="content">
+
+    <!-- TOC -->
+    <div class="toc">
+      <h4>สารบัญ</h4>
+      <ul>
+        <li><a href="#system-map">1. System Map</a></li>
+        <li><a href="#module-spec">2. Module Specification</a></li>
+        <li><a href="#screen-doc">3. Screen Documentation</a></li>
+        <li><a href="#user-journey">4. User Journey</a></li>
+        <li><a href="#data-dict">5. Data Dictionary</a></li>
+        <li><a href="#workflow">6. Workflow Diagrams</a></li>
+        <li><a href="#user-manual">7. User Manual (SOP)</a></li>
+        <li><a href="#arch-review">8. Architecture Review</a></li>
+      </ul>
+    </div>
+
+    <!-- ===== 1. SYSTEM MAP ===== -->
+    <div class="doc-section" id="system-map">
+      <div class="section-header">
+        <div class="section-icon">🗺</div>
+        <h2>System Map — แผนที่ระบบ</h2>
+        <span class="section-sub">Architecture · Navigation · Data Flow · Tech Stack</span>
+      </div>
+
+      <h3>1.1 สถาปัตยกรรมภาพรวม</h3>
+      <div class="cards">
+        <div class="card"><h5>Frontend (Client)</h5><p>React 18.x SPA · Recharts · TailwindCSS · Vite bundler</p></div>
+        <div class="card"><h5>Data Layer</h5><p>window.CFData (Mock) · localStorage (Tweaks) · Session (GL Import)</p></div>
+        <div class="card"><h5>Backend</h5><p>server.js (Static) · app.py (Flask experimental) · Vercel deploy</p></div>
+        <div class="card"><h5>External</h5><p>Business Central ERP (GL import Excel) · ไม่มี DB จริง</p></div>
+      </div>
+
+      <h3>1.2 Navigation Map — โครงสร้างหน้าจอ</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Screen Key</th><th>ชื่อเมนู</th><th>Component</th><th>กลุ่ม Sidebar</th></tr></thead>
+          <tbody>
+            <tr><td><code>dashboard</code></td><td>Dashboard</td><td>DashboardScreen</td><td>หน้าหลัก</td></tr>
+            <tr><td><code>finance</code></td><td>ข้อมูลทางการเงิน</td><td>FinanceInputScreen</td><td>บันทึกข้อมูล</td></tr>
+            <tr><td><code>accounting</code></td><td>ข้อมูลทางบัญชี</td><td>AccountingInputScreen</td><td>บันทึกข้อมูล</td></tr>
+            <tr><td><code>direct</code></td><td>วิธีตรง (Direct)</td><td>DirectCFReport</td><td>งบกระแสเงินสด</td></tr>
+            <tr><td><code>indirect</code></td><td>วิธีอ้อม (Indirect)</td><td>IndirectCFReport</td><td>งบกระแสเงินสด</td></tr>
+            <tr><td><code>forecast</code></td><td>พยากรณ์กระแสเงินสด</td><td>ForecastScreen</td><td>วิเคราะห์</td></tr>
+            <tr><td><code>export</code></td><td>Export Center</td><td>ExportCenter</td><td>วิเคราะห์</td></tr>
+            <tr><td><code>settings</code></td><td>ตั้งค่า</td><td>Settings</td><td>ระบบ</td></tr>
+            <tr><td><em>ไม่มีใน nav</em></td><td>Reconciliation</td><td>Reconciliation</td><td>— (Hidden)</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="callout warn">⚠️ Screen ทั้งหมดอยู่ใน SPA เดียว — ไม่มี URL routing (ใช้ React.useState("dashboard")) Back button browser ไม่ทำงาน</div>
+
+      <h3>1.3 โครงสร้างบริษัท (Multi-Entity)</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>ID</th><th>ชื่อ</th><th>ประเภท</th><th>Income Segments</th></tr></thead>
+          <tbody>
+            <tr><td><code>CONSO</code></td><td>งบรวมกลุ่ม</td><td>Virtual (Sum ทุก entity)</td><td>รวมทุก segment</td></tr>
+            <tr><td><code>ACG</code></td><td>ACG Holding</td><td>Holding Company</td><td>MGT_HMW, MGT_CLIK, OTH (3 segs)</td></tr>
+            <tr><td><code>HMW</code></td><td>HMW</td><td>Honda Dealer</td><td>HONDA, TOK, INS, INS_OPEN, INS_LIM, FIN, RENT, DEL, OTH (9 segs)</td></tr>
+            <tr><td><code>CLIK</code></td><td>CLIK</td><td>Services</td><td>SVC, OTH (2 segs)</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>1.4 Tech Stack</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Layer</th><th>Technology</th><th>Version</th><th>หมายเหตุ</th></tr></thead>
+          <tbody>
+            <tr><td>Frontend Framework</td><td>React</td><td>18.x</td><td>SPA, hooks-based</td></tr>
+            <tr><td>Build Tool</td><td>Vite</td><td>latest</td><td>Bundle → bundle.html</td></tr>
+            <tr><td>Styling</td><td>TailwindCSS + Inline</td><td>v3</td><td>Utility classes + custom CSS vars</td></tr>
+            <tr><td>Charts</td><td>Recharts</td><td>2.x</td><td>Bar, Line, Area, Pie</td></tr>
+            <tr><td>Excel Parse</td><td>SheetJS (xlsx)</td><td>latest</td><td>GL Import + Export</td></tr>
+            <tr><td>Backend Static</td><td>Express.js</td><td>4.x</td><td>server.js — static file only</td></tr>
+            <tr><td>Backend Experimental</td><td>Flask (Python)</td><td>2.x</td><td>app.py — ยังไม่ fully connected</td></tr>
+            <tr><td>Deploy</td><td>Vercel</td><td>—</td><td>vercel.json configured</td></tr>
+            <tr><td>Persistence</td><td>window.CFData (Mock)</td><td>—</td><td>ไม่มี DB จริง — หายเมื่อ Refresh</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>1.5 Period Configuration</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Period Code</th><th>ความหมาย</th><th>ใช้ใน</th></tr></thead>
+          <tbody>
+            <tr><td><code>2026-Q1</code></td><td>Q1 2026 (ม.ค.–มี.ค.)</td><td>Default period, CF Report, GL</td></tr>
+            <tr><td><code>2026-01</code> ถึง <code>2026-03</code></td><td>รายเดือน</td><td>Monthly drill-down</td></tr>
+            <tr><td><code>2025-Q4</code></td><td>Q4 2025 (ต.ค.–ธ.ค.)</td><td>Prior period comparison</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ===== 2. MODULE SPEC ===== -->
+    <div class="doc-section" id="module-spec">
+      <div class="section-header">
+        <div class="section-icon">📦</div>
+        <h2>Module Specification</h2>
+        <span class="section-sub">8 Modules · Business Purpose · KPIs</span>
+      </div>
+
+      <h3>Module 1: Dashboard</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Attribute</th><th>รายละเอียด</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Business Purpose</strong></td><td>แสดงสถานะ Cash Flow ภาพรวม สำหรับ Executive review ประจำวัน</td></tr>
+            <tr><td><strong>User Roles</strong></td><td>CFO, Treasury Manager, Approver, Viewer</td></tr>
+            <tr><td><strong>Inputs</strong></td><td>window.CFData.bankAccounts, monthly[], trend30[], topInflowCats[], topOutflowCats[], recentTxns[]</td></tr>
+            <tr><td><strong>Outputs</strong></td><td>KPI Cards, Trend Chart, Bank Panel, Top Inflow/Outflow Lists, Transactions Table</td></tr>
+            <tr><td><strong>KPIs Shown</strong></td><td>Total Cash, Cash In Q1, Cash Out Q1, Net CF Q1</td></tr>
+            <tr><td><strong>Related Screens</strong></td><td>dashboard</td></tr>
+            <tr><td><strong>Dependencies</strong></td><td>data.js (bankAccounts, monthly, trend30, recentTxns)</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Module 2: Finance Input</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Attribute</th><th>รายละเอียด</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Business Purpose</strong></td><td>รับข้อมูลทางการเงินจาก Treasury — Bank Statements, รายการรับ-จ่าย, AR/AP Reconcile</td></tr>
+            <tr><td><strong>User Roles</strong></td><td>Treasury Manager, Finance User</td></tr>
+            <tr><td><strong>Inputs</strong></td><td>Bank Statement Excel/CSV, Manual transactions, AP Honda, PN payments</td></tr>
+            <tr><td><strong>Outputs</strong></td><td>Transaction list (matched/pending/review), AR Reconcile table</td></tr>
+            <tr><td><strong>7 Tabs</strong></td><td>บัญชีธนาคาร · เงินรับ · เงินจ่าย · AP Honda · PN Payment · Reconcile AR · Reconcile AP</td></tr>
+            <tr><td><strong>KPIs</strong></td><td>Pending count, Unmatched count, Total Balance 7 accounts</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Module 3: Accounting Input</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Attribute</th><th>รายละเอียด</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Business Purpose</strong></td><td>รับข้อมูลบัญชีจาก ERP — GL, AR Aging, AP Aging, Inventory</td></tr>
+            <tr><td><strong>User Roles</strong></td><td>Accountant, Accounting Manager</td></tr>
+            <tr><td><strong>Inputs</strong></td><td>Business Central GL Excel (forEach row → aggregate by GL account)</td></tr>
+            <tr><td><strong>Outputs</strong></td><td>Trial Balance table, AR Aging buckets, AP Next-Due schedule</td></tr>
+            <tr><td><strong>4 Tabs</strong></td><td>Trial Balance (GL) · ลูกหนี้ (AR) · เจ้าหนี้ (AP) · สินค้าคงเหลือ</td></tr>
+            <tr><td><strong>Storage</strong></td><td>window.glImported (session — หายเมื่อ Refresh)</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Module 4: Cash Flow Report</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Tab</th><th>ชื่อ</th><th>รายละเอียด</th></tr></thead>
+          <tbody>
+            <tr><td>0</td><td>งบกระแสเงินสด</td><td>Full CF Statement — Operating / Investing / Financing (TAS 7)</td></tr>
+            <tr><td>1</td><td>CF แยก Segment</td><td>buildSegmentCF() → SegmentCFCard ต่อ income segment</td></tr>
+            <tr><td>2</td><td>Working Capital</td><td>AR/AP Reconcile table, Inventory change, CF Impact per segment</td></tr>
+            <tr><td>3</td><td>Direct vs Indirect</td><td>เปรียบเทียบ Operating CF 2 วิธี ต้องเท่ากัน (Difference = 0)</td></tr>
+            <tr><td>4</td><td>กระทบยอดปลายงวด</td><td>CF Closing vs Bank Total vs TB(1010) → isBalanced (diff &lt; 1M)</td></tr>
+            <tr><td>5</td><td>Cross-validation</td><td>Check list validation CF สอดคล้อง FS</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="callout info">📌 CF Report แยกเป็น 2 Routes: <code>direct</code> (Direct Method) และ <code>indirect</code> (Indirect Method) — แต่ใช้ Tab structure เหมือนกัน</div>
+
+      <h3>Module 5: Forecast</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Attribute</th><th>รายละเอียด</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Scenarios</strong></td><td>Bear (×0.85) · Base (×1.00) · Bull (×1.15)</td></tr>
+            <tr><td><strong>Time Range</strong></td><td>4 / 8 / 12 สัปดาห์</td></tr>
+            <tr><td><strong>KPIs</strong></td><td>End Balance, Total Inflow, Total Outflow, Min Balance</td></tr>
+            <tr><td><strong>Opening Balance</strong></td><td>Hardcoded: 469,220,000 บาท ⚠️ (ควร dynamic)</td></tr>
+            <tr><td><strong>Logic</strong></td><td>inflow × adjust; outflow คงที่; running balance สะสม</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Module 6: Export Center</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Attribute</th><th>รายละเอียด</th></tr></thead>
+          <tbody>
+            <tr><td><strong>3-Step Modal</strong></td><td>Step 1: Config → Step 2: Progress simulation → Step 3: Download</td></tr>
+            <tr><td><strong>Report Types</strong></td><td>Direct CF, Indirect CF, Forecast, AR Aging, AP Schedule, Summary</td></tr>
+            <tr><td><strong>Options</strong></td><td>Format (Formatted/Raw), Unit (บาท/พัน/ล้าน), Sections to include</td></tr>
+            <tr><td><strong>สถานะ</strong></td><td>Simulation เท่านั้น — ยังไม่มีการสร้างไฟล์จริง ⚠️</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Module 7: Settings</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Tab</th><th>รายละเอียด</th></tr></thead>
+          <tbody>
+            <tr><td>CF Mapping</td><td>Map 22 CF line items → Income/Expense segments สำหรับ drill-down</td></tr>
+            <tr><td>GL Accounts</td><td>กำหนด GL Account codes สำหรับ CF categories (21 accounts)</td></tr>
+            <tr><td>Company &amp; Users</td><td>จัดการ Entity และ User roles (ไม่มี enforce จริง)</td></tr>
+            <tr><td>Integrations</td><td>6 services: Business Central, Xero, SAP, Oracle, QuickBooks, Sage</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Module 8: Navigation &amp; Layout</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Component</th><th>รายละเอียด</th></tr></thead>
+          <tbody>
+            <tr><td>Sidebar</td><td>4 groups, 8+ nav items, badges (hardcoded "12" และ "8"), customizable position (L/R)</td></tr>
+            <tr><td>Topbar</td><td>Company selector, Period selector, Global Search (placeholder), Bell icon (placeholder), User avatar</td></tr>
+            <tr><td>Tweaks Panel</td><td>Accent color (4 presets), Chart style, Sidebar position, Density, Font scale → localStorage</td></tr>
+            <tr><td>ExportModal</td><td>Singleton modal — ใช้ร่วมกัน 3 entry points</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ===== 3. SCREEN DOCUMENTATION ===== -->
+    <div class="doc-section" id="screen-doc">
+      <div class="section-header">
+        <div class="section-icon">🖥</div>
+        <h2>Screen Documentation</h2>
+        <span class="section-sub">9 Screens · Widgets · Actions · Business Rules</span>
+      </div>
+
+      <h3>Screen 1: Dashboard</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Widget</th><th>Data Source</th><th>Business Rule</th></tr></thead>
+          <tbody>
+            <tr><td>KPI Grid (4 cards)</td><td>bankAccounts.balance, monthly[]</td><td>Total Cash = sum(bankAccounts.balance)</td></tr>
+            <tr><td>Trend Chart</td><td>monthly[] / trend30[]</td><td>Toggle เดือน/วัน; เส้นเขียว=in, แดง=out</td></tr>
+            <tr><td>Bank Accounts Panel</td><td>bankAccounts[7]</td><td>แสดง balance ต่อบัญชี พร้อมสถานะ FCD</td></tr>
+            <tr><td>Top Inflow BarList</td><td>topInflowCats[]</td><td>Top 5 categories by amount</td></tr>
+            <tr><td>Top Outflow BarList</td><td>topOutflowCats[]</td><td>Top 5 categories by amount</td></tr>
+            <tr><td>Recent Transactions</td><td>recentTxns[8]</td><td>18 records, แสดง 8, badge status</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Screen 2: Finance Input (7 Tabs)</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Tab</th><th>Content</th><th>Key Actions</th></tr></thead>
+          <tbody>
+            <tr><td>บัญชีธนาคาร</td><td>7 bank accounts overview</td><td>ดู Balance, Upload Bank Statement (UploadModal)</td></tr>
+            <tr><td>เงินรับ</td><td>Inflow transactions list</td><td>Filter status, Add transaction (AddTxnModal), Search</td></tr>
+            <tr><td>เงินจ่าย</td><td>Outflow transactions list</td><td>Filter status, Manual match</td></tr>
+            <tr><td>AP Honda Payment</td><td>Honda AP payment schedule</td><td>ดู Due dates, Mark paid</td></tr>
+            <tr><td>PN Payment</td><td>Promissory Note schedule</td><td>ดู maturity dates</td></tr>
+            <tr><td>Reconcile AR</td><td>AR vs Bank reconcile</td><td>Match รายการ, ดูยอดค้างชำระ</td></tr>
+            <tr><td>Reconcile AP</td><td>AP vs Bank reconcile</td><td>Match รายการ, ดู Due</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Screen 3: Accounting Input (4 Tabs)</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Tab</th><th>Content</th><th>Key Actions</th></tr></thead>
+          <tbody>
+            <tr><td>Trial Balance (GL)</td><td>GL accounts aggregated (21 accounts)</td><td>Import BC Excel (ImportLedgerModal), ดู Debit/Credit/Net</td></tr>
+            <tr><td>ลูกหนี้ (AR)</td><td>AR Aging buckets: Current, 30, 60, 90, Over</td><td>ดู aging per customer, Export</td></tr>
+            <tr><td>เจ้าหนี้ (AP)</td><td>AP with Next Due Date per vendor</td><td>ดู payment schedule, Export</td></tr>
+            <tr><td>สินค้าคงเหลือ</td><td>Inventory summary</td><td>ดู Opening/Closing, Change amount</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Screen 4: CF Report — Direct Method</h3>
+      <p>Tab 0 แสดง Full Direct CF Statement ตาม TAS 7 — 3 sections (Operating/Investing/Financing) + Opening/Closing Balance</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Section</th><th>CF Lines (ตัวอย่าง)</th></tr></thead>
+          <tbody>
+            <tr><td>กิจกรรมดำเนินงาน</td><td>เงินสดรับจากการขาย, ดอกเบี้ยรับ, จ่ายผู้จัดจำหน่าย, จ่ายพนักงาน, จ่ายดอกเบี้ย, จ่ายภาษี</td></tr>
+            <tr><td>กิจกรรมลงทุน</td><td>ซื้อสินทรัพย์ถาวร, รับจากขายสินทรัพย์, เงินลงทุน</td></tr>
+            <tr><td>กิจกรรมจัดหาเงิน</td><td>กู้ยืมระยะสั้น/ยาว, ชำระคืนเงินกู้, จ่ายเงินปันผล</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Screen 5: CF Report — Indirect Method</h3>
+      <p>เริ่มจาก Net Profit แล้วปรับด้วย Non-cash items + Working Capital changes ตาม TAS 7</p>
+      <div class="callout success">✅ Tab 3 "Direct vs Indirect" ต้องแสดง Difference = 0 เสมอ มิฉะนั้นมีข้อผิดพลาดในข้อมูล</div>
+
+      <h3>Screen 6: Forecast</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Element</th><th>รายละเอียด</th></tr></thead>
+          <tbody>
+            <tr><td>Scenario Buttons</td><td>Bear / Base / Bull — toggle ปรับ inflow multiplier</td></tr>
+            <tr><td>Time Range</td><td>4 / 8 / 12 สัปดาห์</td></tr>
+            <tr><td>KPI Cards</td><td>End Balance · Total Inflow · Total Outflow · Min Balance</td></tr>
+            <tr><td>ForecastChart</td><td>Bar (Inflow/Outflow) + Line (Running Balance) dual-axis</td></tr>
+            <tr><td>Forecast Table</td><td>Week-by-week Inflow, Outflow, Net, Balance</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Screen 7: Export Center</h3>
+      <pre>User คลิก Export → ExportModal (3 Steps):
+Step 1 — Config: เลือก Report Type, Period, Format, Unit, Sections
+Step 2 — Progress: Simulation 0%→100% (Progress bar animation)
+Step 3 — Done: ชื่อไฟล์ + จำนวน sheets + ขนาดไฟล์ + Download button</pre>
+      <div class="callout warn">⚠️ Export เป็น Simulation — ไม่มีการสร้างไฟล์จริง</div>
+
+      <h3>Screen 8: Settings (4 Tabs)</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Tab</th><th>Content</th><th>Business Purpose</th></tr></thead>
+          <tbody>
+            <tr><td>CF Mapping</td><td>22 CF line items → segments</td><td>กำหนดว่า CF แต่ละบรรทัด map กับ segment ไหน สำหรับ drill-down</td></tr>
+            <tr><td>GL Accounts</td><td>21 GL accounts (1110–5510)</td><td>กำหนด GL code สำหรับ TB reconcile และ CF categories</td></tr>
+            <tr><td>Company &amp; Users</td><td>Entity list, User management</td><td>กำหนด Role — CFO/Admin/Treasury/Accountant/Viewer (ไม่มี enforce จริง)</td></tr>
+            <tr><td>Integrations</td><td>6 ERP systems</td><td>เชื่อมต่อ Business Central, Xero, SAP, Oracle, QuickBooks, Sage</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Screen 9: Reconciliation (Hidden)</h3>
+      <div class="callout danger">🔴 Component Implemented แต่ไม่มีใน Sidebar Navigation — เข้าถึงไม่ได้จาก UI ปัจจุบัน ควรเพิ่มใน Sidebar</div>
+    </div>
+
+    <!-- ===== 4. USER JOURNEY ===== -->
+    <div class="doc-section" id="user-journey">
+      <div class="section-header">
+        <div class="section-icon">🧭</div>
+        <h2>User Journey Map</h2>
+        <span class="section-sub">5 Journeys · 5 Roles · Pain Points</span>
+      </div>
+
+      <h3>Role Definitions</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Role</th><th>ผู้ใช้ตัวอย่าง</th><th>หน้าที่หลัก</th></tr></thead>
+          <tbody>
+            <tr><td><span class="badge-blue">CFO / Admin</span></td><td>K. ปริญญา ส.</td><td>ดูภาพรวม, อนุมัติ, Export, ตั้งค่าระบบ</td></tr>
+            <tr><td><span class="badge-green">Treasury Manager</span></td><td>K. รดา ม.</td><td>จัดการ Cash, Upload Bank Statement, Forecast</td></tr>
+            <tr><td><span class="badge-yellow">Accountant</span></td><td>K. ธนวรรธน์ ค.</td><td>บันทึก GL, Import ข้อมูลบัญชี</td></tr>
+            <tr><td><span class="badge-gray">Approver</span></td><td>K. พิชญา ต.</td><td>ตรวจสอบ, อนุมัติรายการ</td></tr>
+            <tr><td><span class="badge-gray">Viewer (Audit)</span></td><td>K. สุทธิพงศ์ บ.</td><td>ดูข้อมูลอย่างเดียว</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Journey 1: CFO — Daily Morning Review (~15–20 นาที)</h3>
+      <pre>08:00  → Dashboard (CONSO) → ดู KPI 4 ตัว (Total Cash, Net CF Q1)
+         → Trend Chart toggle "วัน" → ดูความผันผวน 30 วัน
+         → Recent Transactions → scan สถานะ "Review"
+         → Forecast → Scenario Base → ดู Min Balance 8 สัปดาห์
+         → (ถ้าไม่ดี) Indirect CF → Tab 2 WC Reconcile → AR CF Impact
+         → Export Center → Indirect CF Report → ส่ง Board Meeting</pre>
+      <p><strong>Pain Points:</strong> Opening balance Forecast hardcoded · ไม่มี default company last-selected</p>
+
+      <h3>Journey 2: Treasury Manager — รับ Bank Statement (ทุกวันจันทร์ ~30–45 นาที)</h3>
+      <pre>Mon AM → Finance Input → Tab บัญชีธนาคาร → ดู 7 accounts
+         → ปุ่ม Upload → UploadModal → Import Excel
+         → Tab เงินรับ → Filter Pending → ตรวจแต่ละรายการ
+         → Tab Reconcile AR → กระทบยอด AR vs Bank
+         → CF Report Direct → Tab 4 → ดู ✓ ยอดตรง หรือ ⚠ มีผลต่าง
+         → Export Center → Direct CF เดือนนี้ → ส่ง CFO</pre>
+      <p><strong>Pain Points:</strong> ต้องสลับ tab หลายครั้ง · ไม่มีแจ้งเตือนอัตโนมัติเมื่อ reconcile ไม่สมดุล</p>
+
+      <h3>Journey 3: Accountant — Import GL รายเดือน (~1–2 ชั่วโมง)</h3>
+      <pre>สิ้นเดือน → Accounting Input → Trial Balance → Import BC Excel
+           → ดู Debit = Credit (Balanced)
+           → Tab ลูกหนี้ → ดู Aging buckets + Over 90 วัน
+           → Tab เจ้าหนี้ → ดู Next Due Date per vendor
+           → Indirect CF → Tab 0 → ตรวจ Net Profit ตรงกับ GL
+           → Tab 2 WC Reconcile → ตรวจ AR/AP CF impact</pre>
+      <p><strong>Pain Points:</strong> ไม่มี Validation ว่า Trial Balance สมดุล · ต้อง Manual compare GL vs CF</p>
+
+      <h3>Journey 4: Viewer/Auditor — Quarterly Review</h3>
+      <pre>ปลายไตรมาส → Dashboard → CONSO → Q1 → ดู KPI + Trend
+              → Direct CF → Tab 0 (Full Statement)
+              → Tab 4 → กระทบยอดเงินสด vs Bank
+              → Tab 5 → Cross-validation checklist
+              → Indirect CF → Tab 3 → Direct vs Indirect Difference = 0
+              → Export Center → ดาวน์โหลดประวัติ</pre>
+
+      <h3>Journey 5: CFO — Board Preparation</h3>
+      <pre>ก่อนประชุม → Indirect CF → Tab 1 CF แยก Segment (HMW vs CLIK vs ACG)
+              → Forecast → toggle Bear/Base/Bull scenarios
+              → Export Center → Indirect CF + Forecast + AR Aging (3 ไฟล์)</pre>
+      <p><strong>Pain Points:</strong> ต้อง Export ทีละไฟล์ · ไม่มี Bulk Export · ไม่มี Presentation mode</p>
+
+      <h3>Usage Matrix</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Role</th><th>Dashboard</th><th>Finance Input</th><th>Accounting Input</th><th>CF Report</th><th>Forecast</th><th>Export</th><th>Settings</th></tr></thead>
+          <tbody>
+            <tr><td>CFO</td><td><span class="badge-green">หลัก</span></td><td><span class="badge-gray">น้อย</span></td><td><span class="badge-gray">น้อย</span></td><td><span class="badge-green">หลัก</span></td><td><span class="badge-green">หลัก</span></td><td><span class="badge-green">หลัก</span></td><td><span class="badge-green">หลัก</span></td></tr>
+            <tr><td>Treasury</td><td><span class="badge-green">หลัก</span></td><td><span class="badge-green">หลัก</span></td><td><span class="badge-gray">น้อย</span></td><td><span class="badge-green">หลัก</span></td><td><span class="badge-green">หลัก</span></td><td><span class="badge-green">หลัก</span></td><td><span class="badge-gray">น้อย</span></td></tr>
+            <tr><td>Accountant</td><td><span class="badge-yellow">บางครั้ง</span></td><td><span class="badge-gray">น้อย</span></td><td><span class="badge-green">หลัก</span></td><td><span class="badge-yellow">บางครั้ง</span></td><td><span class="badge-gray">น้อย</span></td><td><span class="badge-gray">น้อย</span></td><td><span class="badge-green">หลัก</span></td></tr>
+            <tr><td>Viewer</td><td><span class="badge-yellow">บางครั้ง</span></td><td><span class="badge-gray">ไม่ใช้</span></td><td><span class="badge-gray">ไม่ใช้</span></td><td><span class="badge-green">หลัก</span></td><td><span class="badge-gray">น้อย</span></td><td><span class="badge-green">หลัก</span></td><td><span class="badge-gray">ไม่ใช้</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ===== 5. DATA DICTIONARY ===== -->
+    <div class="doc-section" id="data-dict">
+      <div class="section-header">
+        <div class="section-icon">📖</div>
+        <h2>Data Dictionary</h2>
+        <span class="section-sub">15 Data Objects · Field Definitions · Mock Data Details</span>
+      </div>
+      <div class="callout info">ℹ️ ระบบใช้ Mock Data ทั้งหมดใน <code>window.CFData</code> (data.js) — ไม่มีฐานข้อมูลจริง ข้อมูลหายเมื่อ Refresh</div>
+
+      <h3>1. Company Object</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Field</th><th>Type</th><th>ตัวอย่าง</th><th>คำอธิบาย</th></tr></thead>
+          <tbody>
+            <tr><td><code>id</code></td><td>string (PK)</td><td><code>"ACG"</code>, <code>"CONSO"</code></td><td>รหัสบริษัท</td></tr>
+            <tr><td><code>name</code></td><td>string</td><td><code>"ACG Holding"</code></td><td>ชื่อเต็ม</td></tr>
+            <tr><td><code>short</code></td><td>string</td><td><code>"ACG"</code></td><td>ชื่อย่อ</td></tr>
+            <tr><td><code>desc</code></td><td>string</td><td>—</td><td>คำอธิบายธุรกิจ</td></tr>
+            <tr><td><code>color</code></td><td>hex</td><td><code>"#2A6FF0"</code></td><td>สี Brand สำหรับ UI</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>2. Bank Account Object</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Field</th><th>Type</th><th>ตัวอย่าง</th><th>คำอธิบาย</th></tr></thead>
+          <tbody>
+            <tr><td><code>id</code></td><td>string (PK)</td><td><code>"BA-001"</code></td><td>รหัสบัญชี</td></tr>
+            <tr><td><code>entity</code></td><td>string (FK)</td><td><code>"ACG"</code></td><td>บริษัทเจ้าของ</td></tr>
+            <tr><td><code>name</code></td><td>string</td><td><code>"บัญชีหลัก – ออมทรัพย์"</code></td><td>ชื่อบัญชี</td></tr>
+            <tr><td><code>bank</code></td><td>string</td><td><code>"ธนาคารพาณิชย์ A"</code></td><td>ชื่อธนาคาร</td></tr>
+            <tr><td><code>balance</code></td><td>number</td><td><code>248_650_000</code></td><td>ยอดคงเหลือ (บาท)</td></tr>
+            <tr><td><code>type</code></td><td>string</td><td><code>"ออมทรัพย์"</code></td><td>ประเภทบัญชี</td></tr>
+            <tr><td><code>ccy</code></td><td>string</td><td><code>"THB"</code>, <code>"USD"</code></td><td>สกุลเงิน</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>มี 7 บัญชีในระบบ: BA-001 (ACG ออมทรัพย์ THB), BA-002 (HMW กระแสรายวัน THB), BA-003 (HMW เงินเดือน THB), BA-004 (ACG FCD USD), BA-005 (ACG ลงทุน THB), BA-006 (CLIK กระแสรายวัน THB), BA-007 (CLIK เงินเดือน THB)</p>
+
+      <h3>3. Transaction Object</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Field</th><th>Type</th><th>ตัวอย่าง</th><th>คำอธิบาย</th></tr></thead>
+          <tbody>
+            <tr><td><code>id</code></td><td>string (PK)</td><td><code>"T-04221"</code></td><td>รหัสรายการ</td></tr>
+            <tr><td><code>date</code></td><td>string</td><td><code>"2026-03-29"</code></td><td>วันที่ (ISO 8601)</td></tr>
+            <tr><td><code>desc</code></td><td>string</td><td>—</td><td>รายละเอียด</td></tr>
+            <tr><td><code>account</code></td><td>string (FK)</td><td><code>"BA-002"</code></td><td>บัญชีธนาคาร</td></tr>
+            <tr><td><code>amount</code></td><td>number</td><td><code>18_420_000</code></td><td>จำนวนเงิน บาท (+รับ/–จ่าย)</td></tr>
+            <tr><td><code>status</code></td><td>enum</td><td><code>"matched"</code></td><td>matched/pending/review/void</td></tr>
+            <tr><td><code>source</code></td><td>string</td><td><code>"Bank"</code></td><td>Bank/Manual/AP/Payroll</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>4. Income Segments</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Company</th><th>ID</th><th>ชื่อ</th></tr></thead>
+          <tbody>
+            <tr><td>ACG</td><td><code>MGT_HMW</code></td><td>ค่าบริหารจัดการ HMW</td></tr>
+            <tr><td>ACG</td><td><code>MGT_CLIK</code></td><td>ค่าบริหารจัดการ CLIK</td></tr>
+            <tr><td>ACG</td><td><code>OTH</code></td><td>อื่นๆ</td></tr>
+            <tr><td>HMW</td><td><code>HONDA</code></td><td>HONDA (ขายรถ)</td></tr>
+            <tr><td>HMW</td><td><code>TOK</code></td><td>ตอกเข็ม</td></tr>
+            <tr><td>HMW</td><td><code>INS</code></td><td>ประกัน</td></tr>
+            <tr><td>HMW</td><td><code>INS_OPEN</code></td><td>ประกันภัยเปิด</td></tr>
+            <tr><td>HMW</td><td><code>INS_LIM</code></td><td>ประวางวง</td></tr>
+            <tr><td>HMW</td><td><code>FIN</code></td><td>ไฟแนนซ์</td></tr>
+            <tr><td>HMW</td><td><code>RENT</code></td><td>รถเช่า</td></tr>
+            <tr><td>HMW</td><td><code>DEL</code></td><td>รถส่ง</td></tr>
+            <tr><td>HMW</td><td><code>OTH</code></td><td>อื่นๆ</td></tr>
+            <tr><td>CLIK</td><td><code>SVC</code></td><td>Service</td></tr>
+            <tr><td>CLIK</td><td><code>OTH</code></td><td>อื่นๆ</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>5. Expense Segments (8 segments — ใช้ร่วมทุก entity)</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>ID</th><th>ชื่อ</th><th>กลุ่ม CF</th></tr></thead>
+          <tbody>
+            <tr><td><code>F1</code></td><td>Loan &amp; Int</td><td>Financing</td></tr>
+            <tr><td><code>I1</code></td><td>Fixed assets</td><td>Investing</td></tr>
+            <tr><td><code>O1</code></td><td>Staff exp</td><td>Operating</td></tr>
+            <tr><td><code>O2</code></td><td>Inventory</td><td>Operating</td></tr>
+            <tr><td><code>O3</code></td><td>Sub contract</td><td>Operating</td></tr>
+            <tr><td><code>O4</code></td><td>Rental &amp; Facilities</td><td>Operating</td></tr>
+            <tr><td><code>O5</code></td><td>Tax</td><td>Operating</td></tr>
+            <tr><td><code>O6</code></td><td>Others</td><td>Operating</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>6. CF Statement Structure</h3>
+      <pre>directCF = {
+  opening: number,          // เงินสดต้นงวด (บาท)
+  sections: [
+    {
+      header: string,       // "กิจกรรมดำเนินงาน"
+      items: [
+        {
+          label: string,    // ชื่อบรรทัด CF (22 items)
+          current: number,  // ยอดงวดปัจจุบัน
+          prior: number,    // ยอดงวดก่อน
+          header: boolean,  // true = หัวข้อ (ไม่รวมในยอด)
+          indent: number,   // ระดับย่อหน้า
+          bold: boolean
+        }
+      ]
+    }
+    // section[1] = กิจกรรมลงทุน
+    // section[2] = กิจกรรมจัดหาเงิน
+  ]
+}</pre>
+
+      <h3>7. AR / AP Aging Object</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Field</th><th>Type</th><th>AR</th><th>AP</th></tr></thead>
+          <tbody>
+            <tr><td><code>customer</code>/<code>vendor</code></td><td>string</td><td>ชื่อลูกค้า</td><td>ชื่อ Vendor</td></tr>
+            <tr><td><code>entity</code></td><td>string</td><td>บริษัทที่เป็นเจ้าหนี้</td><td>บริษัทที่เป็นลูกหนี้</td></tr>
+            <tr><td><code>total</code></td><td>number</td><td>ยอดรวม</td><td>ยอดรวม</td></tr>
+            <tr><td><code>current</code></td><td>number</td><td>ยังไม่ครบกำหนด</td><td>ยังไม่ครบกำหนด</td></tr>
+            <tr><td><code>d30/d60/d90</code></td><td>number</td><td>Aging buckets</td><td>Aging buckets</td></tr>
+            <tr><td><code>over</code></td><td>number</td><td>เกิน 90 วัน</td><td>—</td></tr>
+            <tr><td><code>nextDueDate</code></td><td>string</td><td>—</td><td>วันครบกำหนดถัดไป</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>8. Helper Functions</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Function</th><th>Input</th><th>Output</th><th>ใช้ที่ไหน</th></tr></thead>
+          <tbody>
+            <tr><td><code>window.fmtTHB(n)</code></td><td>number</td><td>string "฿1,234,567"</td><td>ทุก screen ที่แสดงเงิน</td></tr>
+            <tr><td><code>getCompanyTotals(co, period)</code></td><td>companyId, period</td><td>{income, expense, net}</td><td>Dashboard KPIs</td></tr>
+            <tr><td><code>getIncomeMatrix(co, period)</code></td><td>companyId, period</td><td>segments × months array</td><td>CF Report Tab 1</td></tr>
+            <tr><td><code>buildSegmentCF(cfData)</code></td><td>directCF object</td><td>segs[] (14 segments × 3 entities)</td><td>CF Report Tab 1</td></tr>
+            <tr><td><code>tbBal(period, glCode)</code></td><td>period, "1010"</td><td>GL balance (number)</td><td>CF Report Tab 4 reconcile</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>9. Status Constants</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Constant</th><th>ค่า</th><th>ความหมาย</th><th>สี</th></tr></thead>
+          <tbody>
+            <tr><td><code>matched</code></td><td>"matched"</td><td>จับคู่ Bank + GL แล้ว</td><td><span class="badge-green">เขียว</span></td></tr>
+            <tr><td><code>pending</code></td><td>"pending"</td><td>รอการจับคู่</td><td><span class="badge-yellow">เหลือง</span></td></tr>
+            <tr><td><code>review</code></td><td>"review"</td><td>มีความผิดปกติ ต้องตรวจ</td><td><span class="badge-red">แดง</span></td></tr>
+            <tr><td><code>void</code></td><td>"void"</td><td>ยกเลิก</td><td><span class="badge-gray">เทา</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ===== 6. WORKFLOW DIAGRAMS ===== -->
+    <div class="doc-section" id="workflow">
+      <div class="section-header">
+        <div class="section-icon">⚙️</div>
+        <h2>Workflow Diagrams</h2>
+        <span class="section-sub">8 Flowcharts · Process Flows · Algorithm</span>
+      </div>
+
+      <h3>Workflow 1: กระบวนการจัดทำงบ CF รายเดือน (End-to-End)</h3>
+      <pre>START
+  │
+  [STEP 1] รวบรวมข้อมูล (ทุกสิ้นเดือน)
+  ├── Accountant: Import GL จาก Business Central → Accounting Input → Trial Balance
+  ├── Treasury: Upload Bank Statement → Finance Input → บัญชีธนาคาร
+  └── Finance User: ยืนยันรายการ Pending → Finance Input → เงินรับ/เงินจ่าย
+  │
+  [STEP 2] กระทบยอด AR/AP
+  ├── Accountant: ตรวจ AR Aging → Accounting Input → ลูกหนี้ tab
+  ├── Treasury: Reconcile AR → Finance Input → Reconcile AR tab
+  └── Treasury: ตรวจ AP Due → Accounting Input → เจ้าหนี้ tab
+  │
+  [STEP 3] ตรวจสอบ Cash Flow Statements
+  ├── CFO: Direct CF → Tab 4 กระทบยอดเงินสด
+  │    └── ✓ ยอดตรง → Step 4 | ⚠ มีผลต่าง → กลับ Step 1-2
+  └── CFO: Indirect CF → Tab 3 Direct vs Indirect
+       └── Difference = 0 → Step 4 | ≠ 0 → Settings → CF Mapping
+  │
+  [STEP 4] สร้าง Report
+  ├── CFO: Export Direct CF + Indirect CF + Forecast
+  └── Treasury: ส่ง Report → Approver Review
+  │
+  [STEP 5] อนุมัติ (Manual — ไม่มีใน System ขณะนี้)
+  └── Approver: Tab 5 Cross-validation → Sign-off
+  │
+  END</pre>
+
+      <h3>Workflow 2: Business Central GL Import</h3>
+      <pre>[Business Central ERP] Export GL Journal (Excel)
+  ↓
+Accounting Input → Tab "Trial Balance" → ปุ่ม "นำเข้าจากระบบบัญชี"
+  ↓
+ImportLedgerModal เปิด → เลือกไฟล์ Excel
+  ↓
+ระบบ Parse: forEach row → { glAccount, description, debit, credit }
+            aggregate by GL Account → { code, debit, credit, entries }
+  ↓
+Success Banner: "GL X รายการ • Y GL accounts"
+  ↓
+GL เก็บใน window.glImported (Session — หายเมื่อ Refresh ⚠️)
+  ↓
+ใช้ใน: Trial Balance table · CF Report Tab 4 (tbBal "1010") · Indirect CF</pre>
+
+      <h3>Workflow 3: buildSegmentCF Algorithm</h3>
+      <pre>INPUT: cfData = { direct: directCF }
+  ↓
+ดึง cfMainCur = ยอด "เงินสดรับจากการขายสินค้าและบริการ" (current)
+  ↓
+คำนวณ totalIncQ1 = รวม income ทุก segment ทุก entity (Q1)
+  ↓
+สำหรับแต่ละ entity (HMW, CLIK, ACG):
+  สำหรับแต่ละ income segment:
+    pct = incQ1_segment / totalIncQ1          (สัดส่วน)
+    scaledInc = cfMainCur × pct               (ยอดรับตามสัดส่วน)
+    arCFImpact = -(AR change of segment)      (AR เพิ่ม → CF ลด)
+    allocOpOut = totalOpOut × pct
+    operatingCF = scaledInc + arCFImpact + allocOtherIn + allocOpOut
+    investingCF = totalInvCF × pct
+    financingCF = totalFinCF × pct
+    netCF = operatingCF + investingCF + financingCF
+  ↓
+OUTPUT: segs[] array (14 segments × 3 entities) → แสดงใน Tab 1</pre>
+
+      <h3>Workflow 4: Export Modal (3-Step)</h3>
+      <pre>[Step 1 — Config]
+  เลือก: Report Type · Period · Format (Formatted/Raw) · Unit (บาท/พัน/ล้าน) · Sections
+  ↓ คลิก "สร้างไฟล์"
+[Step 2 — Progress Simulation]
+  0–29%:  "กำลังดึงข้อมูลจาก GL..."
+  30–64%: "กำลังจัดรูปแบบเซลล์ + สูตร..."
+  65–94%: "กำลังสร้าง Pivot tables..."
+  95–100%: "เกือบเสร็จแล้ว..."
+  ↓
+[Step 3 — Done]
+  แสดงชื่อไฟล์ + sheets + ขนาดไฟล์ → ปุ่ม "ดาวน์โหลด"
+  ↓
+Toast: "ดาวน์โหลด [Report Name] เรียบร้อย"
+⚠️ Simulation เท่านั้น — ไม่มีไฟล์จริง</pre>
+
+      <h3>Workflow 5: กระทบยอดเงินสดปลายงวด (Tab 4)</h3>
+      <pre>คำนวณ Net CF = Operating + Investing + Financing
+  ↓
+CF Closing = Opening Balance + Net CF
+  ↓
+Bank Total = sum(bankAccounts.balance)
+  ↓
+TB Cash = tbBal("2026-Q1", "1010")
+  ↓
+diff = bankTotal - cfClosing
+  ├── abs(diff) < 1,000,000 → ✓ ยอดตรง (สีเขียว)
+  └── abs(diff) ≥ 1,000,000 → ⚠ ยอดไม่สอดคล้อง (สีแดง)
+                               Hint: รายการระหว่างทาง / เช็คค้างจ่าย</pre>
+
+      <h3>Workflow 6: Forecast Scenario Analysis</h3>
+      <pre>User เลือก Scenario:
+  Bear → adjust = 0.85 | Base → 1.00 | Bull → 1.15
+  ↓
+Map: inflow = inflow × adjust | outflow = outflow (คงที่)
+  ↓
+Running Balance: starting = 469,220,000 บาท (hardcoded ⚠️)
+  balance[i] = balance[i-1] + net[i]
+  ↓
+KPIs: End Balance · Total Inflow · Total Outflow · Min Balance
+  ↓
+Render: ForecastChart (Bar+Line dual-axis) + Forecast Table</pre>
+
+      <h3>Workflow 7: Working Capital → CF Impact</h3>
+      <pre>AR: Change = Closing AR - Opening AR → CF Impact = -(Change)
+    [AR เพิ่ม → เงินออก → CF ลด]
+
+AP: Change = Closing AP - Opening AP → CF Impact = +(Change)
+    [AP เพิ่ม → ยังไม่จ่าย → CF เพิ่ม]
+
+Inventory: Change = Close - Open → CF Impact = -(Change)
+    [Inv เพิ่ม → ซื้อมากขึ้น → CF ลด]
+
+Accrued: Change = Close - Open → CF Impact = +(Change)
+    [ค้างจ่ายเพิ่ม → ยังไม่จ่าย → CF เพิ่ม]
+
+Total WC CF Impact = AR + AP + Inv + Accrue → Tab 2 WC Reconcile</pre>
+
+      <h3>Workflow 8: Data State Lifecycle</h3>
+      <pre>App Start:
+  window.CFData loaded (data.js)  ← Permanent for session
+  window.CF_PERIODS loaded         ← Permanent for session
+  ↓
+User Interactions:
+  setPeriod / setCompanyId → React state → re-render all screens
+  setTweak → localStorage → persist across refresh ✓
+  GL Import → window.glImported → หายเมื่อ Refresh ⚠️
+  Add/Edit actions → React local state → หายเมื่อ navigate ⚠️
+  ↓
+Page Refresh → Reset ทั้งหมด (ยกเว้น tweaks ใน localStorage)</pre>
+    </div>
+
+    <!-- ===== 7. USER MANUAL ===== -->
+    <div class="doc-section" id="user-manual">
+      <div class="section-header">
+        <div class="section-icon">📋</div>
+        <h2>User Manual (SOP)</h2>
+        <span class="section-sub">คู่มือการใช้งานทีละขั้นตอน</span>
+      </div>
+
+      <h3>ส่วนที่ 1: การเริ่มต้นใช้งาน</h3>
+      <h4>1.1 เข้าสู่ระบบ</h4>
+      <p>เปิด Web Browser (Chrome แนะนำ) → พิมพ์ URL หรือเปิดไฟล์ <code class="inline">bundle.html</code> → ระบบแสดง Dashboard ทันที</p>
+      <div class="callout warn">⚠️ ขณะนี้ไม่มีหน้า Login — ระบบยังไม่มี Authentication</div>
+
+      <h4>1.2 เลือกบริษัท</h4>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>ตัวเลือก</th><th>ความหมาย</th></tr></thead>
+          <tbody>
+            <tr><td>◆ Conso — งบรวมกลุ่ม</td><td>แสดงข้อมูลรวมทุก entity</td></tr>
+            <tr><td>ACG — ACG Holding</td><td>แสดงเฉพาะ ACG</td></tr>
+            <tr><td>HMW — HMW</td><td>แสดงเฉพาะ HMW</td></tr>
+            <tr><td>CLIK — CLIK</td><td>แสดงเฉพาะ CLIK</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h4>1.3 การปรับแต่ง UI (Tweaks Panel)</h4>
+      <p>คลิกไอคอน Tweaks (มุมล่างขวา) → ปรับ Accent Color · Chart Style · Sidebar Position · Density · Font Scale → บันทึกใน localStorage อัตโนมัติ</p>
+
+      <h3>ส่วนที่ 2: Dashboard</h3>
+      <p><strong>ดู KPI 4 ตัว:</strong> ยอดเงินสดคงเหลือรวม · กระแสเงินสดรับ Q1 · กระแสเงินสดจ่าย Q1 · กระแสเงินสดสุทธิ</p>
+      <p><strong>Trend Chart:</strong> คลิก "เดือน" = 6 เดือน | คลิก "วัน" = 30 วัน | เขียว = รับ, แดง = จ่าย</p>
+      <p><strong>Export:</strong> ปุ่ม "Export Excel" → เปิด Export Modal (ดูส่วนที่ 6)</p>
+
+      <h3>ส่วนที่ 3: Finance Input</h3>
+      <h4>3.1 นำเข้า Bank Statement</h4>
+      <p>Finance Input → ปุ่ม "นำเข้า Bank Statement" → เลือกไฟล์ Excel/CSV → รอ parse → "นำเข้า X รายการสำเร็จ"</p>
+      <p><strong>Template:</strong> ใช้ไฟล์ <code class="inline">/templates/05_Bank_Transactions_Template.xlsx</code></p>
+
+      <h4>3.2 ตรวจสอบรายการ</h4>
+      <p>Tab เงินรับ/เงินจ่าย → Filter: ทั้งหมด / Matched / Pending / Review → รายการสีแดง (Review) ต้องตรวจสอบ → คลิก "จับคู่" เพื่อ manual match กับ GL</p>
+
+      <h3>ส่วนที่ 4: Accounting Input</h3>
+      <h4>4.1 Import GL จาก Business Central</h4>
+      <p>Accounting Input → Tab Trial Balance → ปุ่ม "นำเข้าจากระบบบัญชี" → เลือกไฟล์ Excel GL จาก BC → รอประมวลผล → Banner สีเขียว "นำเข้า GL สำเร็จ X,XXX รายการ"</p>
+
+      <h4>4.2 AR Aging</h4>
+      <p>Tab ลูกหนี้ → ดู Aging buckets: Current · 30 วัน · 60 วัน · 90 วัน · Over (สีแดง = Risk สูง)</p>
+
+      <h3>ส่วนที่ 5: งบกระแสเงินสด</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Tab</th><th>ขั้นตอน</th><th>ตรวจสอบ</th></tr></thead>
+          <tbody>
+            <tr><td>Tab 0 (Full Statement)</td><td>Direct/Indirect → Tab 0</td><td>ดู 3 sections + Opening/Closing</td></tr>
+            <tr><td>Tab 1 (Segment)</td><td>เลือก Filter บริษัท</td><td>ดู Net CF ต่อ income segment</td></tr>
+            <tr><td>Tab 2 (WC)</td><td>ดู AR/AP Reconcile</td><td>AR เพิ่ม = CF ลด (แดง) · AP เพิ่ม = CF เพิ่ม (เขียว)</td></tr>
+            <tr><td>Tab 3 (Compare)</td><td>Direct vs Indirect</td><td>Difference ต้อง = 0</td></tr>
+            <tr><td>Tab 4 (Reconcile)</td><td>CF Closing vs Bank vs TB</td><td>✓ ยอดตรง (diff &lt; 1M) หรือ ⚠ มีผลต่าง</td></tr>
+            <tr><td>Tab 5 (Cross-val)</td><td>ดู Checklist</td><td>CF สอดคล้อง Financial Statements</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>ส่วนที่ 6: Export</h3>
+      <p>Export Center หรือปุ่ม Export ใน Dashboard/CF Report → ExportModal Step 1: เลือก Report Type + Period + Format + Unit + Sections → "สร้างไฟล์" → รอ Progress → Step 3: Download</p>
+      <div class="callout warn">⚠️ Export เป็น Simulation — ยังไม่สร้างไฟล์จริง</div>
+
+      <h3>ส่วนที่ 7: Forecast</h3>
+      <p>Forecast (Sidebar) → เลือก Scenario (Bear/Base/Bull) → เลือก Time Range (4/8/12 สัปดาห์) → ดู Chart + KPI cards + Forecast Table</p>
+
+      <h3>ส่วนที่ 8: Settings</h3>
+      <p>Settings (Sidebar ล่างสุด) → Tab CF Mapping: map CF lines → segments → Tab GL Accounts: กำหนด GL codes → Tab Integrations: เชื่อมต่อ ERP</p>
+
+      <h3>Templates ที่ใช้ได้</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Template File</th><th>ใช้สำหรับ</th></tr></thead>
+          <tbody>
+            <tr><td>01_Chart_of_Accounts_Template.xlsx</td><td>Chart of Accounts import</td></tr>
+            <tr><td>02_Customer_Master_Template.xlsx</td><td>Customer master data</td></tr>
+            <tr><td>03_Supplier_Master_Template.xlsx</td><td>Supplier master data</td></tr>
+            <tr><td>04_AR_Invoice_Template.xlsx</td><td>AR Invoice import</td></tr>
+            <tr><td>05_Bank_Transactions_Template.xlsx</td><td>Bank Statement import</td></tr>
+            <tr><td>06_GL_Journal_Template.xlsx</td><td>GL Journal import (BC format)</td></tr>
+            <tr><td>group_pay-template.xlsx</td><td>Group payment template</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Troubleshooting</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>ปัญหา</th><th>สาเหตุ</th><th>วิธีแก้</th></tr></thead>
+          <tbody>
+            <tr><td>ข้อมูล GL หายหลัง Refresh</td><td>window.glImported ไม่ persistent</td><td>Import ใหม่ทุกครั้ง — รอ Phase 2 (DB)</td></tr>
+            <tr><td>CF Tab 3 Difference ≠ 0</td><td>CF Mapping ผิด หรือข้อมูลไม่ครบ</td><td>Settings → CF Mapping → ตรวจ mapping</td></tr>
+            <tr><td>Tab 4 ⚠ ยอดไม่สอดคล้อง</td><td>รายการระหว่างทาง / เช็คค้างจ่าย</td><td>ตรวจ Finance Input → Pending transactions</td></tr>
+            <tr><td>Export ไม่ได้ไฟล์จริง</td><td>Export ยังเป็น Simulation</td><td>รอ Phase 2 implementation</td></tr>
+            <tr><td>Back button ไม่ทำงาน</td><td>SPA ไม่มี URL routing</td><td>ใช้ Sidebar navigation แทน</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ===== 8. ARCHITECTURE REVIEW ===== -->
+    <div class="doc-section" id="arch-review">
+      <div class="section-header">
+        <div class="section-icon">🔍</div>
+        <h2>Architecture Review</h2>
+        <span class="section-sub">G: สิ่งที่ขาด · H: ไม่ได้ใช้ · I: ซ้ำซ้อน · J: ข้อเสนอแนะ</span>
+      </div>
+
+      <h3>G. Missing Items — สิ่งที่ขาดหายไป</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>#</th><th>รายการ</th><th>ความเสี่ยง</th><th>แนะนำ</th></tr></thead>
+          <tbody>
+            <tr><td>G1</td><td>ไม่มี Authentication / Authorization</td><td><span class="priority-critical">Critical</span></td><td>เพิ่ม Clerk / Auth0 / Firebase Auth ก่อน Production</td></tr>
+            <tr><td>G2</td><td>ไม่มีฐานข้อมูลจริง (window.CFData Mock)</td><td><span class="priority-critical">Critical</span></td><td>เพิ่ม PostgreSQL + API Layer</td></tr>
+            <tr><td>G3</td><td>ไม่มี API Backend จริง</td><td><span class="priority-high">สูง</span></td><td>สร้าง REST API หรือ GraphQL</td></tr>
+            <tr><td>G4</td><td>Opening Balance Forecast Hardcoded (469.2M)</td><td><span class="priority-medium">ปานกลาง</span></td><td>ดึงจาก bankAccounts.balance แบบ dynamic</td></tr>
+            <tr><td>G5</td><td>Badge Sidebar Hardcoded ("12", "8")</td><td><span class="priority-low">ต่ำ</span></td><td>คำนวณจากรายการ Pending จริง</td></tr>
+            <tr><td>G6</td><td>ไม่มี Error Handling</td><td><span class="priority-medium">ปานกลาง</span></td><td>เพิ่ม try/catch + Error Boundaries</td></tr>
+            <tr><td>G7</td><td>ไม่มี Data Validation (ฟอร์ม)</td><td><span class="priority-medium">ปานกลาง</span></td><td>เพิ่ม Zod / Yup validation</td></tr>
+            <tr><td>G8</td><td>ไม่มี Audit Trail</td><td><span class="priority-medium">ปานกลาง</span></td><td>เพิ่ม Activity Log table</td></tr>
+            <tr><td>G9</td><td>ไม่มี URL Routing</td><td><span class="priority-low">ต่ำ</span></td><td>เพิ่ม React Router หรือ Next.js routing</td></tr>
+            <tr><td>G10</td><td>ไม่มี Unit Tests</td><td><span class="priority-medium">ปานกลาง</span></td><td>เพิ่ม Vitest/Jest — โดยเฉพาะ buildSegmentCF</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>H. Unused Pages / Components</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>#</th><th>ไฟล์/Component</th><th>สถานะ</th><th>แนะนำ</th></tr></thead>
+          <tbody>
+            <tr><td>H1</td><td><code>Reconciliation</code> component (other-screens.jsx)</td><td>Implemented แต่ไม่มีใน NAV sidebar</td><td>เพิ่มใน Sidebar หรือ link จาก Finance Input</td></tr>
+            <tr><td>H2</td><td><code>public/sample-2025.html</code></td><td>ไฟล์แยก ไม่ integrate กับ app</td><td>Archive หรือ Integrate เป็น Tab ใน CF Report</td></tr>
+            <tr><td>H3</td><td><code>app.py</code> (Flask)</td><td>มีอยู่แต่ไม่ถูกใช้จริง</td><td>Archive หรือ Document roadmap</td></tr>
+            <tr><td>H4</td><td><code>Working_Paper_WC_Drill_Down.xlsx</code></td><td>Static file — ไม่ generate จาก live data</td><td>Generate dynamically จาก reconcile data</td></tr>
+            <tr><td>H5</td><td><code>Finance Statement/</code> folder</td><td>Excel ต้นฉบับ ใช้เฉพาะ data-sample-2025.js</td><td>Archive เมื่อ move to DB</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>I. Duplicate Features</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>#</th><th>Feature</th><th>จุดที่ซ้ำ</th><th>แนะนำ</th></tr></thead>
+          <tbody>
+            <tr><td>I1</td><td>Export Button</td><td>Dashboard · CF Report · Export Center (3 จุด)</td><td>ดี — Single modal เป็น Good practice, ไม่ต้องแก้</td></tr>
+            <tr><td>I2</td><td>Search Input</td><td>Topbar Global · Finance Input · Accounting Input GL</td><td>Implement Global Search หรือลบออกจาก Topbar</td></tr>
+            <tr><td>I3</td><td>Export Button ใน Dashboard Table</td><td>Header + Table แยกกัน</td><td>รวมเป็นปุ่มเดียว</td></tr>
+            <tr><td>I4</td><td>Reconcile Tab</td><td>Finance Input · CF Report Tab 2 · Settings GL</td><td>Define scope: Finance = Transaction-level, CF Tab 2 = Period summary</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>J. Recommendations for Simplification</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>#</th><th>Action</th><th>Priority</th><th>รายละเอียด</th></tr></thead>
+          <tbody>
+            <tr><td>J1</td><td>Authentication ก่อนทุกอย่าง</td><td><span class="priority-critical">Critical</span></td><td>Clerk.com — ง่าย integrate กับ React, มี Free tier</td></tr>
+            <tr><td>J2</td><td>ย้ายไป Next.js + Supabase</td><td><span class="priority-high">High (Phase 2)</span></td><td>Next.js 14 App Router + Supabase (PostgreSQL + Auth + Realtime)</td></tr>
+            <tr><td>J3</td><td>แยก data.js ออกเป็นหลายไฟล์</td><td><span class="priority-medium">Medium</span></td><td>data/companies · transactions · cf-statements · ar-ap · forecast</td></tr>
+            <tr><td>J4</td><td>เพิ่ม Reconciliation ใน Sidebar</td><td><span class="priority-medium">Medium</span></td><td>Component implement แล้ว แต่ไม่มี nav entry</td></tr>
+            <tr><td>J5</td><td>Implement Global Search</td><td><span class="priority-medium">Medium</span></td><td>Command Palette (Cmd+K) style search</td></tr>
+            <tr><td>J6</td><td>Mobile Responsive</td><td><span class="priority-medium">Medium</span></td><td>UI ปัจจุบัน Desktop เท่านั้น</td></tr>
+            <tr><td>J7</td><td>Dynamic Opening Balance</td><td><span class="priority-medium">Medium</span></td><td><code>const bal = window.CFData.bankAccounts.reduce((s,b)=>s+b.balance,0)</code></td></tr>
+            <tr><td>J8</td><td>Notification System</td><td><span class="priority-low">Low</span></td><td>Bell icon ยัง placeholder — แจ้งเตือน CF ต่ำกว่า threshold</td></tr>
+            <tr><td>J9</td><td>Bulk Export / Board Pack</td><td><span class="priority-low">Low</span></td><td>Export Direct CF + Indirect CF + Forecast ในไฟล์เดียว</td></tr>
+            <tr><td>J10</td><td>ซ่อน Tweaks Panel ใน Production</td><td><span class="priority-low">Low</span></td><td><code>process.env.NODE_ENV === 'production'</code></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Action Items Summary</h3>
+      <h4>ต้องทำก่อน Production (Critical)</h4>
+      <p>1. เพิ่ม Authentication (Clerk/Auth0) &nbsp;|&nbsp; 2. เพิ่ม Database (PostgreSQL/Supabase) &nbsp;|&nbsp; 3. สร้าง API Layer</p>
+
+      <h4>Phase 2 (High Priority)</h4>
+      <p>4. ย้ายไป Next.js &nbsp;|&nbsp; 5. เพิ่ม Reconciliation ใน Sidebar &nbsp;|&nbsp; 6. Fix Opening Balance &nbsp;|&nbsp; 7. Error Handling + Validation</p>
+
+      <h4>Phase 3 (Nice to Have)</h4>
+      <p>8. Global Search &nbsp;|&nbsp; 9. Mobile Responsive &nbsp;|&nbsp; 10. Bulk Export &nbsp;|&nbsp; 11. Unit Tests &nbsp;|&nbsp; 12. Audit Trail</p>
+
+      <h3>Overall Readiness Score</h3>
+      <div class="score-bar"><span class="label">Production Readiness</span><div class="bar"><div class="fill" style="width:30%;background:#DC2626"></div></div><span class="value">3/10</span></div>
+      <div class="score-bar"><span class="label">Business Logic Correctness</span><div class="bar"><div class="fill" style="width:80%"></div></div><span class="value">8/10</span></div>
+      <div class="score-bar"><span class="label">UX Design</span><div class="bar"><div class="fill" style="width:80%"></div></div><span class="value">8/10</span></div>
+
+      <div class="callout success" style="margin-top:24px">
+        <strong>จุดแข็ง:</strong> Business logic ถูกต้องตาม TAS 7 · Data structure รองรับ multi-entity · Component structure clean &amp; reusable · UI/UX ดี เหมาะ CFO Office
+      </div>
+      <div class="callout danger" style="margin-top:12px">
+        <strong>จุดที่ต้องพัฒนา:</strong> ไม่มี Backend จริง (ทั้งหมด Mock) · ไม่มี Authentication (Security Risk) · ไม่มี Persistent Data · ขาด Mobile Support
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+
+<script>
+// Active nav
+function setActive(el){
+  document.querySelectorAll('.nav-item').forEach(a=>a.classList.remove('active'));
+  el.classList.add('active');
+}
+
+// Scroll spy
+const sections = document.querySelectorAll('.doc-section');
+const navLinks = document.querySelectorAll('nav a.nav-item');
+window.addEventListener('scroll', ()=>{
+  let current='';
+  sections.forEach(s=>{
+    if(window.scrollY >= s.offsetTop - 100) current = s.id;
+  });
+  navLinks.forEach(a=>{
+    a.classList.toggle('active', a.getAttribute('href')==='#'+current);
+  });
+}, {passive:true});
+
+// Search
+let origContent = '';
+function searchDocs(q){
+  const content = document.getElementById('content');
+  if(!origContent) origContent = content.innerHTML;
+  if(!q.trim()){
+    content.innerHTML = origContent;
+    return;
+  }
+  // Simple text highlight (restore first)
+  content.innerHTML = origContent;
+  const terms = q.trim().split(/\s+/).filter(Boolean);
+  let html = content.innerHTML;
+  terms.forEach(term=>{
+    const re = new RegExp('('+term.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')','gi');
+    html = html.replace(re, '<span class="highlight">$1</span>');
+  });
+  content.innerHTML = html;
+}
+</script>
+</body>
+</html>

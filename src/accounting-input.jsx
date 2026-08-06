@@ -336,7 +336,7 @@ function APTab({ companyId }) {
                 <td className="num warning">{v.d60 ? window.fmtTHB(v.d60) : "—"}</td>
                 <td className="num neg">{v.d90 ? window.fmtTHB(v.d90) : "—"}</td>
                 <td className="num" style={{ fontWeight: 500 }}>{window.fmtTHB(v.total)}</td>
-                <td className="muted small">5 เม.ย. 2026</td>
+                <td className="muted small">{v.nextDueDate ? new Date(v.nextDueDate).toLocaleDateString("th-TH", { day: "numeric", month: "short", year: "2-digit" }) : "—"}</td>
               </tr>
             )}
             <tr style={{ background: "var(--bg-subtle)", fontWeight: 600 }}>
@@ -416,21 +416,9 @@ function Mini({ label, value, color, accent }) {
 }
 
 // ── Business Central GL column mapping ──
-const BC_GL_COLUMNS = {
-  postingDate: ["Posting Date"],
-  glAccount:   ["G/L Account No.", "G/L Account No"],
-  description: ["Description"],
-  description2:["Description 2"],
-  amount:      ["Amount"],
-  documentType:["Document Type"],
-  documentNo:  ["Document No.", "Document No"],
-  genPostingType: ["Gen. Posting Type"],
-  customerNo:  ["Cutomer No", "Customer No.", "Customer No"],
-  customerName:["Cutomer Name", "Customer Name"],
-  vendorName:  ["Vendor Name"],
-  departmentCode: ["Department Code"],
-  entryNo:     ["Entry No.", "Entry No"],
-};
+// Single source of truth is window.BC_GL_COLUMN_ALIASES (defined in data.js).
+// This local alias keeps the parser working without importing; Backend must use the same map.
+const BC_GL_COLUMNS = window.BC_GL_COLUMN_ALIASES;
 
 function findColIndex(headers, aliases) {
   for (const alias of aliases) {

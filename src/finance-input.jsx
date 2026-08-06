@@ -267,10 +267,13 @@ function TransferTab({ companyId }) {
   );
 }
 
+// StatusTag: Transaction reconciliation status (CF_STATUS.TXN)
 function StatusTag({ s }) {
-  if (s === "matched") return <span className="tag success"><span className="dot" />Matched</span>;
-  if (s === "pending") return <span className="tag warning"><span className="dot" />Pending</span>;
-  if (s === "review") return <span className="tag danger"><span className="dot" />Review</span>;
+  const S = window.CF_STATUS.TXN;
+  if (s === S.MATCHED) return <span className="tag success"><span className="dot" />Matched</span>;
+  if (s === S.PENDING)  return <span className="tag warning"><span className="dot" />Pending</span>;
+  if (s === S.REVIEW)   return <span className="tag danger"><span className="dot" />Review</span>;
+  if (s === S.VOID)     return <span className="tag"><span className="dot" />Void</span>;
   return <span className="tag">{s}</span>;
 }
 
@@ -454,14 +457,16 @@ function APHondaTab({ companyId }) {
   const d = window.CFData;
   const rows = d.apHondaPayments.filter(r => companyId === "CONSO" || !companyId || r.entity === companyId);
   const total = rows.reduce((s, r) => s + r.amount, 0);
-  const pending = rows.filter(r => r.status === "pending").reduce((s, r) => s + r.amount, 0);
-  const paid = rows.filter(r => r.status === "paid").reduce((s, r) => s + r.amount, 0);
+  // Use CF_STATUS.DOC: "outstanding" = ค้างชำระ, "paid" = ชำระแล้ว
+  const S = window.CF_STATUS.DOC;
+  const pending = rows.filter(r => r.status === S.OUTSTANDING || r.status === S.OVERDUE).reduce((s, r) => s + r.amount, 0);
+  const paid    = rows.filter(r => r.status === S.PAID).reduce((s, r) => s + r.amount, 0);
 
   return (
     <>
       <div className="kpi-grid" style={{ gridTemplateColumns: "repeat(4, 1fr)", marginBottom: 14 }}>
         <Mini label="ยอด AP HONDA รวม" value={total} accent />
-        <Mini label="ค้างชำระ (Pending)" value={pending} color="var(--warning)" />
+        <Mini label="ค้างชำระ (Outstanding)" value={pending} color="var(--warning)" />
         <Mini label="ชำระแล้ว (Paid)" value={paid} color="var(--success)" />
         <Mini label="จำนวนรายการ" value={rows.length} isCount />
       </div>
@@ -502,7 +507,7 @@ function APHondaTab({ companyId }) {
                 <td className="num neg" style={{ fontWeight: 500 }}>{window.fmtTHB(r.amount)}</td>
                 <td className="num small">{r.dueDate}</td>
                 <td className="mono small">{r.account}</td>
-                <td><StatusTag s={r.status} /></td>
+                <td><PNStatusTag s={r.status} /></td>
               </tr>
             )}
             <tr style={{ background: "var(--bg-subtle)", fontWeight: 600 }}>
@@ -523,9 +528,10 @@ function APHondaTab({ companyId }) {
 function PNPaymentTab({ companyId }) {
   const d = window.CFData;
   const rows = d.pnPayments.filter(r => companyId === "CONSO" || !companyId || r.entity === companyId);
-  const total = rows.reduce((s, r) => s + r.amount, 0);
-  const outstanding = rows.filter(r => r.status === "outstanding").reduce((s, r) => s + r.amount, 0);
-  const paid = rows.filter(r => r.status === "paid").reduce((s, r) => s + r.amount, 0);
+  const S = window.CF_STATUS.DOC;
+  const total       = rows.reduce((s, r) => s + r.amount, 0);
+  const outstanding = rows.filter(r => r.status === S.OUTSTANDING || r.status === S.OVERDUE).reduce((s, r) => s + r.amount, 0);
+  const paid        = rows.filter(r => r.status === S.PAID).reduce((s, r) => s + r.amount, 0);
 
   return (
     <>
@@ -853,11 +859,14 @@ function ReconcileAPTab({ companyId }) {
   );
 }
 
-/* PN-specific status tag */
+// PNStatusTag / APHondaStatusTag: Document lifecycle status (CF_STATUS.DOC)
 function PNStatusTag({ s }) {
-  if (s === "outstanding") return <span className="tag warning"><span className="dot" />Outstanding</span>;
-  if (s === "paid") return <span className="tag success"><span className="dot" />Paid</span>;
-  if (s === "overdue") return <span className="tag danger"><span className="dot" />Overdue</span>;
+  const S = window.CF_STATUS.DOC;
+  if (s === S.OUTSTANDING) return <span className="tag warning"><span className="dot" />Outstanding</span>;
+  if (s === S.PARTIAL)     return <span className="tag accent"><span className="dot" />Partial</span>;
+  if (s === S.PAID)        return <span className="tag success"><span className="dot" />Paid</span>;
+  if (s === S.OVERDUE)     return <span className="tag danger"><span className="dot" />Overdue</span>;
+  if (s === S.CANCELLED)   return <span className="tag"><span className="dot" />Cancelled</span>;
   return <span className="tag">{s}</span>;
 }
 

@@ -468,11 +468,11 @@ window.CFData = (function () {
   ];
 
   const apAging = [
-    { vendor: "บจก. วัตถุดิบเอเชีย",                 entity: "HMW",  total: 64_700_000, current: 38_400_000, d30: 16_200_000, d60: 6_100_000, d90: 4_000_000 },
-    { vendor: "บมจ. พลังงานไทยจำกัด",                entity: "HMW",  total: 38_900_000, current: 24_500_000, d30:  9_800_000, d60: 4_600_000, d90: 0         },
-    { vendor: "บจก. โลจิสติกส์ไทย",                  entity: "CLIK", total: 12_400_000, current:  8_700_000, d30:  2_600_000, d60: 1_100_000, d90: 0         },
-    { vendor: "บจก. เครื่องจักรอุตสาหกรรม KK",      entity: "HMW",  total: 21_300_000, current: 12_400_000, d30:  5_900_000, d60: 3_000_000, d90: 0         },
-    { vendor: "บจก. เทคโนโลยีสารสนเทศ",            entity: "ACG",  total:  7_200_000, current:  5_100_000, d30:  1_400_000, d60:   700_000, d90: 0         },
+    { vendor: "บจก. วัตถุดิบเอเชีย",                 entity: "HMW",  total: 64_700_000, current: 38_400_000, d30: 16_200_000, d60: 6_100_000, d90: 4_000_000, nextDueDate: "2026-04-05" },
+    { vendor: "บมจ. พลังงานไทยจำกัด",                entity: "HMW",  total: 38_900_000, current: 24_500_000, d30:  9_800_000, d60: 4_600_000, d90: 0,         nextDueDate: "2026-04-12" },
+    { vendor: "บจก. โลจิสติกส์ไทย",                  entity: "CLIK", total: 12_400_000, current:  8_700_000, d30:  2_600_000, d60: 1_100_000, d90: 0,         nextDueDate: "2026-04-08" },
+    { vendor: "บจก. เครื่องจักรอุตสาหกรรม KK",      entity: "HMW",  total: 21_300_000, current: 12_400_000, d30:  5_900_000, d60: 3_000_000, d90: 0,         nextDueDate: "2026-04-15" },
+    { vendor: "บจก. เทคโนโลยีสารสนเทศ",            entity: "ACG",  total:  7_200_000, current:  5_100_000, d30:  1_400_000, d60:   700_000, d90: 0,         nextDueDate: "2026-04-20" },
   ];
 
   const glAccounts = [
@@ -513,14 +513,15 @@ window.CFData = (function () {
   // AP HONDA Payments — การจ่ายเงินให้ HONDA (รถยนต์/อะไหล่)
   // ไม่อยู่ใน Payments ทั่วไป เพราะมีลักษณะพิเศษ (Stock Financing)
   // ===========================================================================
+  // status uses CF_STATUS.DOC values: "outstanding" | "partial" | "paid" | "overdue" | "cancelled"
   const apHondaPayments = [
-    { id: "HD-2603-01", date: "2026-03-28", entity: "HMW", invoice: "HD-INV-26030145", model: "Honda Civic RS 2026", qty: 8, unit: 1_124_000, amount: 8_992_000, dueDate: "2026-04-15", status: "pending", account: "BA-002" },
-    { id: "HD-2603-02", date: "2026-03-25", entity: "HMW", invoice: "HD-INV-26030122", model: "Honda CR-V 2026", qty: 5, unit: 1_490_000, amount: 7_450_000, dueDate: "2026-04-12", status: "pending", account: "BA-002" },
-    { id: "HD-2603-03", date: "2026-03-20", entity: "HMW", invoice: "HD-INV-26030089", model: "Honda HR-V 2026", qty: 6, unit: 1_009_000, amount: 6_054_000, dueDate: "2026-04-08", status: "paid", account: "BA-002" },
-    { id: "HD-2603-04", date: "2026-03-15", entity: "HMW", invoice: "HD-INV-26030054", model: "Honda Accord 2026", qty: 3, unit: 1_790_000, amount: 5_370_000, dueDate: "2026-04-02", status: "paid", account: "BA-002" },
-    { id: "HD-2603-05", date: "2026-03-12", entity: "HMW", invoice: "HD-INV-26030041", model: "อะไหล่ Genuine Parts Q1", qty: 1, unit: 2_840_000, amount: 2_840_000, dueDate: "2026-03-30", status: "paid", account: "BA-002" },
-    { id: "HD-2602-06", date: "2026-02-28", entity: "HMW", invoice: "HD-INV-26020198", model: "Honda City 2026", qty: 10, unit: 729_000, amount: 7_290_000, dueDate: "2026-03-18", status: "paid", account: "BA-002" },
-    { id: "HD-2602-07", date: "2026-02-20", entity: "HMW", invoice: "HD-INV-26020156", model: "Honda BR-V 2026", qty: 4, unit: 894_000, amount: 3_576_000, dueDate: "2026-03-10", status: "paid", account: "BA-002" },
+    { id: "HD-2603-01", date: "2026-03-28", entity: "HMW", invoice: "HD-INV-26030145", model: "Honda Civic RS 2026", qty: 8, unit: 1_124_000, amount: 8_992_000, dueDate: "2026-04-15", status: "outstanding", account: "BA-002" },
+    { id: "HD-2603-02", date: "2026-03-25", entity: "HMW", invoice: "HD-INV-26030122", model: "Honda CR-V 2026", qty: 5, unit: 1_490_000, amount: 7_450_000, dueDate: "2026-04-12", status: "outstanding", account: "BA-002" },
+    { id: "HD-2603-03", date: "2026-03-20", entity: "HMW", invoice: "HD-INV-26030089", model: "Honda HR-V 2026", qty: 6, unit: 1_009_000, amount: 6_054_000, dueDate: "2026-04-08", status: "paid",        account: "BA-002" },
+    { id: "HD-2603-04", date: "2026-03-15", entity: "HMW", invoice: "HD-INV-26030054", model: "Honda Accord 2026", qty: 3, unit: 1_790_000, amount: 5_370_000, dueDate: "2026-04-02", status: "paid",        account: "BA-002" },
+    { id: "HD-2603-05", date: "2026-03-12", entity: "HMW", invoice: "HD-INV-26030041", model: "อะไหล่ Genuine Parts Q1", qty: 1, unit: 2_840_000, amount: 2_840_000, dueDate: "2026-03-30", status: "paid",  account: "BA-002" },
+    { id: "HD-2602-06", date: "2026-02-28", entity: "HMW", invoice: "HD-INV-26020198", model: "Honda City 2026", qty: 10, unit: 729_000, amount: 7_290_000, dueDate: "2026-03-18", status: "paid",            account: "BA-002" },
+    { id: "HD-2602-07", date: "2026-02-20", entity: "HMW", invoice: "HD-INV-26020156", model: "Honda BR-V 2026", qty: 4, unit: 894_000, amount: 3_576_000, dueDate: "2026-03-10", status: "paid",             account: "BA-002" },
   ];
 
   // ===========================================================================
@@ -1061,6 +1062,108 @@ window.CFData = (function () {
   // Overwrite directCF with auto-calculated version (ensures Direct Operating CF = Indirect)
   Object.assign(directCF, buildDirectCF("2026-Q1", "2025-Q4"));
 
+  // ── Daily cash transactions (treasury view, last 5 business days) ────────────
+  const _dailyTxns = {
+    "2026-06-05": [
+      { id:"D060501", time:"08:45", desc:"รับชำระจากลูกค้า – HMW Fleet Contract Q2",        amount:  14_800_000, type:"in",  category:"รายรับจากการขาย",      account:"BA-002", entity:"HMW",  source:"Bank",    status:"matched" },
+      { id:"D060502", time:"09:30", desc:"จ่ายค่าสินค้า – วัตถุดิบเอเชีย INV-0601",          amount:  -8_400_000, type:"out", category:"จ่ายเจ้าหนี้การค้า",   account:"BA-002", entity:"HMW",  source:"Bank",    status:"matched" },
+      { id:"D060503", time:"10:15", desc:"รับค่า Service – CLIK สัญญา C-2026/062",          amount:   6_200_000, type:"in",  category:"รายรับจากการขาย",      account:"BA-006", entity:"CLIK", source:"Bank",    status:"matched" },
+      { id:"D060504", time:"11:00", desc:"จ่ายดอกเบี้ยกู้ – ACG Treasury มิ.ย.",             amount:  -4_100_000, type:"out", category:"ดอกเบี้ยและการเงิน",   account:"BA-001", entity:"ACG",  source:"Bank",    status:"matched" },
+      { id:"D060505", time:"13:30", desc:"รับค่าประกัน AIA Honda – มิ.ย.",                  amount:   3_600_000, type:"in",  category:"รายรับจากการขาย",      account:"BA-002", entity:"HMW",  source:"Bank",    status:"matched" },
+      { id:"D060506", time:"14:45", desc:"จ่ายเงินเดือน – CLIK รอบที่ 1 มิ.ย.",             amount:  -4_800_000, type:"out", category:"เงินเดือนและสวัสดิการ", account:"BA-006", entity:"CLIK", source:"Payroll", status:"matched" },
+      { id:"D060507", time:"15:20", desc:"ชำระภาษีมูลค่าเพิ่ม – มิ.ย.",                     amount:  -2_900_000, type:"out", category:"ภาษีอากร",             account:"BA-001", entity:"ACG",  source:"Manual",  status:"pending" },
+      { id:"D060508", time:"16:00", desc:"ค่าบริหารจัดการ HMW → ACG มิ.ย.",                 amount:   2_800_000, type:"in",  category:"ค่าบริหารจัดการ",      account:"BA-001", entity:"ACG",  source:"Manual",  status:"matched" },
+    ],
+    "2026-06-04": [
+      { id:"D060401", time:"09:00", desc:"รับชำระ Honda ตอกเข็ม – Site ลาดกระบัง",          amount:  11_200_000, type:"in",  category:"รายรับจากการขาย",      account:"BA-002", entity:"HMW",  source:"Bank",    status:"matched" },
+      { id:"D060402", time:"09:45", desc:"จ่ายค่า Sub Contract – โลจิสติกส์ไทย",             amount:  -3_540_000, type:"out", category:"จ่ายเจ้าหนี้การค้า",   account:"BA-006", entity:"CLIK", source:"AP",      status:"matched" },
+      { id:"D060403", time:"11:30", desc:"รับเงินปันผลลงทุน – ACG Treasury",                 amount:   2_200_000, type:"in",  category:"ดอกเบี้ยและเงินปันผล", account:"BA-005", entity:"ACG",  source:"Bank",    status:"matched" },
+      { id:"D060404", time:"13:00", desc:"จ่ายค่าไฟฟ้า – HMW ทุกสาขา มิ.ย.",               amount:  -3_200_000, type:"out", category:"สาธารณูปโภค",          account:"BA-002", entity:"HMW",  source:"Bank",    status:"matched" },
+      { id:"D060405", time:"14:30", desc:"รับค่าเช่ารถ Fleet – Q2",                          amount:   1_900_000, type:"in",  category:"รายรับจากการขาย",      account:"BA-002", entity:"HMW",  source:"Bank",    status:"matched" },
+      { id:"D060406", time:"16:30", desc:"โอนระหว่างบัญชี ACG → HMW Operating",              amount:  -5_000_000, type:"out", category:"โอนภายใน",             account:"BA-001", entity:"ACG",  source:"Manual",  status:"matched" },
+    ],
+    "2026-06-03": [
+      { id:"D060301", time:"08:30", desc:"รับชำระจากลูกค้า CLIK – บจก.อีสเทิร์น ปิโตร",     amount:   9_800_000, type:"in",  category:"รายรับจากการขาย",      account:"BA-006", entity:"CLIK", source:"Bank",    status:"matched" },
+      { id:"D060302", time:"10:00", desc:"จ่ายวัตถุดิบ – HMW Inventory มิ.ย.",               amount: -12_400_000, type:"out", category:"จ่ายเจ้าหนี้การค้า",   account:"BA-002", entity:"HMW",  source:"Bank",    status:"matched" },
+      { id:"D060303", time:"11:30", desc:"ค่าเช่าโชว์รูม – HMW สาขาบางนา มิ.ย.",            amount:  -3_200_000, type:"out", category:"ค่าเช่าและสาธารณูปโภค",account:"BA-002", entity:"HMW",  source:"AP",      status:"matched" },
+      { id:"D060304", time:"13:45", desc:"รับชำระประกัน – INS_LIM Honda Plan",               amount:   4_100_000, type:"in",  category:"รายรับจากการขาย",      account:"BA-002", entity:"HMW",  source:"Bank",    status:"matched" },
+      { id:"D060305", time:"15:00", desc:"ชำระเงินกู้ระยะยาว – ACG Treasury มิ.ย.",           amount:  -6_200_000, type:"out", category:"ชำระคืนเงินกู้",       account:"BA-001", entity:"ACG",  source:"Bank",    status:"matched" },
+    ],
+    "2026-06-02": [
+      { id:"D060201", time:"09:15", desc:"รับชำระจากลูกค้า – HMW Honda Q2 Batch",            amount:  18_600_000, type:"in",  category:"รายรับจากการขาย",      account:"BA-002", entity:"HMW",  source:"Bank",    status:"matched" },
+      { id:"D060202", time:"10:30", desc:"จ่ายเงินเดือน – HMW รอบที่ 1 มิ.ย.",              amount: -18_400_000, type:"out", category:"เงินเดือนและสวัสดิการ", account:"BA-003", entity:"HMW",  source:"Payroll", status:"matched" },
+      { id:"D060203", time:"11:00", desc:"ดอกเบี้ยรับเงินฝากประจำ – ACG",                    amount:   1_080_000, type:"in",  category:"ดอกเบี้ยและเงินปันผล", account:"BA-005", entity:"ACG",  source:"Bank",    status:"matched" },
+      { id:"D060204", time:"14:00", desc:"จ่ายค่า Sub Contract – CLIK มิ.ย. (pending review)",amount: -4_200_000, type:"out", category:"จ่ายเจ้าหนี้การค้า",   account:"BA-006", entity:"CLIK", source:"AP",      status:"review"  },
+      { id:"D060205", time:"16:00", desc:"ค่าบริหารจัดการ CLIK → ACG มิ.ย.",                  amount:   1_400_000, type:"in",  category:"ค่าบริหารจัดการ",      account:"BA-001", entity:"ACG",  source:"Manual",  status:"matched" },
+    ],
+    "2026-05-30": [
+      { id:"D053001", time:"09:00", desc:"รับชำระจากลูกค้า – HMW ปิดงวดพ.ค.",               amount:  22_400_000, type:"in",  category:"รายรับจากการขาย",      account:"BA-002", entity:"HMW",  source:"Bank",    status:"matched" },
+      { id:"D053002", time:"10:15", desc:"จ่ายชำระ AP ปิดงวด – วัตถุดิบเอเชีย",              amount: -16_800_000, type:"out", category:"จ่ายเจ้าหนี้การค้า",   account:"BA-002", entity:"HMW",  source:"Bank",    status:"matched" },
+      { id:"D053003", time:"11:30", desc:"จ่ายเงินเดือน ACG – พ.ค. 2026",                   amount:  -3_600_000, type:"out", category:"เงินเดือนและสวัสดิการ", account:"BA-001", entity:"ACG",  source:"Payroll", status:"matched" },
+      { id:"D053004", time:"13:00", desc:"รับค่าบริการ CLIK – ปิดสิ้นเดือนพ.ค.",              amount:   7_200_000, type:"in",  category:"รายรับจากการขาย",      account:"BA-006", entity:"CLIK", source:"Bank",    status:"matched" },
+      { id:"D053005", time:"15:30", desc:"จ่ายเงินปันผลผู้ถือหุ้น – รอบที่ 1/2569",           amount: -10_600_000, type:"out", category:"เงินปันผลจ่าย",        account:"BA-001", entity:"ACG",  source:"Bank",    status:"matched" },
+      { id:"D053006", time:"16:45", desc:"ชำระภาษีหัก ณ ที่จ่าย – ภงด.1 พ.ค.",              amount:  -1_840_000, type:"out", category:"ภาษีอากร",             account:"BA-001", entity:"ACG",  source:"Manual",  status:"matched" },
+    ],
+  };
+
+  const _dailyOpenings = {
+    "2026-05-30": 472_000_000,
+    "2026-06-02": 473_560_000,
+    "2026-06-03": 470_000_000,
+    "2026-06-04": 471_900_000,
+    "2026-06-05": 473_460_000,
+  };
+
+  function getDailyData(dateCode) {
+    const txns = (_dailyTxns[dateCode] || []).slice().sort((a, b) => a.time.localeCompare(b.time));
+    const opening = _dailyOpenings[dateCode] || 473_000_000;
+    const inflow  = txns.filter(t => t.amount > 0).reduce((s, t) => s + t.amount, 0);
+    const outflow = txns.filter(t => t.amount < 0).reduce((s, t) => s + t.amount, 0);
+    const byCat = {};
+    txns.forEach(t => {
+      if (!byCat[t.category]) byCat[t.category] = { label: t.category, inflow: 0, outflow: 0 };
+      if (t.amount > 0) byCat[t.category].inflow  += t.amount;
+      else              byCat[t.category].outflow += t.amount;
+    });
+    return { txns, opening, inflow, outflow, net: inflow + outflow, closing: opening + inflow + outflow, byCategory: Object.values(byCat) };
+  }
+
+  // ── Scale-based multi-period CF generator ─────────────────────────────────
+  // Returns { direct, indirect } shaped like d.directCF / d.indirectCF for any period.
+  // Replace scaling with real DB queries in Backend.
+  const _periodCFConfig = {
+    //              [curScale, priScale, opening,       priorOpening ]
+    "2026-01":    [ 0.290,    0.315,    446_780_000,   374_200_000  ],
+    "2026-02":    [ 0.325,    0.340,    447_563_000,   378_500_000  ],
+    "2026-03":    [ 0.385,    0.345,    448_454_000,   384_100_000  ],
+    "2026-Q1":    [ 1.000,    1.000,    446_780_000,   412_400_000  ],
+    "2025-Q4":    [ 1.000,    0.960,    412_400_000,   390_000_000  ],
+    "2026-04":    [ 0.320,    0.310,    449_480_000,   380_000_000  ],
+    "2026-05":    [ 0.365,    0.335,    450_704_000,   385_400_000  ],
+    "2026-06":    [ 0.402,    0.362,    452_560_000,   392_000_000  ],
+    "2026-Q2":    [ 1.087,    1.005,    449_480_000,   446_780_000  ],
+    "2026-YTD":   [ 2.087,    1.980,    446_780_000,   412_400_000  ],
+    "2025-12":    [ 0.420,    0.400,    400_000_000,   360_000_000  ],
+    "2025-FY":    [ 3.620,    3.440,    390_000_000,   360_000_000  ],
+  };
+
+  function getCFData(periodCode) {
+    const cfg = _periodCFConfig[periodCode];
+    const [curS, priS, opening, priorOpening] = cfg || [1, 1, directCF.opening, directCF.priorOpening];
+    function scaleItems(items) {
+      return items.map(it => ({
+        ...it,
+        current: it.current != null ? Math.round(it.current * curS) : null,
+        prior:   it.prior   != null ? Math.round(it.prior   * priS) : null,
+      }));
+    }
+    function scaleSecs(secs) { return secs.map(s => ({ ...s, items: scaleItems(s.items) })); }
+    return {
+      direct:   { sections: scaleSecs(directCF.sections),   opening, priorOpening },
+      indirect: { sections: scaleSecs(indirectCF.sections), opening, priorOpening },
+    };
+  }
+
   // Totals derived
   const totalCash = bankAccounts.reduce((s, b) => s + b.balance, 0);
   const inflowQ1 = monthly.slice(3).reduce((s, m) => s + m.inflow, 0);
@@ -1087,8 +1190,80 @@ window.CFData = (function () {
     getEntityForAccount, getSegmentName,
     cfMapping, filterSegmentsByMapping,
     totals: { totalCash, inflowQ1, outflowQ1, netQ1: inflowQ1 - outflowQ1 },
+    // Multi-period helpers (Backend will replace these with real API calls)
+    getCFData, getDailyData,
   };
 })();
+
+// ─── Shared Enums / Constants (Backend must mirror these exactly) ────────────
+// Transaction reconciliation status (bank_transactions, cash_receipts, cash_payments)
+window.CF_STATUS = {
+  TXN: {
+    MATCHED: "matched",   // Bank statement matched with GL entry
+    PENDING:  "pending",  // Awaiting match / approval
+    REVIEW:   "review",   // Flagged for manual review
+    VOID:     "void",     // Cancelled / reversed
+  },
+  // Document lifecycle status (ap_bills, ar_invoices, pn_payments)
+  DOC: {
+    OUTSTANDING: "outstanding", // Issued, not yet due
+    PARTIAL:     "partial",     // Partially paid
+    PAID:        "paid",        // Fully settled
+    OVERDUE:     "overdue",     // Past due date, not paid
+    CANCELLED:   "cancelled",   // Voided document
+  },
+};
+
+// ─── Period definitions — single source of truth for period selector ─────────
+// code   = API parameter value (Backend must accept this format)
+// label  = Thai display string (UI only)
+// type   = granularity: "daily" | "month" | "quarter" | "ytd" | "annual"
+window.CF_PERIODS = [
+  // ── Daily (5 recent business days) ─────────────────────────────────────────
+  { code: "2026-06-05", label: "5 มิ.ย. 2569",        type: "daily",   date: "2026-06-05" },
+  { code: "2026-06-04", label: "4 มิ.ย. 2569",        type: "daily",   date: "2026-06-04" },
+  { code: "2026-06-03", label: "3 มิ.ย. 2569",        type: "daily",   date: "2026-06-03" },
+  { code: "2026-06-02", label: "2 มิ.ย. 2569",        type: "daily",   date: "2026-06-02" },
+  { code: "2026-05-30", label: "30 พ.ค. 2569",        type: "daily",   date: "2026-05-30" },
+  // ── Monthly ─────────────────────────────────────────────────────────────────
+  { code: "2026-06",   label: "มิ.ย. 2569",           type: "month",   year: 2026, month: 6  },
+  { code: "2026-05",   label: "พ.ค. 2569",            type: "month",   year: 2026, month: 5  },
+  { code: "2026-04",   label: "เม.ย. 2569",           type: "month",   year: 2026, month: 4  },
+  { code: "2026-03",   label: "มี.ค. 2569",           type: "month",   year: 2026, month: 3  },
+  { code: "2026-02",   label: "ก.พ. 2569",            type: "month",   year: 2026, month: 2  },
+  { code: "2026-01",   label: "ม.ค. 2569",            type: "month",   year: 2026, month: 1  },
+  { code: "2025-12",   label: "ธ.ค. 2568",            type: "month",   year: 2025, month: 12 },
+  // ── Quarterly ───────────────────────────────────────────────────────────────
+  { code: "2026-Q2",  label: "ไตรมาส 2/2569",         type: "quarter", year: 2026, q: 2, monthStart: "2026-04", monthEnd: "2026-06" },
+  { code: "2026-Q1",  label: "ไตรมาส 1/2569",         type: "quarter", year: 2026, q: 1, monthStart: "2026-01", monthEnd: "2026-03" },
+  { code: "2025-Q4",  label: "ไตรมาส 4/2568",         type: "quarter", year: 2025, q: 4, monthStart: "2025-10", monthEnd: "2025-12" },
+  // ── YTD & Annual ────────────────────────────────────────────────────────────
+  { code: "2026-YTD", label: "YTD 2569 (ม.ค.–มิ.ย.)", type: "ytd",     year: 2026 },
+  { code: "2025-FY",  label: "ปี 2568 (เต็มปี)",       type: "annual",  year: 2025 },
+];
+
+// Lookup helpers
+window.CF_PERIOD_DEFAULT = "2026-Q1";
+window.getPeriodLabel = (code) => (window.CF_PERIODS.find(p => p.code === code) || {}).label || code;
+window.getPeriodMeta  = (code) =>  window.CF_PERIODS.find(p => p.code === code) || null;
+
+// ─── BC GL column aliases — canonical list (no typos) ────────────────────────
+// Used by Frontend parser AND must match Backend import service config.
+window.BC_GL_COLUMN_ALIASES = {
+  postingDate:    ["Posting Date"],
+  glAccount:      ["G/L Account No.", "G/L Account No"],
+  description:    ["Description"],
+  description2:   ["Description 2"],
+  amount:         ["Amount"],
+  documentType:   ["Document Type"],
+  documentNo:     ["Document No.", "Document No"],
+  genPostingType: ["Gen. Posting Type"],
+  customerNo:     ["Customer No.", "Customer No"],        // fixed: was "Cutomer No"
+  customerName:   ["Customer Name"],                      // fixed: was "Cutomer Name"
+  vendorName:     ["Vendor Name"],
+  departmentCode: ["Department Code"],
+  entryNo:        ["Entry No.", "Entry No"],
+};
 
 window.fmtTHB = function (n, opts = {}) {
   if (n == null || isNaN(n)) return "—";

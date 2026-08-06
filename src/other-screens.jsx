@@ -161,10 +161,11 @@ function ForecastChart({ data, height = 260, style = "line" }) {
 function Reconciliation({ toast }) {
   const d = window.CFData;
   const [filter, setFilter] = React.useState("all");
-  const items = d.reconItems.filter((r) => filter === "all" || (filter === "matched" ? r.status === "matched" : r.status !== "matched"));
+  const S = window.CF_STATUS.TXN;
+  const items = d.reconItems.filter((r) => filter === "all" || (filter === "matched" ? r.status === S.MATCHED : r.status !== S.MATCHED));
   const counts = {
-    matched: d.reconItems.filter((r) => r.status === "matched").length,
-    unmatched: d.reconItems.filter((r) => r.status !== "matched").length,
+    matched:   d.reconItems.filter((r) => r.status === S.MATCHED).length,
+    unmatched: d.reconItems.filter((r) => r.status !== S.MATCHED).length,
   };
 
   return (
@@ -227,21 +228,21 @@ function Reconciliation({ toast }) {
                 <td className="small">{r.bank?.desc || <span className="faint">—</span>}</td>
                 <td className={"num " + (r.bank?.amount > 0 ? "pos" : r.bank?.amount < 0 ? "neg" : "")}>{r.bank ? window.fmtTHB(r.bank.amount) : "—"}</td>
                 <td className="center faint">
-                  {r.status === "matched" ? <Ic name="check" size={14} style={{ color: "var(--success)" }} /> :
-                    r.status === "needs-review" ? <Ic name="alert" size={14} style={{ color: "var(--warning)" }} /> :
+                  {r.status === S.MATCHED ? <Ic name="check" size={14} style={{ color: "var(--success)" }} /> :
+                    r.status === S.REVIEW ? <Ic name="alert" size={14} style={{ color: "var(--warning)" }} /> :
                       <Ic name="arrowRight" size={14} />}
                 </td>
                 <td className="num small">{r.gl?.date.slice(5) || <span className="faint">—</span>}</td>
                 <td className="small">{r.gl?.desc || <span className="faint">ไม่พบใน GL</span>}{r.gl && <div className="tiny faint">{r.gl.account}</div>}</td>
                 <td className={"num " + (r.gl?.amount > 0 ? "pos" : r.gl?.amount < 0 ? "neg" : "")}>{r.gl ? window.fmtTHB(r.gl.amount) : "—"}</td>
                 <td>
-                  {r.status === "matched" && <span className="tag success"><span className="dot" />Matched</span>}
+                  {r.status === S.MATCHED        && <span className="tag success"><span className="dot" />Matched</span>}
                   {r.status === "unmatched-bank" && <span className="tag warning"><span className="dot" />Bank Only</span>}
-                  {r.status === "unmatched-gl" && <span className="tag warning"><span className="dot" />GL Only</span>}
-                  {r.status === "needs-review" && <span className="tag danger"><span className="dot" />Review</span>}
+                  {r.status === "unmatched-gl"   && <span className="tag warning"><span className="dot" />GL Only</span>}
+                  {r.status === S.REVIEW         && <span className="tag danger"><span className="dot" />Review</span>}
                 </td>
                 <td>
-                  {r.status === "matched"
+                  {r.status === S.MATCHED
                     ? <button className="iconbtn" title="แยกออก"><Ic name="more" size={14} /></button>
                     : <button className="btn sm" onClick={() => toast("เปิดกล่องจับคู่")}><Ic name="link" size={12} /> จับคู่</button>}
                 </td>

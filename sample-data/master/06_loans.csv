@@ -1,0 +1,5 @@
+﻿loan_code,loan_type,company,counterparty,origination_date,principal_original,opening_balance,closing_balance,interest_rate_pa,maturity_date,note
+LN-HMW-ST-001,ST_WORKING_CAPITAL,HMW,KBank,2024-12-31,220000000,220000000,120000000,4.8,2025-12-31,Revolving short-term facility
+LN-HMW-LT-001,LT_TERM_LOAN,HMW,KBank,2020-01-01,55750000,11150000,0,4.5,2025-12-31,Final installment paid in 2025
+LN-CLIK-LT-001,LT_TERM_LOAN,CLIK,KBank,2022-01-01,80000000,80000000,80000000,5.0,2028-12-31,No principal repayment scheduled in 2025
+LN-CLIK-LT-002,LT_LOAN_FROM_PARENT,CLIK,ACG,2023-01-01,200000000,200000000,200000000,3.5,2030-12-31,Intercompany loan

@@ -1,0 +1,22 @@
+﻿customer_code,customer_name_th,customer_name_en,company,segment,credit_term_days,credit_limit,is_related_party,note
+CUST-HMW-001,ลูกค้าเงินสด - รายย่อย,Cash Customer Pool,HMW,RETAIL_CASH,0,0,N,Aggregated cash customers
+CUST-HMW-002,กรุงศรีลีสซิ่ง,Krungsri Auto Lease,HMW,FINANCE_CO,30,150000000,N,
+CUST-HMW-003,เอสซีบีลีสซิ่ง,SCB Leasing,HMW,FINANCE_CO,30,120000000,N,
+CUST-HMW-004,ทิสโก้ออโต้,Tisco Auto,HMW,FINANCE_CO,30,80000000,N,
+CUST-HMW-005,กสิกรไทย ออโต้,KBank Auto Finance,HMW,FINANCE_CO,30,100000000,N,
+CUST-HMW-006,บมจ. โรงแรมไทย,Thai Hotel PCL,HMW,CORPORATE,60,15000000,N,Fleet sales
+CUST-HMW-007,บจ. การไฟฟ้าฯ,Provincial Electricity Authority,HMW,CORPORATE,60,30000000,N,Fleet sales
+CUST-HMW-008,บจ. ขนส่งไทย,Thai Logistics Co,HMW,CORPORATE,45,20000000,N,Fleet sales
+CUST-HMW-009,บจ. ฮอนด้าไทย,Honda Thailand,HMW,DEALER_REBATE,30,50000000,N,Dealer incentive/commission
+CUST-HMW-010,บมจ. ทิพยประกันภัย,Dhipaya Insurance PCL,HMW,INSURANCE,45,10000000,N,Insurance commission
+CUST-HMW-011,บจ. กรุงเทพประกันภัย,Bangkok Insurance,HMW,INSURANCE,45,8000000,N,
+CUST-HMW-012,ราชการ - กรมป่าไม้,Royal Forest Department,HMW,GOVERNMENT,60,12000000,N,Government fleet
+CUST-HMW-099,ออโตคลิกบายเอซีจี,Autoclick by ACG,HMW,RELATED_PARTY,30,5000000,Y,Intercompany - parts sales
+CUST-CLIK-001,ลูกค้าเงินสด - รายย่อย,Cash Customer Pool,CLIK,RETAIL_CASH,0,0,N,Aggregated cash service customers
+CUST-CLIK-002,บมจ. โรงแรมไทย,Thai Hotel PCL,CLIK,CORPORATE,30,3000000,N,Fleet servicing
+CUST-CLIK-003,บจ. ขนส่งไทย,Thai Logistics Co,CLIK,CORPORATE,30,5000000,N,Fleet servicing
+CUST-CLIK-004,บจ. ส่งของด่วน,Quick Delivery Co,CLIK,CORPORATE,30,2000000,N,Fleet servicing
+CUST-CLIK-005,กลุ่มลูกค้าราชการ,Government Pool,CLIK,GOVERNMENT,60,4000000,N,
+CUST-CLIK-099,ฮอนด้ามะลิวัลย์,Honda Maliwan,CLIK,RELATED_PARTY,30,2000000,Y,Intercompany - servicing for parent
+CUST-ACG-001,ฮอนด้ามะลิวัลย์ - ค่าบริหารจัดการ,HMW Mgmt Fee,ACG,RELATED_PARTY,30,60000000,Y,Mgmt fee from HMW
+CUST-ACG-002,ออโตคลิกบายเอซีจี - ค่าบริหารจัดการ,CLIK Mgmt Fee,ACG,RELATED_PARTY,30,10000000,Y,Mgmt fee from CLIK

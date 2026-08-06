@@ -1,0 +1,82 @@
+﻿account_code,statement,fs_line_th,fs_line_en,fs_order,roll_up_to
+1111,BS,เงินสดและรายการเทียบเท่าเงินสด,Cash and Cash Equivalents,101,1110
+1112,BS,เงินสดและรายการเทียบเท่าเงินสด,Cash and Cash Equivalents,102,1110
+1113,BS,เงินสดและรายการเทียบเท่าเงินสด,Cash and Cash Equivalents,103,1110
+1114,BS,เงินสดและรายการเทียบเท่าเงินสด,Cash and Cash Equivalents,104,1110
+1121,BS,ลูกหนี้การค้ากิจการอื่น,Trade AR,111,1120
+1122,BS,ลูกหนี้การค้ากิจการอื่น,Trade AR,112,1120
+1123,BS,ลูกหนี้การค้ากิจการอื่น,Trade AR,113,1120
+1124,BS,ลูกหนี้การค้ากิจการอื่น,Trade AR,114,1120
+1125,BS,ลูกหนี้กิจการที่เกี่ยวข้องกัน,AR Related Parties,115,
+1130,BS,ลูกหนี้หมุนเวียนอื่น,Other Current Receivables,120,
+1141,BS,สินค้าคงเหลือ,Inventory,131,1140
+1142,BS,สินค้าคงเหลือ,Inventory,132,1140
+1143,BS,สินค้าคงเหลือ,Inventory,133,1140
+1144,BS,สินค้าคงเหลือ,Inventory,134,1140
+1150,BS,สินทรัพย์หมุนเวียนอื่น,Other Current Assets,140,
+1160,BS,สินทรัพย์ภาษีเงินได้ของงวดปัจจุบัน,Current Tax Asset,150,
+1210,BS,เงินลงทุนในบริษัทย่อย,Investment in Subsidiary,201,
+1215,BS,เงินให้กู้ยืมระยะยาวแก่บริษัทย่อย,LT Loan to Subsidiary,202,
+1220,BS,ลูกหนี้ไม่หมุนเวียนอื่น,Other Non-Current Receivables,210,
+1230,BS,อสังหาริมทรัพย์เพื่อการลงทุน,Investment Property,220,
+1311,BS,ที่ดิน อาคารและอุปกรณ์,Property Plant Equipment Net,231,1310
+1312,BS,ที่ดิน อาคารและอุปกรณ์,Property Plant Equipment Net,232,1310
+1313,BS,ที่ดิน อาคารและอุปกรณ์,Property Plant Equipment Net,233,1310
+1314,BS,ที่ดิน อาคารและอุปกรณ์,Property Plant Equipment Net,234,1310
+1319,BS,ที่ดิน อาคารและอุปกรณ์,Property Plant Equipment Net,235,1310
+1320,BS,สินทรัพย์สิทธิการใช้,Right-of-Use Assets,240,
+1325,BS,สินทรัพย์สิทธิการใช้,Right-of-Use Assets,241,1320
+1330,BS,สินทรัพย์ไม่มีตัวตน,Intangible Assets,250,
+1335,BS,สินทรัพย์ไม่มีตัวตน,Intangible Assets,251,1330
+1340,BS,สินทรัพย์ภาษีเงินได้รอการตัดบัญชี,Deferred Tax Asset,260,
+1350,BS,สินทรัพย์ไม่หมุนเวียนอื่น,Other Non-Current Assets,270,
+2110,BS,เงินกู้ยืมระยะสั้นจากสถาบันการเงิน,Short-term Loan,301,
+2121,BS,เจ้าหนี้การค้า,Trade AP,310,2120
+2122,BS,เจ้าหนี้การค้า,Trade AP,311,2120
+2123,BS,เจ้าหนี้การค้า,Trade AP,312,2120
+2125,BS,เจ้าหนี้กิจการที่เกี่ยวข้องกัน,AP Related Parties,313,
+2130,BS,เจ้าหนี้หมุนเวียนอื่น,Other Current Payables,320,
+2140,BS,ส่วนของเงินกู้ยืมระยะยาวถึงกำหนดในหนึ่งปี,Current Portion LT Loan,330,
+2150,BS,ส่วนของหนี้สินตามสัญญาเช่าถึงกำหนดในหนึ่งปี,Current Portion Lease,340,
+2160,BS,ภาษีเงินได้นิติบุคคลค้างจ่าย,Tax Payable,350,
+2170,BS,หนี้สินหมุนเวียนอื่น,Other Current Liabilities,360,
+2210,BS,เงินกู้ยืมระยะยาวจากสถาบันการเงิน,LT Loan,401,
+2215,BS,เงินกู้ยืมจากกิจการที่เกี่ยวข้องกัน,LT Loan from Related Parties,402,
+2220,BS,หนี้สินตามสัญญาเช่า,Lease Liability NC,410,
+2230,BS,ประมาณการหนี้สินผลประโยชน์พนักงาน,Employee Benefit Provision,420,
+2240,BS,หนี้สินไม่หมุนเวียนอื่น,Other NC Liabilities,430,
+3110,BS,ทุนเรือนหุ้น - ชำระแล้ว,Paid-up Share Capital,501,
+3120,BS,ส่วนเกินมูลค่าหุ้นสามัญ,Share Premium,502,
+3130,BS,ส่วนเกินทุนจากการจัดโครงสร้างทางธุรกิจ,Business Restructure Premium,503,
+3140,BS,ใบสำคัญแสดงสิทธิที่จะซื้อหุ้น,Warrants,504,
+3150,BS,กำไรสะสม - สำรองตามกฎหมาย,Retained Earnings Legal Reserve,510,
+3160,BS,กำไรสะสม - ยังไม่ได้จัดสรร,Retained Earnings Unappropriated,520,
+3170,BS,ส่วนของผู้ถือหุ้นส่วนน้อย,Non-Controlling Interest,530,
+4110,PL,รายได้จากการขายและการให้บริการ,Sales & Service Revenue,1010,
+4120,PL,รายได้จากการขายและการให้บริการ,Sales & Service Revenue,1011,
+4130,PL,รายได้จากการขายและการให้บริการ,Sales & Service Revenue,1012,
+4140,PL,รายได้จากการขายและการให้บริการ,Sales & Service Revenue,1013,
+4150,PL,เงินปันผลรับ,Dividend Income,1020,
+4160,PL,รายได้ค่านายหน้า,Commission Revenue,1030,
+4170,PL,รายได้ค่าบริหารจัดการ,Management Fee Income,1040,
+4180,PL,รายได้อื่น,Other Income,1050,
+4190,PL,รายได้อื่น,Other Income,1051,
+5110,PL,ต้นทุนขายและบริการ,COGS,2010,
+5120,PL,ต้นทุนขายและบริการ,COGS,2011,
+5130,PL,ต้นทุนขายและบริการ,COGS,2012,
+5135,PL,ต้นทุนขายและบริการ,COGS,2013,
+5210,PL,ต้นทุนในการจัดจำหน่าย,Distribution Cost,2020,
+5310,PL,ค่าใช้จ่ายในการขายและบริหาร,SG&A,2030,
+5411,PL,ค่าใช้จ่ายในการบริหาร,SG&A,2040,5410
+5412,PL,ค่าใช้จ่ายในการบริหาร,SG&A,2041,5410
+5413,PL,ค่าใช้จ่ายในการบริหาร,SG&A,2042,5410
+5414,PL,ค่าใช้จ่ายในการบริหาร,SG&A,2043,5410
+5415,PL,ค่าใช้จ่ายในการบริหาร,SG&A,2044,5410
+5416,PL,ค่าใช้จ่ายในการบริหาร,SG&A,2045,5410
+5417,PL,ค่าใช้จ่ายในการบริหาร,SG&A,2046,5410
+5418,PL,ค่าใช้จ่ายในการบริหาร,SG&A,2047,5410
+5419,PL,ค่าใช้จ่ายในการบริหาร,SG&A,2048,5410
+5420,PL,ค่าใช้จ่ายในการบริหาร,SG&A,2049,5410
+5421,PL,ค่าใช้จ่ายในการบริหาร,SG&A,2050,5410
+5510,PL,ต้นทุนทางการเงิน,Finance Cost,2060,
+5610,PL,ค่าใช้จ่ายภาษีเงินได้,Income Tax,2070,

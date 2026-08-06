@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cashflow Logic — Test Runner</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',Sarabun,sans-serif;font-size:14px;background:#F8F9FA;color:#1A202C;padding:24px}
+h1{font-size:18px;font-weight:600;margin-bottom:4px}
+.subtitle{font-size:13px;color:#64748B;margin-bottom:20px}
+.summary{display:flex;gap:12px;margin-bottom:24px;flex-wrap:wrap}
+.kpi{background:#fff;border:1px solid #E2E8F0;border-radius:8px;padding:12px 20px;min-width:120px}
+.kpi-num{font-size:28px;font-weight:700}
+.kpi-label{font-size:12px;color:#64748B;margin-top:2px}
+.kpi.pass .kpi-num{color:#16A34A}
+.kpi.fail .kpi-num{color:#DC2626}
+.kpi.total .kpi-num{color:#2A6FF0}
+.group{background:#fff;border:1px solid #E2E8F0;border-radius:8px;margin-bottom:12px;overflow:hidden}
+.group-head{display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid #E2E8F0;cursor:pointer;user-select:none}
+.group-head:hover{background:#F8FAFC}
+.group-name{font-weight:600;font-size:13.5px;flex:1}
+.group-count{font-size:12px;color:#64748B}
+.group-badge{font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px}
+.badge-pass{background:#DCFCE7;color:#166534}
+.badge-fail{background:#FEE2E2;color:#991B1B}
+.badge-run{background:#DBEAFE;color:#1E40AF}
+.cases{display:none}
+.cases.open{display:block}
+.case{display:flex;align-items:flex-start;gap:10px;padding:8px 16px 8px 36px;border-bottom:.5px solid #F1F5F9;font-size:13px}
+.case:last-child{border-bottom:none}
+.case-icon{font-size:15px;flex-shrink:0;margin-top:1px}
+.case-name{flex:1;color:#334155}
+.case-err{font-size:12px;color:#DC2626;font-family:monospace;background:#FEF2F2;padding:4px 8px;border-radius:4px;margin-top:4px;white-space:pre-wrap;word-break:break-all}
+.progress{height:6px;background:#E2E8F0;border-radius:3px;margin-bottom:20px;overflow:hidden}
+.progress-bar{height:100%;border-radius:3px;background:#2A6FF0;transition:width .3s}
+#log{font-size:12px;color:#64748B;margin-top:16px}
+</style>
+</head>
+<body>
+
+<h1>Cashflow Logic — Test Runner</h1>
+<p class="subtitle">ตรวจสอบความถูกต้องของ business logic โดยไม่ต้องติดตั้งอะไร</p>
+
+<div class="progress"><div class="progress-bar" id="progress" style="width:0%"></div></div>
+
+<div class="summary">
+  <div class="kpi total"><div class="kpi-num" id="total">0</div><div class="kpi-label">ทั้งหมด</div></div>
+  <div class="kpi pass"><div class="kpi-num" id="passed">0</div><div class="kpi-label">ผ่าน</div></div>
+  <div class="kpi fail"><div class="kpi-num" id="failed">0</div><div class="kpi-label">ไม่ผ่าน</div></div>
+</div>
+
+<div id="results"></div>
+<div id="log"></div>
+
+<script src="../src/cashflow-logic.js"></script>
+<script>
+// ─── Mini test framework ──────────────────────────────────────────────────────
+let groups = [], currentGroup = null, passed = 0, failed = 0;
+
+function describe(name, fn) {
+  currentGroup = { name, cases: [] };
+  groups.push(currentGroup);
+  fn();
+}
+
+function test(name, fn) {
+  const c = { name, pass: false, err: null };
+  try { fn(); c.pass = true; passed++; }
+  catch(e) { c.err = e.message || String(e); failed++; }
+  currentGroup.cases.push(c);
+}
+
+function expect(actual) {
+  return {
+    toBe:          (e) => { if (actual !== e)           throw new Error(`คาดว่า ${JSON.stringify(e)}\nแต่ได้   ${JSON.stringify(actual)}`) },
+    toBeGreaterThan:(e) => { if (!(actual > e))          throw new Error(`คาดว่า > ${e}, แต่ได้ ${actual}`) },
+    toBeLessThan:   (e) => { if (!(actual < e))          throw new Error(`คาดว่า < ${e}, แต่ได้ ${actual}`) },
+    toHaveLength:   (e) => { if ((actual||[]).length !== e) throw new Error(`คาดว่า length ${e}, แต่ได้ ${(actual||[]).length}`) },
+    toMatch:        (r) => { if (!String(actual).match(r))  throw new Error(`"${actual}" ไม่ match ${r}`) },
+  };
+}
+
+// ─── Golden Dataset ───────────────────────────────────────────────────────────
+const TRIAL_BALANCE = {
+  "2025-Q4": [
+    { code: "1010", balance: 446780000 }, { code: "1130", balance: 168300000 },
+    { code: "1140", balance: -8200000  }, { code: "1200", balance: 142800000 },
+    { code: "2110", balance: 95400000  }, { code: "2120", balance: 42100000  },
+    { code: "2210", balance: 180000000 }, { code: "2310", balance: 240000000 },
+  ],
+  "2026-Q1": [
+    { code: "1010", balance: 465220000 }, { code: "1130", balance: 196700000 },
+    { code: "1140", balance: -12400000 }, { code: "1200", balance: 157600000 },
+    { code: "2110", balance: 114000000 }, { code: "2120", balance:  48300000 },
+    { code: "2210", balance: 155000000 }, { code: "2310", balance: 221600000 },
+  ],
+};
+
+const DIRECT_CF = {
+  opening: 446780000,
+  sections: [
+    { title:"ดำเนินงาน", subtotalLabel:"รวม", items: [
+      { label:"เงินสดรับจากการขายสินค้าและบริการ", current: 612400000 },
+      { label:"เงินสดรับจากดอกเบี้ยและเงินปันผล",  current:  39100000 },
+      { label:"เงินสดรับอื่น",                     current:  14200000 },
+      { label:"จ่ายผู้จัดจำหน่ายและพนักงาน",       current:-483700000 },
+      { label:"เงินสดจ่ายดอกเบี้ย",                current: -36200000 },
+      { label:"เงินสดจ่ายภาษีเงินได้",             current: -48700000 },
+    ]},
+    { title:"ลงทุน", subtotalLabel:"รวม", items: [
+      { label:"ซื้อที่ดิน อาคารและอุปกรณ์",  current:-21400000 },
+      { label:"ขายสินทรัพย์ถาวร",             current:  4200000 },
+      { label:"เงินลงทุนระยะสั้น (เพิ่ม)/ลด", current: -8600000 },
+      { label:"เงินปันผลรับจากเงินลงทุน",    current:  6800000 },
+    ]},
+    { title:"จัดหาเงิน", subtotalLabel:"รวม", items: [
+      { label:"เงินกู้ระยะสั้น",     current:-25000000 },
+      { label:"เงินกู้ระยะยาว – รับ", current:       0 },
+      { label:"เงินกู้ระยะยาว – คืน", current:-18400000 },
+      { label:"จ่ายเงินปันผล",       current:-32000000 },
+    ]},
+  ],
+};
+
+const INDIRECT_CF = {
+  opening: 446780000,
+  sections: [
+    { title:"ดำเนินงาน (อ้อม)", subtotalLabel:"รวม", items: [
+      { label:"กำไรก่อนภาษี",      current: 142800000 },
+      { label:"ไม่ใช่เงินสด",      current: null, header: true },
+      { label:"ค่าเสื่อมราคา",     current:  38700000 },
+      { label:"หนี้สูญ",           current:   4200000 },
+      { label:"FX Loss",           current:  -2400000 },
+      { label:"ดอกเบี้ยจ่าย",      current:  36200000 },
+      { label:"WC",                current: null, header: true },
+      { label:"AR change",         current: -28400000 },
+      { label:"Inventory change",  current: -14800000 },
+      { label:"AP change",         current:  18600000 },
+      { label:"Accrued change",    current:   6200000 },
+      { label:"จ่ายดอกเบี้ย",      current: -36200000 },
+      { label:"จ่ายภาษี",          current: -48700000 },
+    ]},
+    { title:"ลงทุน", subtotalLabel:"รวม", items: [
+      { label:"ซื้อ PPE",           current:-21400000 },
+      { label:"ขาย PPE",           current:  4200000 },
+      { label:"เงินลงทุนระยะสั้น", current: -8600000 },
+      { label:"เงินปันผลรับ",      current:  6800000 },
+    ]},
+    { title:"จัดหาเงิน", subtotalLabel:"รวม", items: [
+      { label:"กู้ระยะสั้น",  current:-25000000 },
+      { label:"กู้ระยะยาว",   current:       0 },
+      { label:"คืนระยะยาว",   current:-18400000 },
+      { label:"ปันผล",        current:-32000000 },
+    ]},
+  ],
+};
+
+const BANK_ACCOUNTS = [
+  {balance:248650000},{balance:92140000},{balance:18220000},
+  {balance:64310000},{balance:45900000},{balance:32480000},{balance:8640000},
+];
+
+const AR_ENTITIES = [
+  {opening:224000000,sales:412400000,collection:-385200000,adjustments:0,closing:251200000,change:27200000},
+  {opening:86100000,sales:165300000,collection:-148900000,adjustments:-1200000,closing:101300000,change:15200000},
+  {opening:14500000,sales:32400000,collection:-27100000,adjustments:0,closing:19800000,change:5300000},
+];
+
+const AP_ENTITIES = [
+  {opening:98400000,purchases:268900000,payment:-245300000,adjustments:0,closing:122000000,change:23600000},
+  {opening:18500000,purchases:84200000,payment:-78400000,adjustments:-300000,closing:24000000,change:5500000},
+  {opening:5200000,purchases:12400000,payment:-11100000,adjustments:0,closing:6500000,change:1300000},
+];
+
+// ─── Test cases ───────────────────────────────────────────────────────────────
+const L = window.CFLogic;
+
+describe("fmtTHB — number formatting", () => {
+  test("แสดงตัวเลขติดลบถูกต้อง",      () => expect(L.fmtTHB(-1000000)).toMatch(/-/));
+  test("แสดงทศนิยม 2 ตำแหน่ง",        () => expect(L.fmtTHB(1234567)).toMatch(/\./));
+  test("null คืน —",                   () => expect(L.fmtTHB(null)).toBe("—"));
+});
+
+describe("fmtTHBShort — short format", () => {
+  test("1,000,000 → 1.0M",             () => expect(L.fmtTHBShort(1000000)).toBe("1.0M"));
+  test("500,000 → 500.0K",             () => expect(L.fmtTHBShort(500000)).toBe("500.0K"));
+  test("ค่าลบขึ้นต้นด้วย -",           () => expect(L.fmtTHBShort(-61200000)).toMatch(/^-/));
+});
+
+describe("tbBal — Trial Balance lookup", () => {
+  test("ดึงยอดบัญชีถูกต้อง",          () => expect(L.tbBal(TRIAL_BALANCE,"2026-Q1","1010")).toBe(465220000));
+  test("งวดที่ไม่มีคืน 0",            () => expect(L.tbBal(TRIAL_BALANCE,"2020-Q1","1010")).toBe(0));
+  test("รหัสบัญชีที่ไม่มีคืน 0",      () => expect(L.tbBal(TRIAL_BALANCE,"2026-Q1","9999")).toBe(0));
+});
+
+describe("tbDelta — balance change", () => {
+  test("เงินสด Q1−Q4 = +18,440,000",   () => expect(L.tbDelta(TRIAL_BALANCE,"2026-Q1","2025-Q4","1010")).toBe(18440000));
+  test("เงินกู้ระยะสั้นลดลง −25M",    () => expect(L.tbDelta(TRIAL_BALANCE,"2026-Q1","2025-Q4","2210")).toBe(-25000000));
+});
+
+describe("Working Capital changes", () => {
+  test("AR เพิ่ม → ค่าลบ (ใช้เงินสด)",() => expect(L.getARChange(TRIAL_BALANCE,"2026-Q1","2025-Q4")).toBeLessThan(0));
+  test("AR change = −24,200,000",      () => expect(L.getARChange(TRIAL_BALANCE,"2026-Q1","2025-Q4")).toBe(-24200000));
+  test("AP เพิ่ม → ค่าบวก (ยังไม่จ่าย)",() => expect(L.getAPChange(TRIAL_BALANCE,"2026-Q1","2025-Q4")).toBeGreaterThan(0));
+  test("AP change = +18,600,000",      () => expect(L.getAPChange(TRIAL_BALANCE,"2026-Q1","2025-Q4")).toBe(18600000));
+  test("Inventory เพิ่ม → ค่าลบ",     () => expect(L.getInventoryChange(TRIAL_BALANCE,"2026-Q1","2025-Q4")).toBeLessThan(0));
+  test("Accrued เพิ่ม → ค่าบวก",      () => expect(L.getAccruedExpChange(TRIAL_BALANCE,"2026-Q1","2025-Q4")).toBeGreaterThan(0));
+});
+
+describe("calcWCImpact", () => {
+  test("รวม WC = −18,400,000",         () => expect(L.calcWCImpact({arCF:-28400000,apCF:18600000,invCF:-14800000,accrCF:6200000})).toBe(-18400000));
+  test("undefined ไม่ crash",          () => expect(L.calcWCImpact({arCF:-10000000})).toBe(-10000000));
+});
+
+describe("calcSectionSubtotals", () => {
+  test("Operating sub = 97,100,000",  () => expect(L.calcSectionSubtotals(DIRECT_CF)[0].sub).toBe(97100000));
+  test("Investing sub = −19,000,000", () => expect(L.calcSectionSubtotals(DIRECT_CF)[1].sub).toBe(-19000000));
+  test("Financing sub = −75,400,000", () => expect(L.calcSectionSubtotals(DIRECT_CF)[2].sub).toBe(-75400000));
+  test("header items ไม่นับในผลรวม",   () => { const s=L.calcSectionSubtotals(INDIRECT_CF); expect(isNaN(s[0].sub)).toBe(false); });
+});
+
+describe("calcNetCF", () => {
+  test("Net CF Direct = 2,700,000",    () => expect(L.calcNetCF(DIRECT_CF).netCF).toBe(2700000));
+  test("Closing = Opening + Net CF",   () => { const r=L.calcNetCF(DIRECT_CF); expect(r.closing).toBe(r.opening+r.netCF); });
+  test("Closing = 449,480,000",        () => expect(L.calcNetCF(DIRECT_CF).closing).toBe(449480000));
+});
+
+describe("calcOperatingItems", () => {
+  test("cashIn > 0",                   () => expect(L.calcOperatingItems(DIRECT_CF.sections[0].items).cashIn).toBeGreaterThan(0));
+  test("cashOut < 0",                  () => expect(L.calcOperatingItems(DIRECT_CF.sections[0].items).cashOut).toBeLessThan(0));
+  test("cashIn + cashOut = netOp",     () => { const r=L.calcOperatingItems(DIRECT_CF.sections[0].items); expect(r.cashIn+r.cashOut).toBe(r.netOp); });
+  test("cashIn = 665,700,000",         () => expect(L.calcOperatingItems(DIRECT_CF.sections[0].items).cashIn).toBe(665700000));
+});
+
+describe("calcARReconcileTotals", () => {
+  test("totalOpening = 324,600,000",   () => expect(L.calcARReconcileTotals(AR_ENTITIES).totalOpening).toBe(324600000));
+  test("totalSales = 610,100,000",     () => expect(L.calcARReconcileTotals(AR_ENTITIES).totalSales).toBe(610100000));
+  test("cfImpact ต้องเป็นลบ",          () => expect(L.calcARReconcileTotals(AR_ENTITIES).cfImpact).toBeLessThan(0));
+  test("closing = opening + change",   () => { const r=L.calcARReconcileTotals(AR_ENTITIES); expect(r.totalClosing).toBe(r.totalOpening+r.totalChange); });
+  test("cfImpact = −totalChange",      () => { const r=L.calcARReconcileTotals(AR_ENTITIES); expect(r.cfImpact).toBe(-r.totalChange); });
+});
+
+describe("calcAPReconcileTotals", () => {
+  test("cfImpact ต้องเป็นบวก",          () => expect(L.calcAPReconcileTotals(AP_ENTITIES).cfImpact).toBeGreaterThan(0));
+  test("closing = opening + change",   () => { const r=L.calcAPReconcileTotals(AP_ENTITIES); expect(r.totalClosing).toBe(r.totalOpening+r.totalChange); });
+  test("cfImpact = totalChange",       () => { const r=L.calcAPReconcileTotals(AP_ENTITIES); expect(r.cfImpact).toBe(r.totalChange); });
+});
+
+describe("calcCashEndingReconcile", () => {
+  test("bankTotal = sum ของ bank accounts", () => { const r=L.calcCashEndingReconcile(DIRECT_CF,BANK_ACCOUNTS); expect(r.bankTotal).toBe(BANK_ACCOUNTS.reduce((s,b)=>s+b.balance,0)); });
+  test("diff = bankTotal − cfClosing",  () => { const r=L.calcCashEndingReconcile(DIRECT_CF,BANK_ACCOUNTS); expect(r.diff).toBe(r.bankTotal-r.cfClosing); });
+  test("isBalanced = true เมื่อ diff = 0", () => { const r=L.calcCashEndingReconcile(DIRECT_CF,[{balance:449480000}]); expect(r.isBalanced).toBe(true); });
+  test("isBalanced = false เมื่อ diff ใหญ่", () => { const r=L.calcCashEndingReconcile(DIRECT_CF,[{balance:999999999}]); expect(r.isBalanced).toBe(false); });
+});
+
+describe("compareDirectIndirect", () => {
+  // DIRECT_CF net = 97.1 - 19.0 - 75.4 = 2.7M
+  // INDIRECT_CF operating = 116.2M (not reconciled to direct — illustrative data)
+  // Tests verify the function returns correct values for each dataset independently
+  test("directNet = 2,700,000",              () => expect(L.compareDirectIndirect(DIRECT_CF,INDIRECT_CF).directNet).toBe(2700000));
+  test("indirectNet = 21,800,000",           () => expect(L.compareDirectIndirect(DIRECT_CF,INDIRECT_CF).indirectNet).toBe(21800000));
+  test("isMatch = false เมื่อ data ไม่ตรงกัน", () => expect(L.compareDirectIndirect(DIRECT_CF,INDIRECT_CF).isMatch).toBe(false));
+  test("sectionDiffs มี 3 sections",         () => expect(L.compareDirectIndirect(DIRECT_CF,INDIRECT_CF).sectionDiffs).toHaveLength(3));
+  test("Investing และ Financing ต้องเท่ากัน", () => { const r=L.compareDirectIndirect(DIRECT_CF,INDIRECT_CF); expect(r.sectionDiffs[1].diff).toBe(0); expect(r.sectionDiffs[2].diff).toBe(0); });
+  test("isMatch = true เมื่อ net CF ตรงกัน", () => {
+    // Reconciled dataset: both methods → net 2,700,000
+    const INDIRECT_RECONCILED = { opening:446780000, sections:[
+      { items:[
+        {current:142800000},{current:38700000},{current:4200000},{current:-2400000},
+        {current:36200000},{current:-47500000},{current:-14800000},{current:18600000},
+        {current:6200000},{current:-36200000},{current:-48700000}
+      ]},
+      INDIRECT_CF.sections[1],
+      INDIRECT_CF.sections[2],
+    ]};
+    expect(L.compareDirectIndirect(DIRECT_CF, INDIRECT_RECONCILED).isMatch).toBe(true);
+  });
+});
+
+describe("calcCrossValidationGaps", () => {
+  const cf  = {cfCashFromSales:612400000,cfNetAll:2700000,cfOpening:446780000};
+  const ext = {arCollections:561200000,bankInflowQ1:674500000,bankNetQ1:2700000,bankClosing:449480000};
+  test("cashSalesGap = CF − AR collections",() => expect(L.calcCrossValidationGaps(cf,ext).cashSalesGap).toBe(612400000-561200000));
+  test("checks มี 3 รายการ",                () => expect(L.calcCrossValidationGaps(cf,ext).checks).toHaveLength(3));
+  test("status ok เมื่อ gap < 5M",          () => { const c2={...cf,cfCashFromSales:100000000}; const e2={...ext,arCollections:99000000}; expect(L.calcCrossValidationGaps(c2,e2).checks[0].status).toBe("ok"); });
+});
+
+describe("cashHealthStatus", () => {
+  test("ยอดเกิน target → good",         () => expect(L.cashHealthStatus(700000000)).toBe("good"));
+  test("ยอดระหว่าง min–target → warn",  () => expect(L.cashHealthStatus(400000000)).toBe("warn"));
+  test("ยอดต่ำกว่า min → danger",       () => expect(L.cashHealthStatus(100000000)).toBe("danger"));
+  test("ยอดเท่ากับ target → good",      () => expect(L.cashHealthStatus(600000000)).toBe("good"));
+  test("custom threshold ใช้ได้",       () => expect(L.cashHealthStatus(50000000,{target:100000000,minimum:30000000})).toBe("warn"));
+});
+
+// ─── Render results ───────────────────────────────────────────────────────────
+const total = passed + failed;
+document.getElementById("total").textContent  = total;
+document.getElementById("passed").textContent = passed;
+document.getElementById("failed").textContent = failed;
+document.getElementById("progress").style.width = (total > 0 ? (passed/total*100) : 0) + "%";
+document.getElementById("progress").style.background = failed === 0 ? "#16A34A" : "#DC2626";
+
+const container = document.getElementById("results");
+groups.forEach(g => {
+  const allPass = g.cases.every(c => c.pass);
+  const gPass   = g.cases.filter(c => c.pass).length;
+
+  const div = document.createElement("div");
+  div.className = "group";
+
+  const head = document.createElement("div");
+  head.className = "group-head";
+  head.innerHTML = `
+    <span class="group-name">${g.name}</span>
+    <span class="group-count">${gPass}/${g.cases.length}</span>
+    <span class="group-badge ${allPass ? 'badge-pass' : 'badge-fail'}">${allPass ? '✓ ผ่าน' : '✗ มีปัญหา'}</span>
+  `;
+
+  const cases = document.createElement("div");
+  cases.className = "cases" + (allPass ? "" : " open");
+  g.cases.forEach(c => {
+    const row = document.createElement("div");
+    row.className = "case";
+    row.innerHTML = `
+      <span class="case-icon">${c.pass ? "✅" : "❌"}</span>
+      <div>
+        <div class="case-name">${c.name}</div>
+        ${c.err ? `<div class="case-err">${c.err}</div>` : ""}
+      </div>`;
+    cases.appendChild(row);
+  });
+
+  head.addEventListener("click", () => cases.classList.toggle("open"));
+  div.appendChild(head);
+  div.appendChild(cases);
+  container.appendChild(div);
+});
+
+document.getElementById("log").textContent =
+  `รัน ${total} test cases — ผ่าน ${passed} — ไม่ผ่าน ${failed}` +
+  (failed === 0 ? " 🎉 ทุก logic ถูกต้อง!" : " ⚠️ กรุณาตรวจสอบ test ที่ไม่ผ่าน");
+</script>
+</body>
+</html>

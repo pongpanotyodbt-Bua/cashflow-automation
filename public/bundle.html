@@ -10,6 +10,7 @@
 <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 <style>
 /* Cash Flow Management — Minimal enterprise (Linear/Notion-inspired) */
 
@@ -1898,9 +1899,12 @@ function Sidebar({ active, setActive }) {
 }
 
 function Topbar({ crumbs, period, setPeriod, onSearch, companyId, setCompanyId }) {
-  const periods = ["รายสัปดาห์", "เดือนนี้", "ไตรมาส 1/2569", "YTD 2569", "ปี 2568"];
+  // period = API code (e.g. "2026-Q1") — display label derived from CF_PERIODS
+  const periods = window.CF_PERIODS;
   const companies = window.CFData.companies;
   const activeCo = companies.find(c => c.id === companyId) || companies[0];
+  const activePeriod = periods.find(p => p.code === period) || periods[0];
+
   return (
     <header className="topbar">
       <div className="crumbs">
@@ -1931,8 +1935,16 @@ function Topbar({ crumbs, period, setPeriod, onSearch, companyId, setCompanyId }
         </select>
       </div>
 
-      <select className="select" value={period} onChange={(e) => setPeriod(e.target.value)}>
-        {periods.map((p) => <option key={p}>{p}</option>)}
+      {/* Period selector — stores code, displays Thai label */}
+      <select
+        className="select"
+        value={period}
+        onChange={(e) => setPeriod(e.target.value)}
+        title={`งวด: ${activePeriod.label} (code: ${activePeriod.code})`}
+      >
+        {periods.map((p) => (
+          <option key={p.code} value={p.code}>{p.label}</option>
+        ))}
       </select>
       <button className="iconbtn" title="แจ้งเตือน"><Ic name="bell" size={16} /></button>
     </header>
@@ -2415,11 +2427,11 @@ window.CFData = (function () {
   ];
 
   const apAging = [
-    { vendor: "บจก. วัตถุดิบเอเชีย",                 entity: "HMW",  total: 64_700_000, current: 38_400_000, d30: 16_200_000, d60: 6_100_000, d90: 4_000_000 },
-    { vendor: "บมจ. พลังงานไทยจำกัด",                entity: "HMW",  total: 38_900_000, current: 24_500_000, d30:  9_800_000, d60: 4_600_000, d90: 0         },
-    { vendor: "บจก. โลจิสติกส์ไทย",                  entity: "CLIK", total: 12_400_000, current:  8_700_000, d30:  2_600_000, d60: 1_100_000, d90: 0         },
-    { vendor: "บจก. เครื่องจักรอุตสาหกรรม KK",      entity: "HMW",  total: 21_300_000, current: 12_400_000, d30:  5_900_000, d60: 3_000_000, d90: 0         },
-    { vendor: "บจก. เทคโนโลยีสารสนเทศ",            entity: "ACG",  total:  7_200_000, current:  5_100_000, d30:  1_400_000, d60:   700_000, d90: 0         },
+    { vendor: "บจก. วัตถุดิบเอเชีย",                 entity: "HMW",  total: 64_700_000, current: 38_400_000, d30: 16_200_000, d60: 6_100_000, d90: 4_000_000, nextDueDate: "2026-04-05" },
+    { vendor: "บมจ. พลังงานไทยจำกัด",                entity: "HMW",  total: 38_900_000, current: 24_500_000, d30:  9_800_000, d60: 4_600_000, d90: 0,         nextDueDate: "2026-04-12" },
+    { vendor: "บจก. โลจิสติกส์ไทย",                  entity: "CLIK", total: 12_400_000, current:  8_700_000, d30:  2_600_000, d60: 1_100_000, d90: 0,         nextDueDate: "2026-04-08" },
+    { vendor: "บจก. เครื่องจักรอุตสาหกรรม KK",      entity: "HMW",  total: 21_300_000, current: 12_400_000, d30:  5_900_000, d60: 3_000_000, d90: 0,         nextDueDate: "2026-04-15" },
+    { vendor: "บจก. เทคโนโลยีสารสนเทศ",            entity: "ACG",  total:  7_200_000, current:  5_100_000, d30:  1_400_000, d60:   700_000, d90: 0,         nextDueDate: "2026-04-20" },
   ];
 
   const glAccounts = [
@@ -2460,14 +2472,15 @@ window.CFData = (function () {
   // AP HONDA Payments — การจ่ายเงินให้ HONDA (รถยนต์/อะไหล่)
   // ไม่อยู่ใน Payments ทั่วไป เพราะมีลักษณะพิเศษ (Stock Financing)
   // ===========================================================================
+  // status uses CF_STATUS.DOC values: "outstanding" | "partial" | "paid" | "overdue" | "cancelled"
   const apHondaPayments = [
-    { id: "HD-2603-01", date: "2026-03-28", entity: "HMW", invoice: "HD-INV-26030145", model: "Honda Civic RS 2026", qty: 8, unit: 1_124_000, amount: 8_992_000, dueDate: "2026-04-15", status: "pending", account: "BA-002" },
-    { id: "HD-2603-02", date: "2026-03-25", entity: "HMW", invoice: "HD-INV-26030122", model: "Honda CR-V 2026", qty: 5, unit: 1_490_000, amount: 7_450_000, dueDate: "2026-04-12", status: "pending", account: "BA-002" },
-    { id: "HD-2603-03", date: "2026-03-20", entity: "HMW", invoice: "HD-INV-26030089", model: "Honda HR-V 2026", qty: 6, unit: 1_009_000, amount: 6_054_000, dueDate: "2026-04-08", status: "paid", account: "BA-002" },
-    { id: "HD-2603-04", date: "2026-03-15", entity: "HMW", invoice: "HD-INV-26030054", model: "Honda Accord 2026", qty: 3, unit: 1_790_000, amount: 5_370_000, dueDate: "2026-04-02", status: "paid", account: "BA-002" },
-    { id: "HD-2603-05", date: "2026-03-12", entity: "HMW", invoice: "HD-INV-26030041", model: "อะไหล่ Genuine Parts Q1", qty: 1, unit: 2_840_000, amount: 2_840_000, dueDate: "2026-03-30", status: "paid", account: "BA-002" },
-    { id: "HD-2602-06", date: "2026-02-28", entity: "HMW", invoice: "HD-INV-26020198", model: "Honda City 2026", qty: 10, unit: 729_000, amount: 7_290_000, dueDate: "2026-03-18", status: "paid", account: "BA-002" },
-    { id: "HD-2602-07", date: "2026-02-20", entity: "HMW", invoice: "HD-INV-26020156", model: "Honda BR-V 2026", qty: 4, unit: 894_000, amount: 3_576_000, dueDate: "2026-03-10", status: "paid", account: "BA-002" },
+    { id: "HD-2603-01", date: "2026-03-28", entity: "HMW", invoice: "HD-INV-26030145", model: "Honda Civic RS 2026", qty: 8, unit: 1_124_000, amount: 8_992_000, dueDate: "2026-04-15", status: "outstanding", account: "BA-002" },
+    { id: "HD-2603-02", date: "2026-03-25", entity: "HMW", invoice: "HD-INV-26030122", model: "Honda CR-V 2026", qty: 5, unit: 1_490_000, amount: 7_450_000, dueDate: "2026-04-12", status: "outstanding", account: "BA-002" },
+    { id: "HD-2603-03", date: "2026-03-20", entity: "HMW", invoice: "HD-INV-26030089", model: "Honda HR-V 2026", qty: 6, unit: 1_009_000, amount: 6_054_000, dueDate: "2026-04-08", status: "paid",        account: "BA-002" },
+    { id: "HD-2603-04", date: "2026-03-15", entity: "HMW", invoice: "HD-INV-26030054", model: "Honda Accord 2026", qty: 3, unit: 1_790_000, amount: 5_370_000, dueDate: "2026-04-02", status: "paid",        account: "BA-002" },
+    { id: "HD-2603-05", date: "2026-03-12", entity: "HMW", invoice: "HD-INV-26030041", model: "อะไหล่ Genuine Parts Q1", qty: 1, unit: 2_840_000, amount: 2_840_000, dueDate: "2026-03-30", status: "paid",  account: "BA-002" },
+    { id: "HD-2602-06", date: "2026-02-28", entity: "HMW", invoice: "HD-INV-26020198", model: "Honda City 2026", qty: 10, unit: 729_000, amount: 7_290_000, dueDate: "2026-03-18", status: "paid",            account: "BA-002" },
+    { id: "HD-2602-07", date: "2026-02-20", entity: "HMW", invoice: "HD-INV-26020156", model: "Honda BR-V 2026", qty: 4, unit: 894_000, amount: 3_576_000, dueDate: "2026-03-10", status: "paid",             account: "BA-002" },
   ];
 
   // ===========================================================================
@@ -3008,6 +3021,108 @@ window.CFData = (function () {
   // Overwrite directCF with auto-calculated version (ensures Direct Operating CF = Indirect)
   Object.assign(directCF, buildDirectCF("2026-Q1", "2025-Q4"));
 
+  // ── Daily cash transactions (treasury view, last 5 business days) ────────────
+  const _dailyTxns = {
+    "2026-06-05": [
+      { id:"D060501", time:"08:45", desc:"รับชำระจากลูกค้า – HMW Fleet Contract Q2",        amount:  14_800_000, type:"in",  category:"รายรับจากการขาย",      account:"BA-002", entity:"HMW",  source:"Bank",    status:"matched" },
+      { id:"D060502", time:"09:30", desc:"จ่ายค่าสินค้า – วัตถุดิบเอเชีย INV-0601",          amount:  -8_400_000, type:"out", category:"จ่ายเจ้าหนี้การค้า",   account:"BA-002", entity:"HMW",  source:"Bank",    status:"matched" },
+      { id:"D060503", time:"10:15", desc:"รับค่า Service – CLIK สัญญา C-2026/062",          amount:   6_200_000, type:"in",  category:"รายรับจากการขาย",      account:"BA-006", entity:"CLIK", source:"Bank",    status:"matched" },
+      { id:"D060504", time:"11:00", desc:"จ่ายดอกเบี้ยกู้ – ACG Treasury มิ.ย.",             amount:  -4_100_000, type:"out", category:"ดอกเบี้ยและการเงิน",   account:"BA-001", entity:"ACG",  source:"Bank",    status:"matched" },
+      { id:"D060505", time:"13:30", desc:"รับค่าประกัน AIA Honda – มิ.ย.",                  amount:   3_600_000, type:"in",  category:"รายรับจากการขาย",      account:"BA-002", entity:"HMW",  source:"Bank",    status:"matched" },
+      { id:"D060506", time:"14:45", desc:"จ่ายเงินเดือน – CLIK รอบที่ 1 มิ.ย.",             amount:  -4_800_000, type:"out", category:"เงินเดือนและสวัสดิการ", account:"BA-006", entity:"CLIK", source:"Payroll", status:"matched" },
+      { id:"D060507", time:"15:20", desc:"ชำระภาษีมูลค่าเพิ่ม – มิ.ย.",                     amount:  -2_900_000, type:"out", category:"ภาษีอากร",             account:"BA-001", entity:"ACG",  source:"Manual",  status:"pending" },
+      { id:"D060508", time:"16:00", desc:"ค่าบริหารจัดการ HMW → ACG มิ.ย.",                 amount:   2_800_000, type:"in",  category:"ค่าบริหารจัดการ",      account:"BA-001", entity:"ACG",  source:"Manual",  status:"matched" },
+    ],
+    "2026-06-04": [
+      { id:"D060401", time:"09:00", desc:"รับชำระ Honda ตอกเข็ม – Site ลาดกระบัง",          amount:  11_200_000, type:"in",  category:"รายรับจากการขาย",      account:"BA-002", entity:"HMW",  source:"Bank",    status:"matched" },
+      { id:"D060402", time:"09:45", desc:"จ่ายค่า Sub Contract – โลจิสติกส์ไทย",             amount:  -3_540_000, type:"out", category:"จ่ายเจ้าหนี้การค้า",   account:"BA-006", entity:"CLIK", source:"AP",      status:"matched" },
+      { id:"D060403", time:"11:30", desc:"รับเงินปันผลลงทุน – ACG Treasury",                 amount:   2_200_000, type:"in",  category:"ดอกเบี้ยและเงินปันผล", account:"BA-005", entity:"ACG",  source:"Bank",    status:"matched" },
+      { id:"D060404", time:"13:00", desc:"จ่ายค่าไฟฟ้า – HMW ทุกสาขา มิ.ย.",               amount:  -3_200_000, type:"out", category:"สาธารณูปโภค",          account:"BA-002", entity:"HMW",  source:"Bank",    status:"matched" },
+      { id:"D060405", time:"14:30", desc:"รับค่าเช่ารถ Fleet – Q2",                          amount:   1_900_000, type:"in",  category:"รายรับจากการขาย",      account:"BA-002", entity:"HMW",  source:"Bank",    status:"matched" },
+      { id:"D060406", time:"16:30", desc:"โอนระหว่างบัญชี ACG → HMW Operating",              amount:  -5_000_000, type:"out", category:"โอนภายใน",             account:"BA-001", entity:"ACG",  source:"Manual",  status:"matched" },
+    ],
+    "2026-06-03": [
+      { id:"D060301", time:"08:30", desc:"รับชำระจากลูกค้า CLIK – บจก.อีสเทิร์น ปิโตร",     amount:   9_800_000, type:"in",  category:"รายรับจากการขาย",      account:"BA-006", entity:"CLIK", source:"Bank",    status:"matched" },
+      { id:"D060302", time:"10:00", desc:"จ่ายวัตถุดิบ – HMW Inventory มิ.ย.",               amount: -12_400_000, type:"out", category:"จ่ายเจ้าหนี้การค้า",   account:"BA-002", entity:"HMW",  source:"Bank",    status:"matched" },
+      { id:"D060303", time:"11:30", desc:"ค่าเช่าโชว์รูม – HMW สาขาบางนา มิ.ย.",            amount:  -3_200_000, type:"out", category:"ค่าเช่าและสาธารณูปโภค",account:"BA-002", entity:"HMW",  source:"AP",      status:"matched" },
+      { id:"D060304", time:"13:45", desc:"รับชำระประกัน – INS_LIM Honda Plan",               amount:   4_100_000, type:"in",  category:"รายรับจากการขาย",      account:"BA-002", entity:"HMW",  source:"Bank",    status:"matched" },
+      { id:"D060305", time:"15:00", desc:"ชำระเงินกู้ระยะยาว – ACG Treasury มิ.ย.",           amount:  -6_200_000, type:"out", category:"ชำระคืนเงินกู้",       account:"BA-001", entity:"ACG",  source:"Bank",    status:"matched" },
+    ],
+    "2026-06-02": [
+      { id:"D060201", time:"09:15", desc:"รับชำระจากลูกค้า – HMW Honda Q2 Batch",            amount:  18_600_000, type:"in",  category:"รายรับจากการขาย",      account:"BA-002", entity:"HMW",  source:"Bank",    status:"matched" },
+      { id:"D060202", time:"10:30", desc:"จ่ายเงินเดือน – HMW รอบที่ 1 มิ.ย.",              amount: -18_400_000, type:"out", category:"เงินเดือนและสวัสดิการ", account:"BA-003", entity:"HMW",  source:"Payroll", status:"matched" },
+      { id:"D060203", time:"11:00", desc:"ดอกเบี้ยรับเงินฝากประจำ – ACG",                    amount:   1_080_000, type:"in",  category:"ดอกเบี้ยและเงินปันผล", account:"BA-005", entity:"ACG",  source:"Bank",    status:"matched" },
+      { id:"D060204", time:"14:00", desc:"จ่ายค่า Sub Contract – CLIK มิ.ย. (pending review)",amount: -4_200_000, type:"out", category:"จ่ายเจ้าหนี้การค้า",   account:"BA-006", entity:"CLIK", source:"AP",      status:"review"  },
+      { id:"D060205", time:"16:00", desc:"ค่าบริหารจัดการ CLIK → ACG มิ.ย.",                  amount:   1_400_000, type:"in",  category:"ค่าบริหารจัดการ",      account:"BA-001", entity:"ACG",  source:"Manual",  status:"matched" },
+    ],
+    "2026-05-30": [
+      { id:"D053001", time:"09:00", desc:"รับชำระจากลูกค้า – HMW ปิดงวดพ.ค.",               amount:  22_400_000, type:"in",  category:"รายรับจากการขาย",      account:"BA-002", entity:"HMW",  source:"Bank",    status:"matched" },
+      { id:"D053002", time:"10:15", desc:"จ่ายชำระ AP ปิดงวด – วัตถุดิบเอเชีย",              amount: -16_800_000, type:"out", category:"จ่ายเจ้าหนี้การค้า",   account:"BA-002", entity:"HMW",  source:"Bank",    status:"matched" },
+      { id:"D053003", time:"11:30", desc:"จ่ายเงินเดือน ACG – พ.ค. 2026",                   amount:  -3_600_000, type:"out", category:"เงินเดือนและสวัสดิการ", account:"BA-001", entity:"ACG",  source:"Payroll", status:"matched" },
+      { id:"D053004", time:"13:00", desc:"รับค่าบริการ CLIK – ปิดสิ้นเดือนพ.ค.",              amount:   7_200_000, type:"in",  category:"รายรับจากการขาย",      account:"BA-006", entity:"CLIK", source:"Bank",    status:"matched" },
+      { id:"D053005", time:"15:30", desc:"จ่ายเงินปันผลผู้ถือหุ้น – รอบที่ 1/2569",           amount: -10_600_000, type:"out", category:"เงินปันผลจ่าย",        account:"BA-001", entity:"ACG",  source:"Bank",    status:"matched" },
+      { id:"D053006", time:"16:45", desc:"ชำระภาษีหัก ณ ที่จ่าย – ภงด.1 พ.ค.",              amount:  -1_840_000, type:"out", category:"ภาษีอากร",             account:"BA-001", entity:"ACG",  source:"Manual",  status:"matched" },
+    ],
+  };
+
+  const _dailyOpenings = {
+    "2026-05-30": 472_000_000,
+    "2026-06-02": 473_560_000,
+    "2026-06-03": 470_000_000,
+    "2026-06-04": 471_900_000,
+    "2026-06-05": 473_460_000,
+  };
+
+  function getDailyData(dateCode) {
+    const txns = (_dailyTxns[dateCode] || []).slice().sort((a, b) => a.time.localeCompare(b.time));
+    const opening = _dailyOpenings[dateCode] || 473_000_000;
+    const inflow  = txns.filter(t => t.amount > 0).reduce((s, t) => s + t.amount, 0);
+    const outflow = txns.filter(t => t.amount < 0).reduce((s, t) => s + t.amount, 0);
+    const byCat = {};
+    txns.forEach(t => {
+      if (!byCat[t.category]) byCat[t.category] = { label: t.category, inflow: 0, outflow: 0 };
+      if (t.amount > 0) byCat[t.category].inflow  += t.amount;
+      else              byCat[t.category].outflow += t.amount;
+    });
+    return { txns, opening, inflow, outflow, net: inflow + outflow, closing: opening + inflow + outflow, byCategory: Object.values(byCat) };
+  }
+
+  // ── Scale-based multi-period CF generator ─────────────────────────────────
+  // Returns { direct, indirect } shaped like d.directCF / d.indirectCF for any period.
+  // Replace scaling with real DB queries in Backend.
+  const _periodCFConfig = {
+    //              [curScale, priScale, opening,       priorOpening ]
+    "2026-01":    [ 0.290,    0.315,    446_780_000,   374_200_000  ],
+    "2026-02":    [ 0.325,    0.340,    447_563_000,   378_500_000  ],
+    "2026-03":    [ 0.385,    0.345,    448_454_000,   384_100_000  ],
+    "2026-Q1":    [ 1.000,    1.000,    446_780_000,   412_400_000  ],
+    "2025-Q4":    [ 1.000,    0.960,    412_400_000,   390_000_000  ],
+    "2026-04":    [ 0.320,    0.310,    449_480_000,   380_000_000  ],
+    "2026-05":    [ 0.365,    0.335,    450_704_000,   385_400_000  ],
+    "2026-06":    [ 0.402,    0.362,    452_560_000,   392_000_000  ],
+    "2026-Q2":    [ 1.087,    1.005,    449_480_000,   446_780_000  ],
+    "2026-YTD":   [ 2.087,    1.980,    446_780_000,   412_400_000  ],
+    "2025-12":    [ 0.420,    0.400,    400_000_000,   360_000_000  ],
+    "2025-FY":    [ 3.620,    3.440,    390_000_000,   360_000_000  ],
+  };
+
+  function getCFData(periodCode) {
+    const cfg = _periodCFConfig[periodCode];
+    const [curS, priS, opening, priorOpening] = cfg || [1, 1, directCF.opening, directCF.priorOpening];
+    function scaleItems(items) {
+      return items.map(it => ({
+        ...it,
+        current: it.current != null ? Math.round(it.current * curS) : null,
+        prior:   it.prior   != null ? Math.round(it.prior   * priS) : null,
+      }));
+    }
+    function scaleSecs(secs) { return secs.map(s => ({ ...s, items: scaleItems(s.items) })); }
+    return {
+      direct:   { sections: scaleSecs(directCF.sections),   opening, priorOpening },
+      indirect: { sections: scaleSecs(indirectCF.sections), opening, priorOpening },
+    };
+  }
+
   // Totals derived
   const totalCash = bankAccounts.reduce((s, b) => s + b.balance, 0);
   const inflowQ1 = monthly.slice(3).reduce((s, m) => s + m.inflow, 0);
@@ -3034,32 +3149,79 @@ window.CFData = (function () {
     getEntityForAccount, getSegmentName,
     cfMapping, filterSegmentsByMapping,
     totals: { totalCash, inflowQ1, outflowQ1, netQ1: inflowQ1 - outflowQ1 },
+    // Multi-period helpers (Backend will replace these with real API calls)
+    getCFData, getDailyData,
   };
 })();
 
-window.fmtTHB = function (n, opts = {}) {
-  if (n == null || isNaN(n)) return "—";
-  const { compact = false, sign = false, decimals = 0 } = opts;
-  const abs = Math.abs(n);
-  let str;
-  if (compact && abs >= 1_000_000) {
-    str = (abs / 1_000_000).toLocaleString("en-US", { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + " ลบ.";
-  } else {
-    str = abs.toLocaleString("en-US", { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
-  }
-  if (n < 0) return "(" + str + ")";
-  return sign && n > 0 ? "+" + str : str;
+// ─── Shared Enums / Constants (Backend must mirror these exactly) ────────────
+// Transaction reconciliation status (bank_transactions, cash_receipts, cash_payments)
+window.CF_STATUS = {
+  TXN: {
+    MATCHED: "matched",   // Bank statement matched with GL entry
+    PENDING:  "pending",  // Awaiting match / approval
+    REVIEW:   "review",   // Flagged for manual review
+    VOID:     "void",     // Cancelled / reversed
+  },
+  // Document lifecycle status (ap_bills, ar_invoices, pn_payments)
+  DOC: {
+    OUTSTANDING: "outstanding", // Issued, not yet due
+    PARTIAL:     "partial",     // Partially paid
+    PAID:        "paid",        // Fully settled
+    OVERDUE:     "overdue",     // Past due date, not paid
+    CANCELLED:   "cancelled",   // Voided document
+  },
 };
 
-window.fmtTHBShort = function (n) {
-  if (n == null) return "—";
-  const abs = Math.abs(n);
-  let v, suf;
-  if (abs >= 1_000_000_000) { v = n / 1_000_000_000; suf = " พันลบ."; }
-  else if (abs >= 1_000_000) { v = n / 1_000_000; suf = " ลบ."; }
-  else if (abs >= 1_000) { v = n / 1_000; suf = " พัน"; }
-  else { v = n; suf = ""; }
-  return v.toLocaleString("en-US", { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + suf;
+// ─── Period definitions — single source of truth for period selector ─────────
+// code   = API parameter value (Backend must accept this format)
+// label  = Thai display string (UI only)
+// type   = granularity: "daily" | "month" | "quarter" | "ytd" | "annual"
+window.CF_PERIODS = [
+  // ── Daily (5 recent business days) ─────────────────────────────────────────
+  { code: "2026-06-05", label: "5 มิ.ย. 2569",        type: "daily",   date: "2026-06-05" },
+  { code: "2026-06-04", label: "4 มิ.ย. 2569",        type: "daily",   date: "2026-06-04" },
+  { code: "2026-06-03", label: "3 มิ.ย. 2569",        type: "daily",   date: "2026-06-03" },
+  { code: "2026-06-02", label: "2 มิ.ย. 2569",        type: "daily",   date: "2026-06-02" },
+  { code: "2026-05-30", label: "30 พ.ค. 2569",        type: "daily",   date: "2026-05-30" },
+  // ── Monthly ─────────────────────────────────────────────────────────────────
+  { code: "2026-06",   label: "มิ.ย. 2569",           type: "month",   year: 2026, month: 6  },
+  { code: "2026-05",   label: "พ.ค. 2569",            type: "month",   year: 2026, month: 5  },
+  { code: "2026-04",   label: "เม.ย. 2569",           type: "month",   year: 2026, month: 4  },
+  { code: "2026-03",   label: "มี.ค. 2569",           type: "month",   year: 2026, month: 3  },
+  { code: "2026-02",   label: "ก.พ. 2569",            type: "month",   year: 2026, month: 2  },
+  { code: "2026-01",   label: "ม.ค. 2569",            type: "month",   year: 2026, month: 1  },
+  { code: "2025-12",   label: "ธ.ค. 2568",            type: "month",   year: 2025, month: 12 },
+  // ── Quarterly ───────────────────────────────────────────────────────────────
+  { code: "2026-Q2",  label: "ไตรมาส 2/2569",         type: "quarter", year: 2026, q: 2, monthStart: "2026-04", monthEnd: "2026-06" },
+  { code: "2026-Q1",  label: "ไตรมาส 1/2569",         type: "quarter", year: 2026, q: 1, monthStart: "2026-01", monthEnd: "2026-03" },
+  { code: "2025-Q4",  label: "ไตรมาส 4/2568",         type: "quarter", year: 2025, q: 4, monthStart: "2025-10", monthEnd: "2025-12" },
+  // ── YTD & Annual ────────────────────────────────────────────────────────────
+  { code: "2026-YTD", label: "YTD 2569 (ม.ค.–มิ.ย.)", type: "ytd",     year: 2026 },
+  { code: "2025-FY",  label: "ปี 2568 (เต็มปี)",       type: "annual",  year: 2025 },
+];
+
+// Lookup helpers
+window.CF_PERIOD_DEFAULT = "2026-Q1";
+window.getPeriodLabel = (code) => (window.CF_PERIODS.find(p => p.code === code) || {}).label || code;
+window.getPeriodMeta  = (code) =>  window.CF_PERIODS.find(p => p.code === code) || null;
+
+// ─── BC GL column aliases — canonical list (no typos) ────────────────────────
+// Used by Frontend parser AND must match Backend import service config.
+window.BC_GL_COLUMN_ALIASES = {
+  postingDate:    ["Posting Date"],
+  glAccount:      ["G/L Account No.", "G/L Account No"],
+  description:    ["Description"],
+  description2:   ["Description 2"],
+  amount:         ["Amount"],
+  documentType:   ["Document Type"],
+  documentNo:     ["Document No.", "Document No"],
+  genPostingType: ["Gen. Posting Type"],
+  customerNo:     ["Customer No.", "Customer No"],        // fixed: was "Cutomer No"
+  customerName:   ["Customer Name"],                      // fixed: was "Cutomer Name"
+  vendorName:     ["Vendor Name"],
+  departmentCode: ["Department Code"],
+  entryNo:        ["Entry No.", "Entry No"],
 };
 
 window.fmtTHB = function (n, opts = {}) {
@@ -3664,7 +3826,9 @@ Object.assign(window, {
 <script type="text/babel">
 /* Dashboard screen */
 
-function Dashboard({ chartStyle, companyId = "CONSO" }) {
+function Dashboard({ chartStyle, companyId = "CONSO", period = window.CF_PERIOD_DEFAULT }) {
+  // periodLabel is Thai display string e.g. "ไตรมาส 1/2569"
+  const periodLabel = window.getPeriodLabel(period);
   const d = window.CFData;
   const [view, setView] = React.useState("monthly"); // monthly | daily
   const activeCo = d.companies.find(c => c.id === companyId) || d.companies[0];
@@ -3789,7 +3953,7 @@ function Dashboard({ chartStyle, companyId = "CONSO" }) {
           <div className="card-head">
             <div>
               <div className="card-title">รายการเข้าหลัก (Top Inflow)</div>
-              <div className="card-sub">ไตรมาส 1/2569 จัดเรียงตามจำนวนเงิน</div>
+              <div className="card-sub">{periodLabel} จัดเรียงตามจำนวนเงิน</div>
             </div>
           </div>
           <div className="card-pad">
@@ -3801,7 +3965,7 @@ function Dashboard({ chartStyle, companyId = "CONSO" }) {
           <div className="card-head">
             <div>
               <div className="card-title">รายการจ่ายหลัก (Top Outflow)</div>
-              <div className="card-sub">ไตรมาส 1/2569 จัดเรียงตามจำนวนเงิน</div>
+              <div className="card-sub">{periodLabel} จัดเรียงตามจำนวนเงิน</div>
             </div>
           </div>
           <div className="card-pad">
@@ -3845,9 +4009,11 @@ function Dashboard({ chartStyle, companyId = "CONSO" }) {
                   {t.amount > 0 ? "+" : ""}{window.fmtTHB(t.amount)}
                 </td>
                 <td>
-                  {t.status === "matched" && <span className="tag success"><span className="dot" />Matched</span>}
-                  {t.status === "pending" && <span className="tag warning"><span className="dot" />Pending</span>}
-                  {t.status === "review" && <span className="tag danger"><span className="dot" />Review</span>}
+                  {/* Use CF_STATUS.TXN for consistent status rendering across all screens */}
+                  {t.status === window.CF_STATUS.TXN.MATCHED && <span className="tag success"><span className="dot" />Matched</span>}
+                  {t.status === window.CF_STATUS.TXN.PENDING  && <span className="tag warning"><span className="dot" />Pending</span>}
+                  {t.status === window.CF_STATUS.TXN.REVIEW   && <span className="tag danger"><span className="dot" />Review</span>}
+                  {t.status === window.CF_STATUS.TXN.VOID     && <span className="tag"><span className="dot" />Void</span>}
                 </td>
               </tr>
             ))}
@@ -4151,10 +4317,13 @@ function TransferTab({ companyId }) {
   );
 }
 
+// StatusTag: Transaction reconciliation status (CF_STATUS.TXN)
 function StatusTag({ s }) {
-  if (s === "matched") return <span className="tag success"><span className="dot" />Matched</span>;
-  if (s === "pending") return <span className="tag warning"><span className="dot" />Pending</span>;
-  if (s === "review") return <span className="tag danger"><span className="dot" />Review</span>;
+  const S = window.CF_STATUS.TXN;
+  if (s === S.MATCHED) return <span className="tag success"><span className="dot" />Matched</span>;
+  if (s === S.PENDING)  return <span className="tag warning"><span className="dot" />Pending</span>;
+  if (s === S.REVIEW)   return <span className="tag danger"><span className="dot" />Review</span>;
+  if (s === S.VOID)     return <span className="tag"><span className="dot" />Void</span>;
   return <span className="tag">{s}</span>;
 }
 
@@ -4338,14 +4507,16 @@ function APHondaTab({ companyId }) {
   const d = window.CFData;
   const rows = d.apHondaPayments.filter(r => companyId === "CONSO" || !companyId || r.entity === companyId);
   const total = rows.reduce((s, r) => s + r.amount, 0);
-  const pending = rows.filter(r => r.status === "pending").reduce((s, r) => s + r.amount, 0);
-  const paid = rows.filter(r => r.status === "paid").reduce((s, r) => s + r.amount, 0);
+  // Use CF_STATUS.DOC: "outstanding" = ค้างชำระ, "paid" = ชำระแล้ว
+  const S = window.CF_STATUS.DOC;
+  const pending = rows.filter(r => r.status === S.OUTSTANDING || r.status === S.OVERDUE).reduce((s, r) => s + r.amount, 0);
+  const paid    = rows.filter(r => r.status === S.PAID).reduce((s, r) => s + r.amount, 0);
 
   return (
     <>
       <div className="kpi-grid" style={{ gridTemplateColumns: "repeat(4, 1fr)", marginBottom: 14 }}>
         <Mini label="ยอด AP HONDA รวม" value={total} accent />
-        <Mini label="ค้างชำระ (Pending)" value={pending} color="var(--warning)" />
+        <Mini label="ค้างชำระ (Outstanding)" value={pending} color="var(--warning)" />
         <Mini label="ชำระแล้ว (Paid)" value={paid} color="var(--success)" />
         <Mini label="จำนวนรายการ" value={rows.length} isCount />
       </div>
@@ -4386,7 +4557,7 @@ function APHondaTab({ companyId }) {
                 <td className="num neg" style={{ fontWeight: 500 }}>{window.fmtTHB(r.amount)}</td>
                 <td className="num small">{r.dueDate}</td>
                 <td className="mono small">{r.account}</td>
-                <td><StatusTag s={r.status} /></td>
+                <td><PNStatusTag s={r.status} /></td>
               </tr>
             )}
             <tr style={{ background: "var(--bg-subtle)", fontWeight: 600 }}>
@@ -4407,9 +4578,10 @@ function APHondaTab({ companyId }) {
 function PNPaymentTab({ companyId }) {
   const d = window.CFData;
   const rows = d.pnPayments.filter(r => companyId === "CONSO" || !companyId || r.entity === companyId);
-  const total = rows.reduce((s, r) => s + r.amount, 0);
-  const outstanding = rows.filter(r => r.status === "outstanding").reduce((s, r) => s + r.amount, 0);
-  const paid = rows.filter(r => r.status === "paid").reduce((s, r) => s + r.amount, 0);
+  const S = window.CF_STATUS.DOC;
+  const total       = rows.reduce((s, r) => s + r.amount, 0);
+  const outstanding = rows.filter(r => r.status === S.OUTSTANDING || r.status === S.OVERDUE).reduce((s, r) => s + r.amount, 0);
+  const paid        = rows.filter(r => r.status === S.PAID).reduce((s, r) => s + r.amount, 0);
 
   return (
     <>
@@ -4477,15 +4649,22 @@ function PNPaymentTab({ companyId }) {
 function ReconcileARTab({ companyId }) {
   const d = window.CFData;
   const recon = d.reconcileAR;
-  const entities = recon.entities.filter(e => companyId === "CONSO" || !companyId || e.entity === companyId);
+  const reconSeg = d.reconcileARBySegment;
+  const [viewMode, setViewMode] = React.useState("entity"); // "entity" | "segment"
+  const [expanded, setExpanded] = React.useState({});
 
-  // Recalculate totals for filtered view
+  const entities = recon.entities.filter(e => companyId === "CONSO" || !companyId || e.entity === companyId);
   const sumOpening = entities.reduce((s, e) => s + e.opening, 0);
   const sumSales = entities.reduce((s, e) => s + e.sales, 0);
   const sumCollection = entities.reduce((s, e) => s + e.collection, 0);
   const sumAdjustments = entities.reduce((s, e) => s + e.adjustments, 0);
   const sumClosing = entities.reduce((s, e) => s + e.closing, 0);
   const sumChange = entities.reduce((s, e) => s + e.change, 0);
+
+  const toggleExpand = (ent) => setExpanded(prev => ({ ...prev, [ent]: !prev[ent] }));
+
+  // Segment color by id
+  const segColorMap = { HONDA: "#1F9D55", TOK: "#2A6FF0", INS: "#7C4DFF", INS_OPEN: "#0E97A0", INS_LIM: "#C97A00", FIN: "#D03434", RENT: "#8B5A2B", DEL: "#8B95A1", SVC: "#7C4DFF", MGT_HMW: "#2A6FF0", MGT_CLIK: "#7C4DFF", OTH: "#8B95A1" };
 
   return (
     <>
@@ -4501,42 +4680,83 @@ function ReconcileARTab({ companyId }) {
           <div className="card-title">Reconcile AR — กระทบยอดลูกหนี้การค้า</div>
           <div className="tiny muted" style={{ marginLeft: 8 }}>งวด: {recon.period} • สำหรับ CF Indirect Method</div>
           <div className="grow" />
+          {/* View toggle */}
+          <div className="row" style={{ gap: 4, marginRight: 8 }}>
+            <button className={"btn sm" + (viewMode === "entity" ? " primary" : "")} onClick={() => setViewMode("entity")}>By Entity</button>
+            <button className={"btn sm" + (viewMode === "segment" ? " primary" : "")} onClick={() => { setViewMode("segment"); setExpanded(Object.fromEntries(entities.map(e => [e.entity, true]))); }}>By Segment</button>
+          </div>
           <button className="btn sm"><Ic name="download" size={13} /> Export</button>
         </div>
         <table className="tbl">
           <thead>
             <tr>
-              <th style={{ width: 80 }}>Entity</th>
+              <th style={{ minWidth: 160 }}>Entity / Segment</th>
               <th className="num">เปิดงวด (AR)</th>
-              <th className="num">+ ยอดขาย (Credit)</th>
-              <th className="num">− เก็บเงิน (Collection)</th>
+              <th className="num">+ ยอดขาย</th>
+              <th className="num">− เก็บเงิน</th>
               <th className="num">± ปรับปรุง</th>
               <th className="num">ปิดงวด (AR)</th>
               <th className="num">Δ Change</th>
-              <th>ผลกระทบ CF</th>
+              <th style={{ width: 120 }}>ผลกระทบ CF</th>
             </tr>
           </thead>
           <tbody>
-            {entities.map(e =>
-              <tr key={e.entity}>
-                <td><EntityChip entity={e.entity} /></td>
-                <td className="num">{window.fmtTHB(e.opening)}</td>
-                <td className="num pos">+{window.fmtTHB(e.sales)}</td>
-                <td className="num neg">{window.fmtTHB(e.collection)}</td>
-                <td className="num">{e.adjustments ? window.fmtTHB(e.adjustments) : "—"}</td>
-                <td className="num" style={{ fontWeight: 500 }}>{window.fmtTHB(e.closing)}</td>
-                <td className="num" style={{ fontWeight: 500, color: e.change > 0 ? "var(--warning)" : "var(--success)" }}>{e.change > 0 ? "+" : ""}{window.fmtTHB(e.change)}</td>
-                <td className="small muted">{e.impact}</td>
-              </tr>
-            )}
+            {entities.map(e => {
+              const segs = reconSeg.byEntity[e.entity]?.segments || [];
+              const isOpen = expanded[e.entity];
+              return (
+                <React.Fragment key={e.entity}>
+                  {/* Entity row */}
+                  <tr
+                    style={{ background: isOpen && viewMode === "segment" ? "var(--accent-soft)" : undefined, cursor: viewMode === "segment" ? "pointer" : undefined }}
+                    onClick={viewMode === "segment" ? () => toggleExpand(e.entity) : undefined}
+                  >
+                    <td>
+                      <div className="row" style={{ gap: 6, alignItems: "center" }}>
+                        {viewMode === "segment" && (
+                          <span style={{ fontSize: 10, color: "var(--text-muted)", transition: "transform .15s", display: "inline-block", transform: isOpen ? "rotate(90deg)" : "rotate(0deg)" }}>▶</span>
+                        )}
+                        <EntityChip entity={e.entity} />
+                      </div>
+                    </td>
+                    <td className="num">{window.fmtTHB(e.opening)}</td>
+                    <td className="num pos">+{window.fmtTHB(e.sales)}</td>
+                    <td className="num neg">{window.fmtTHB(e.collection)}</td>
+                    <td className="num">{e.adjustments ? window.fmtTHB(e.adjustments) : "—"}</td>
+                    <td className="num" style={{ fontWeight: 500 }}>{window.fmtTHB(e.closing)}</td>
+                    <td className="num" style={{ fontWeight: 600, color: e.change > 0 ? "var(--warning)" : "var(--success)" }}>{e.change > 0 ? "+" : ""}{window.fmtTHB(e.change)}</td>
+                    <td className="small muted">{e.impact}</td>
+                  </tr>
+                  {/* Segment rows — only when expanded in segment mode */}
+                  {viewMode === "segment" && isOpen && segs.map(seg => (
+                    <tr key={seg.id} style={{ background: "var(--bg-subtle)" }}>
+                      <td style={{ paddingLeft: 32 }}>
+                        <div className="row" style={{ gap: 6, alignItems: "center" }}>
+                          <span style={{ width: 8, height: 8, borderRadius: "50%", background: segColorMap[seg.id] || "#8B95A1", flexShrink: 0 }} />
+                          <span className="small">{seg.name}</span>
+                          <span className="tag" style={{ fontSize: 10, padding: "1px 6px", marginLeft: 2 }}>{seg.id}</span>
+                        </div>
+                      </td>
+                      <td className="num tiny">{window.fmtTHB(seg.opening)}</td>
+                      <td className="num tiny pos">+{window.fmtTHB(seg.sales)}</td>
+                      <td className="num tiny neg">{window.fmtTHB(seg.collection)}</td>
+                      <td className="num tiny">{seg.adjustments ? window.fmtTHB(seg.adjustments) : "—"}</td>
+                      <td className="num tiny">{window.fmtTHB(seg.closing)}</td>
+                      <td className="num tiny" style={{ color: seg.change > 0 ? "var(--warning)" : "var(--success)" }}>{seg.change > 0 ? "+" : ""}{window.fmtTHB(seg.change)}</td>
+                      <td className="tiny muted">{seg.change > 0 ? "AR เพิ่ม ↓CF" : "AR ลด ↑CF"}</td>
+                    </tr>
+                  ))}
+                </React.Fragment>
+              );
+            })}
             <tr style={{ background: "var(--bg-subtle)", fontWeight: 600 }}>
-              <td>รวม</td>
+              <td>รวมทั้งหมด</td>
               <td className="num">{window.fmtTHB(sumOpening)}</td>
               <td className="num pos">+{window.fmtTHB(sumSales)}</td>
               <td className="num neg">{window.fmtTHB(sumCollection)}</td>
               <td className="num">{sumAdjustments ? window.fmtTHB(sumAdjustments) : "—"}</td>
               <td className="num">{window.fmtTHB(sumClosing)}</td>
-              <td className="num">{sumChange > 0 ? "+" : ""}{window.fmtTHB(sumChange)}</td>
+              <td className="num" style={{ color: sumChange > 0 ? "var(--warning)" : "var(--success)" }}>{sumChange > 0 ? "+" : ""}{window.fmtTHB(sumChange)}</td>
               <td></td>
             </tr>
           </tbody>
@@ -4547,6 +4767,7 @@ function ReconcileARTab({ companyId }) {
             <Ic name="info" size={14} style={{ color: "var(--accent-text)" }} />
             <div className="small">
               <strong>สูตร CF Indirect:</strong> AR เพิ่ม = ใช้เงินสด (หักจาก Net Profit) • AR ลด = ได้เงินสด (บวกเข้า Net Profit)
+              {viewMode === "segment" && <span className="muted"> • คลิกที่ Entity เพื่อ expand/collapse segments</span>}
             </div>
           </div>
         </div>
@@ -4561,14 +4782,22 @@ function ReconcileARTab({ companyId }) {
 function ReconcileAPTab({ companyId }) {
   const d = window.CFData;
   const recon = d.reconcileAP;
-  const entities = recon.entities.filter(e => companyId === "CONSO" || !companyId || e.entity === companyId);
+  const reconSeg = d.reconcileAPBySegment;
+  const [viewMode, setViewMode] = React.useState("entity");
+  const [expanded, setExpanded] = React.useState({});
 
+  const entities = recon.entities.filter(e => companyId === "CONSO" || !companyId || e.entity === companyId);
   const sumOpening = entities.reduce((s, e) => s + e.opening, 0);
   const sumPurchases = entities.reduce((s, e) => s + e.purchases, 0);
   const sumPayment = entities.reduce((s, e) => s + e.payment, 0);
   const sumAdjustments = entities.reduce((s, e) => s + e.adjustments, 0);
   const sumClosing = entities.reduce((s, e) => s + e.closing, 0);
   const sumChange = entities.reduce((s, e) => s + e.change, 0);
+
+  const toggleExpand = (ent) => setExpanded(prev => ({ ...prev, [ent]: !prev[ent] }));
+
+  // Expense segment colors (from expenseSegments in data)
+  const segColorMap = { F1: "#D03434", I1: "#C97A00", O1: "#2A6FF0", O2: "#1F9D55", O3: "#7C4DFF", O4: "#0E97A0", O5: "#8B5A2B", O6: "#8B95A1" };
 
   return (
     <>
@@ -4584,42 +4813,83 @@ function ReconcileAPTab({ companyId }) {
           <div className="card-title">Reconcile AP — กระทบยอดเจ้าหนี้การค้า</div>
           <div className="tiny muted" style={{ marginLeft: 8 }}>งวด: {recon.period} • สำหรับ CF Indirect Method</div>
           <div className="grow" />
+          {/* View toggle */}
+          <div className="row" style={{ gap: 4, marginRight: 8 }}>
+            <button className={"btn sm" + (viewMode === "entity" ? " primary" : "")} onClick={() => setViewMode("entity")}>By Entity</button>
+            <button className={"btn sm" + (viewMode === "segment" ? " primary" : "")} onClick={() => { setViewMode("segment"); setExpanded(Object.fromEntries(entities.map(e => [e.entity, true]))); }}>By Segment</button>
+          </div>
           <button className="btn sm"><Ic name="download" size={13} /> Export</button>
         </div>
         <table className="tbl">
           <thead>
             <tr>
-              <th style={{ width: 80 }}>Entity</th>
+              <th style={{ minWidth: 160 }}>Entity / Segment</th>
               <th className="num">เปิดงวด (AP)</th>
               <th className="num">+ ซื้อ (Purchase)</th>
-              <th className="num">− จ่ายเงิน (Payment)</th>
+              <th className="num">− จ่ายเงิน</th>
               <th className="num">± ปรับปรุง</th>
               <th className="num">ปิดงวด (AP)</th>
               <th className="num">Δ Change</th>
-              <th>ผลกระทบ CF</th>
+              <th style={{ width: 120 }}>ผลกระทบ CF</th>
             </tr>
           </thead>
           <tbody>
-            {entities.map(e =>
-              <tr key={e.entity}>
-                <td><EntityChip entity={e.entity} /></td>
-                <td className="num">{window.fmtTHB(e.opening)}</td>
-                <td className="num pos">+{window.fmtTHB(e.purchases)}</td>
-                <td className="num neg">{window.fmtTHB(e.payment)}</td>
-                <td className="num">{e.adjustments ? window.fmtTHB(e.adjustments) : "—"}</td>
-                <td className="num" style={{ fontWeight: 500 }}>{window.fmtTHB(e.closing)}</td>
-                <td className="num" style={{ fontWeight: 500, color: e.change > 0 ? "var(--success)" : "var(--warning)" }}>{e.change > 0 ? "+" : ""}{window.fmtTHB(e.change)}</td>
-                <td className="small muted">{e.impact}</td>
-              </tr>
-            )}
+            {entities.map(e => {
+              const segs = reconSeg.byEntity[e.entity]?.segments || [];
+              const isOpen = expanded[e.entity];
+              return (
+                <React.Fragment key={e.entity}>
+                  {/* Entity row */}
+                  <tr
+                    style={{ background: isOpen && viewMode === "segment" ? "var(--accent-soft)" : undefined, cursor: viewMode === "segment" ? "pointer" : undefined }}
+                    onClick={viewMode === "segment" ? () => toggleExpand(e.entity) : undefined}
+                  >
+                    <td>
+                      <div className="row" style={{ gap: 6, alignItems: "center" }}>
+                        {viewMode === "segment" && (
+                          <span style={{ fontSize: 10, color: "var(--text-muted)", transition: "transform .15s", display: "inline-block", transform: isOpen ? "rotate(90deg)" : "rotate(0deg)" }}>▶</span>
+                        )}
+                        <EntityChip entity={e.entity} />
+                      </div>
+                    </td>
+                    <td className="num">{window.fmtTHB(e.opening)}</td>
+                    <td className="num pos">+{window.fmtTHB(e.purchases)}</td>
+                    <td className="num neg">{window.fmtTHB(e.payment)}</td>
+                    <td className="num">{e.adjustments ? window.fmtTHB(e.adjustments) : "—"}</td>
+                    <td className="num" style={{ fontWeight: 500 }}>{window.fmtTHB(e.closing)}</td>
+                    <td className="num" style={{ fontWeight: 600, color: e.change > 0 ? "var(--success)" : "var(--warning)" }}>{e.change > 0 ? "+" : ""}{window.fmtTHB(e.change)}</td>
+                    <td className="small muted">{e.impact}</td>
+                  </tr>
+                  {/* Segment rows — only when expanded in segment mode */}
+                  {viewMode === "segment" && isOpen && segs.map(seg => (
+                    <tr key={seg.id} style={{ background: "var(--bg-subtle)" }}>
+                      <td style={{ paddingLeft: 32 }}>
+                        <div className="row" style={{ gap: 6, alignItems: "center" }}>
+                          <span style={{ width: 8, height: 8, borderRadius: "50%", background: segColorMap[seg.id] || "#8B95A1", flexShrink: 0 }} />
+                          <span className="small">{seg.name}</span>
+                          <span className="tag" style={{ fontSize: 10, padding: "1px 6px", marginLeft: 2 }}>{seg.id}</span>
+                        </div>
+                      </td>
+                      <td className="num tiny">{window.fmtTHB(seg.opening)}</td>
+                      <td className="num tiny pos">+{window.fmtTHB(seg.purchases)}</td>
+                      <td className="num tiny neg">{window.fmtTHB(seg.payment)}</td>
+                      <td className="num tiny">{seg.adjustments ? window.fmtTHB(seg.adjustments) : "—"}</td>
+                      <td className="num tiny">{window.fmtTHB(seg.closing)}</td>
+                      <td className="num tiny" style={{ color: seg.change > 0 ? "var(--success)" : "var(--warning)" }}>{seg.change > 0 ? "+" : ""}{window.fmtTHB(seg.change)}</td>
+                      <td className="tiny muted">{seg.change > 0 ? "AP เพิ่ม ↑CF" : "AP ลด ↓CF"}</td>
+                    </tr>
+                  ))}
+                </React.Fragment>
+              );
+            })}
             <tr style={{ background: "var(--bg-subtle)", fontWeight: 600 }}>
-              <td>รวม</td>
+              <td>รวมทั้งหมด</td>
               <td className="num">{window.fmtTHB(sumOpening)}</td>
               <td className="num pos">+{window.fmtTHB(sumPurchases)}</td>
               <td className="num neg">{window.fmtTHB(sumPayment)}</td>
               <td className="num">{sumAdjustments ? window.fmtTHB(sumAdjustments) : "—"}</td>
               <td className="num">{window.fmtTHB(sumClosing)}</td>
-              <td className="num">{sumChange > 0 ? "+" : ""}{window.fmtTHB(sumChange)}</td>
+              <td className="num" style={{ color: sumChange > 0 ? "var(--success)" : "var(--warning)" }}>{sumChange > 0 ? "+" : ""}{window.fmtTHB(sumChange)}</td>
               <td></td>
             </tr>
           </tbody>
@@ -4630,6 +4900,7 @@ function ReconcileAPTab({ companyId }) {
             <Ic name="info" size={14} style={{ color: "var(--accent-text)" }} />
             <div className="small">
               <strong>สูตร CF Indirect:</strong> AP เพิ่ม = ได้เงินสด (บวกเข้า Net Profit) • AP ลด = ใช้เงินสด (หักจาก Net Profit)
+              {viewMode === "segment" && <span className="muted"> • คลิกที่ Entity เพื่อ expand/collapse segments</span>}
             </div>
           </div>
         </div>
@@ -4638,11 +4909,14 @@ function ReconcileAPTab({ companyId }) {
   );
 }
 
-/* PN-specific status tag */
+// PNStatusTag / APHondaStatusTag: Document lifecycle status (CF_STATUS.DOC)
 function PNStatusTag({ s }) {
-  if (s === "outstanding") return <span className="tag warning"><span className="dot" />Outstanding</span>;
-  if (s === "paid") return <span className="tag success"><span className="dot" />Paid</span>;
-  if (s === "overdue") return <span className="tag danger"><span className="dot" />Overdue</span>;
+  const S = window.CF_STATUS.DOC;
+  if (s === S.OUTSTANDING) return <span className="tag warning"><span className="dot" />Outstanding</span>;
+  if (s === S.PARTIAL)     return <span className="tag accent"><span className="dot" />Partial</span>;
+  if (s === S.PAID)        return <span className="tag success"><span className="dot" />Paid</span>;
+  if (s === S.OVERDUE)     return <span className="tag danger"><span className="dot" />Overdue</span>;
+  if (s === S.CANCELLED)   return <span className="tag"><span className="dot" />Cancelled</span>;
   return <span className="tag">{s}</span>;
 }
 
@@ -4657,6 +4931,7 @@ function AccountingInput({ toast, companyId = "CONSO" }) {
   const d = window.CFData;
   const [tab, setTab] = React.useState("gl");
   const [showImport, setShowImport] = React.useState(false);
+  const [glData, setGlData] = React.useState(window.glImported || null);
   const activeCo = d.companies.find(c => c.id === companyId) || d.companies[0];
 
   return (
@@ -4682,19 +4957,94 @@ function AccountingInput({ toast, companyId = "CONSO" }) {
         <button className={"tab " + (tab === "inv" ? "active" : "")} onClick={() => setTab("inv")}>สินค้าคงเหลือ</button>
       </div>
 
-      {tab === "gl" && <GLTab />}
+      {tab === "gl" && <GLTab glData={glData} onClear={() => { window.glImported = null; setGlData(null); }} />}
       {tab === "ar" && <ARTab companyId={companyId} />}
       {tab === "ap" && <APTab companyId={companyId} />}
       {tab === "inv" && <InvTab />}
 
-      {showImport && <ImportLedgerModal onClose={() => setShowImport(false)} onDone={() => {setShowImport(false);toast("นำเข้าข้อมูลจาก ERP สำเร็จ");}} />}
+      {showImport && <ImportLedgerModal onClose={() => setShowImport(false)} onDone={(rows) => {
+        window.glImported = rows;
+        setGlData(rows);
+        setShowImport(false);
+        toast(`นำเข้า GL สำเร็จ ${rows.length.toLocaleString()} รายการ`);
+      }} />}
     </>);
 
 }
 
-function GLTab() {
+function GLTab({ glData, onClear }) {
   const d = window.CFData;
-  // Mock GL balances
+  const [search, setSearch] = React.useState("");
+
+  // ── Imported GL data from Business Central ──
+  if (glData && glData.length > 0) {
+    const byAccount = {};
+    glData.forEach(r => {
+      if (!r.glAccount) return;
+      if (!byAccount[r.glAccount]) {
+        byAccount[r.glAccount] = { code: r.glAccount, description: r.description, debit: 0, credit: 0, entries: 0 };
+      }
+      byAccount[r.glAccount].debit += r.debit;
+      byAccount[r.glAccount].credit += r.credit;
+      byAccount[r.glAccount].entries++;
+    });
+    let rows = Object.values(byAccount).sort((a, b) => a.code.localeCompare(b.code));
+    if (search) rows = rows.filter(r => r.code.includes(search) || r.description.toLowerCase().includes(search.toLowerCase()));
+    const totDebit = rows.reduce((s, r) => s + r.debit, 0);
+    const totCredit = rows.reduce((s, r) => s + r.credit, 0);
+
+    return (
+      <>
+        <div style={{ background: "var(--success-soft)", border: "1px solid var(--success)", borderRadius: 8, padding: "8px 14px", marginBottom: 14, fontSize: 13, color: "var(--success)", display: "flex", alignItems: "center", gap: 8 }}>
+          <Ic name="check" size={14} />
+          <span>ข้อมูล GL จาก Business Central — {glData.length.toLocaleString()} รายการ • {rows.length} GL accounts</span>
+          <button className="btn sm" style={{ marginLeft: "auto" }} onClick={onClear}>ล้างข้อมูล</button>
+        </div>
+        <div className="row" style={{ marginBottom: 14 }}>
+          <div className="search-wrap">
+            <Ic name="search" size={14} className="search-ic" />
+            <input className="input search" placeholder="ค้นหารหัสหรือชื่อบัญชี…" style={{ width: 280 }} value={search} onChange={(e) => setSearch(e.target.value)} />
+          </div>
+          <div className="grow" />
+          <button className="btn sm"><Ic name="download" size={13} /> Export GL</button>
+        </div>
+        <div className="card">
+          <table className="tbl">
+            <thead>
+              <tr>
+                <th style={{ width: 110 }}>รหัส GL</th>
+                <th>ชื่อบัญชี / รายละเอียด</th>
+                <th className="num">รายการ</th>
+                <th className="num">รวมเดบิต</th>
+                <th className="num">รวมเครดิต</th>
+                <th className="num">Net</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((r) => (
+                <tr key={r.code}>
+                  <td className="mono small">{r.code}</td>
+                  <td style={{ fontWeight: 500 }}>{r.description}</td>
+                  <td className="num muted small">{r.entries.toLocaleString()}</td>
+                  <td className="num">{window.fmtTHB(r.debit)}</td>
+                  <td className="num neg">{window.fmtTHB(r.credit)}</td>
+                  <td className="num" style={{ fontWeight: 600, color: r.debit - r.credit >= 0 ? "var(--success)" : "var(--danger)" }}>{window.fmtTHB(r.debit - r.credit)}</td>
+                </tr>
+              ))}
+              <tr style={{ background: "var(--bg-subtle)", fontWeight: 600 }}>
+                <td colSpan="3">รวม ({rows.length} accounts)</td>
+                <td className="num">{window.fmtTHB(totDebit)}</td>
+                <td className="num neg">{window.fmtTHB(totCredit)}</td>
+                <td className="num">{window.fmtTHB(totDebit - totCredit)}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </>
+    );
+  }
+
+  // ── Mock GL data (default) ──
   const balances = {
     "1110": 28_400_000, "1120": 469_220_000, "1140": 235_400_000, "1150": 18_200_000,
     "1160": 139_422_800, "1210": 1_240_800_000, "2110": 144_500_000, "2120": 28_400_000,
@@ -4913,7 +5263,7 @@ function APTab({ companyId }) {
                 <td className="num warning">{v.d60 ? window.fmtTHB(v.d60) : "—"}</td>
                 <td className="num neg">{v.d90 ? window.fmtTHB(v.d90) : "—"}</td>
                 <td className="num" style={{ fontWeight: 500 }}>{window.fmtTHB(v.total)}</td>
-                <td className="muted small">5 เม.ย. 2026</td>
+                <td className="muted small">{v.nextDueDate ? new Date(v.nextDueDate).toLocaleDateString("th-TH", { day: "numeric", month: "short", year: "2-digit" }) : "—"}</td>
               </tr>
             )}
             <tr style={{ background: "var(--bg-subtle)", fontWeight: 600 }}>
@@ -4992,56 +5342,208 @@ function Mini({ label, value, color, accent }) {
 
 }
 
+// ── Business Central GL column mapping ──
+// Single source of truth is window.BC_GL_COLUMN_ALIASES (defined in data.js).
+// This local alias keeps the parser working without importing; Backend must use the same map.
+const BC_GL_COLUMNS = window.BC_GL_COLUMN_ALIASES;
+
+function findColIndex(headers, aliases) {
+  for (const alias of aliases) {
+    const idx = headers.findIndex(h => h && h.toString().trim() === alias);
+    if (idx !== -1) return idx;
+  }
+  return -1;
+}
+
+function parseGLExcel(arrayBuffer) {
+  const wb = XLSX.read(arrayBuffer, { type: "array", cellDates: true });
+  const ws = wb.Sheets[wb.SheetNames[0]];
+  const raw = XLSX.utils.sheet_to_json(ws, { header: 1, raw: false, defval: "" });
+  if (raw.length < 2) return { rows: [], colMap: {} };
+
+  const headers = raw[0];
+  const colMap = {};
+  for (const [key, aliases] of Object.entries(BC_GL_COLUMNS)) {
+    const idx = findColIndex(headers, aliases);
+    if (idx !== -1) colMap[key] = idx;
+  }
+
+  const rows = [];
+  for (let i = 1; i < raw.length; i++) {
+    const r = raw[i];
+    const acct = colMap.glAccount !== undefined ? r[colMap.glAccount] : "";
+    if (!acct || acct.toString().trim() === "") continue;
+    const amt = parseFloat((r[colMap.amount] || "0").toString().replace(/,/g, "")) || 0;
+    rows.push({
+      postingDate:    colMap.postingDate  !== undefined ? r[colMap.postingDate]  : "",
+      glAccount:      acct.toString().trim(),
+      description:    colMap.description  !== undefined ? r[colMap.description]  : "",
+      description2:   colMap.description2 !== undefined ? r[colMap.description2] : "",
+      amount:         amt,
+      debit:          amt > 0 ? amt : 0,
+      credit:         amt < 0 ? Math.abs(amt) : 0,
+      documentType:   colMap.documentType !== undefined ? r[colMap.documentType] : "",
+      documentNo:     colMap.documentNo   !== undefined ? r[colMap.documentNo]   : "",
+      genPostingType: colMap.genPostingType !== undefined ? r[colMap.genPostingType] : "",
+      customerNo:     colMap.customerNo   !== undefined ? r[colMap.customerNo]   : "",
+      customerName:   colMap.customerName !== undefined ? r[colMap.customerName] : "",
+      vendorName:     colMap.vendorName   !== undefined ? r[colMap.vendorName]   : "",
+      departmentCode: colMap.departmentCode !== undefined ? r[colMap.departmentCode] : "",
+      entryNo:        colMap.entryNo      !== undefined ? r[colMap.entryNo]      : "",
+    });
+  }
+  return { rows, colMap };
+}
+
 function ImportLedgerModal({ onClose, onDone }) {
-  const [source, setSource] = React.useState("erp-sap");
+  const [source, setSource] = React.useState("bc");
+  const [step, setStep] = React.useState(1);
+  const [fileName, setFileName] = React.useState("");
+  const [parsed, setParsed] = React.useState(null);
+  const [error, setError] = React.useState("");
+  const fileRef = React.useRef();
+
+  const handleFile = (file) => {
+    if (!file) return;
+    setFileName(file.name);
+    setError("");
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const result = parseGLExcel(e.target.result);
+        if (result.rows.length === 0) { setError("ไม่พบข้อมูลในไฟล์ หรือ format ไม่ถูกต้อง — ตรวจสอบว่ามี column: Posting Date, G/L Account No., Amount"); return; }
+        setParsed(result);
+        setStep(2);
+      } catch (err) { setError("อ่านไฟล์ไม่ได้: " + err.message); }
+    };
+    reader.readAsArrayBuffer(file);
+  };
+
+  const handleDrop = (e) => { e.preventDefault(); handleFile(e.dataTransfer.files[0]); };
+
+  const handleConfirm = () => {
+    setStep(3);
+    setTimeout(() => onDone(parsed.rows), 400);
+  };
+
+  const stats = parsed ? {
+    totalRows:  parsed.rows.length,
+    glAccounts: [...new Set(parsed.rows.map(r => r.glAccount))].length,
+    totalDebit: parsed.rows.reduce((s, r) => s + r.debit, 0),
+    totalCredit: parsed.rows.reduce((s, r) => s + r.credit, 0),
+    dateMin: parsed.rows.map(r => r.postingDate).filter(Boolean).sort()[0] || "—",
+    dateMax: parsed.rows.map(r => r.postingDate).filter(Boolean).sort().slice(-1)[0] || "—",
+  } : null;
+
+  const sources = [
+    { id: "bc",          n: "Business Central (D365)", sub: "Excel GL Entries export" },
+    { id: "express",     n: "Express Accounting",      sub: "เชื่อมต่อระบบ" },
+    { id: "flowaccount", n: "FlowAccount",             sub: "เชื่อมต่อระบบ" },
+    { id: "peak",        n: "PEAK Account",            sub: "เชื่อมต่อระบบ" },
+    { id: "excel",       n: "Excel / CSV ทั่วไป",       sub: "อัปโหลดไฟล์" },
+    { id: "api",         n: "API Endpoint (Custom)",   sub: "เชื่อมต่อระบบ" },
+  ];
+  const canUpload = source === "bc" || source === "excel";
+
   return (
     <div className="modal-backdrop" onClick={onClose}>
       <div className="modal lg" onClick={(e) => e.stopPropagation()}>
         <div className="modal-head">
-          <div className="modal-title">นำเข้าข้อมูลจากระบบบัญชี</div>
+          <div className="modal-title">นำเข้าข้อมูล GL จากระบบบัญชี</div>
+          <span className="tag" style={{ marginLeft: 10 }}>ขั้นตอน {step}/3</span>
           <button className="iconbtn" style={{ marginLeft: "auto" }} onClick={onClose}><Ic name="x" size={16} /></button>
         </div>
         <div className="modal-body">
-          <div className="small muted" style={{ marginBottom: 8 }}>เลือกระบบต้นทาง</div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10, marginBottom: 18 }}>
-            {[
-            { id: "erp-sap", n: "ERP ภายในองค์กร" },
-            { id: "express", n: "Express Accounting" },
-            { id: "flowaccount", n: "FlowAccount" },
-            { id: "excel", n: "Excel / CSV Template" },
-            { id: "peak", n: "PEAK Account" },
-            { id: "api", n: "API Endpoint (Custom)" }].
-            map((s) =>
-            <button key={s.id} className="card" style={{
-              padding: 14, textAlign: "left", cursor: "pointer",
-              borderColor: source === s.id ? "var(--accent)" : "var(--border)",
-              background: source === s.id ? "var(--accent-soft)" : "var(--bg)"
-            }} onClick={() => setSource(s.id)}>
-                <div style={{ fontWeight: 500 }}>{s.n}</div>
-                <div className="tiny faint" style={{ marginTop: 2 }}>{s.id === "excel" ? "อัปโหลดไฟล์" : "เชื่อมต่อระบบ"}</div>
-              </button>
-            )}
-          </div>
-          <div className="form-grid">
-            <label className="field">งวดบัญชี<select className="select"><option>มี.ค. 2026</option><option>ก.พ. 2026</option><option>ม.ค. 2026</option></select></label>
-            <label className="field">ประเภทข้อมูล
-              <select className="select"><option>General Ledger (เต็ม)</option><option>เฉพาะลูกหนี้ (AR)</option><option>เฉพาะเจ้าหนี้ (AP)</option><option>สินค้าคงเหลือ</option></select>
-            </label>
-            <label className="field full"><span className="row" style={{ gap: 6 }}><input type="checkbox" defaultChecked />อัปเดต Mapping CF อัตโนมัติตามรหัส GL ที่ตั้งไว้</span></label>
-          </div>
+
+          {step === 1 && (
+            <>
+              <div className="small muted" style={{ marginBottom: 8 }}>เลือกระบบต้นทาง</div>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10, marginBottom: 18 }}>
+                {sources.map((s) => (
+                  <button key={s.id} className="card" style={{ padding: 14, textAlign: "left", cursor: "pointer", borderColor: source === s.id ? "var(--accent)" : "var(--border)", background: source === s.id ? "var(--accent-soft)" : "var(--bg)" }} onClick={() => setSource(s.id)}>
+                    <div style={{ fontWeight: 500 }}>{s.n}</div>
+                    <div className="tiny faint" style={{ marginTop: 2 }}>{s.sub}</div>
+                  </button>
+                ))}
+              </div>
+              {canUpload && (
+                <div style={{ border: "1.5px dashed var(--border-strong)", borderRadius: 10, padding: 38, textAlign: "center", background: "var(--bg-subtle)", cursor: "pointer" }}
+                  onDrop={handleDrop} onDragOver={(e) => e.preventDefault()} onClick={() => fileRef.current.click()}>
+                  <Ic name="upload" size={24} style={{ color: "var(--text-tertiary)" }} />
+                  <div style={{ marginTop: 8, fontWeight: 500 }}>ลากไฟล์มาวาง หรือ คลิกเลือกไฟล์</div>
+                  <div className="small muted" style={{ marginTop: 4 }}>รองรับ .xlsx — General Ledger Entries จาก Business Central</div>
+                  <button className="btn primary" style={{ marginTop: 14 }} onClick={(e) => { e.stopPropagation(); fileRef.current.click(); }}>เลือกไฟล์</button>
+                  <input ref={fileRef} type="file" accept=".xlsx,.xls" style={{ display: "none" }} onChange={(e) => handleFile(e.target.files[0])} />
+                </div>
+              )}
+              {error && <div style={{ color: "var(--danger)", marginTop: 10, fontSize: 13 }}>{error}</div>}
+              <div className="small muted" style={{ marginTop: 12 }}>
+                <strong>Columns ที่ต้องการ:</strong> <code>Posting Date</code> · <code>G/L Account No.</code> · <code>Description</code> · <code>Amount</code> (ลำดับคอลัมน์ไม่สำคัญ)
+              </div>
+            </>
+          )}
+
+          {step === 2 && parsed && (
+            <>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10, marginBottom: 16 }}>
+                <div className="kpi" style={{ padding: "10px 14px" }}><div className="kpi-label">รายการทั้งหมด</div><div className="kpi-value" style={{ fontSize: 20 }}>{stats.totalRows.toLocaleString()}</div></div>
+                <div className="kpi" style={{ padding: "10px 14px" }}><div className="kpi-label">รหัส GL</div><div className="kpi-value" style={{ fontSize: 20 }}>{stats.glAccounts}</div></div>
+                <div className="kpi" style={{ padding: "10px 14px" }}><div className="kpi-label">รวมเดบิต</div><div className="kpi-value" style={{ fontSize: 20, color: "var(--success)" }}>{window.fmtTHB(stats.totalDebit)}</div></div>
+                <div className="kpi" style={{ padding: "10px 14px" }}><div className="kpi-label">รวมเครดิต</div><div className="kpi-value" style={{ fontSize: 20, color: "var(--danger)" }}>{window.fmtTHB(stats.totalCredit)}</div></div>
+              </div>
+              <div className="small muted" style={{ marginBottom: 8 }}>ตัวอย่างข้อมูล (10 รายการแรก) · ช่วงเวลา: {stats.dateMin} — {stats.dateMax} · ไฟล์: {fileName}</div>
+              <div style={{ overflowX: "auto", maxHeight: 240, overflowY: "auto" }}>
+                <table className="tbl">
+                  <thead>
+                    <tr>
+                      <th>Posting Date</th><th>GL Account</th><th>Description</th><th>Doc Type</th><th className="num">Debit</th><th className="num">Credit</th><th>Dept</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {parsed.rows.slice(0, 10).map((r, i) => (
+                      <tr key={i}>
+                        <td className="mono small">{r.postingDate}</td>
+                        <td className="mono small">{r.glAccount}</td>
+                        <td className="small">{r.description}</td>
+                        <td className="small muted">{r.documentType}</td>
+                        <td className="num small">{r.debit > 0 ? window.fmtTHB(r.debit) : "—"}</td>
+                        <td className="num small neg">{r.credit > 0 ? window.fmtTHB(r.credit) : "—"}</td>
+                        <td className="small muted">{r.departmentCode}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
+          )}
+
+          {step === 3 && (
+            <div style={{ textAlign: "center", padding: "20px 0" }}>
+              <div style={{ width: 56, height: 56, borderRadius: "50%", background: "var(--success-soft)", color: "var(--success)", display: "inline-grid", placeItems: "center", marginBottom: 12 }}>
+                <Ic name="check" size={26} />
+              </div>
+              <div style={{ fontSize: 16, fontWeight: 600 }}>นำเข้าสำเร็จ</div>
+              <div className="muted" style={{ marginTop: 4 }}>{stats?.totalRows.toLocaleString()} รายการ · {stats?.glAccounts} GL accounts</div>
+            </div>
+          )}
+
         </div>
         <div className="modal-foot">
-          <button className="btn" onClick={onClose}>ยกเลิก</button>
-          <button className="btn primary" onClick={onDone}>เริ่มนำเข้า</button>
+          {step === 1 && <button className="btn" onClick={onClose}>ยกเลิก</button>}
+          {step === 2 && <>
+            <button className="btn" onClick={() => { setParsed(null); setStep(1); }}>← เลือกใหม่</button>
+            <button className="btn primary" onClick={handleConfirm}>นำเข้า {stats?.totalRows.toLocaleString()} รายการ →</button>
+          </>}
         </div>
       </div>
-    </div>);
-
+    </div>
+  );
 }
 
 window.AccountingInput = AccountingInput;
 window.TypeTag = TypeTag;
 window.MiniKpi = Mini;
+
 </script>
 
 <script type="text/babel">
@@ -5208,10 +5710,11 @@ function ForecastChart({ data, height = 260, style = "line" }) {
 function Reconciliation({ toast }) {
   const d = window.CFData;
   const [filter, setFilter] = React.useState("all");
-  const items = d.reconItems.filter((r) => filter === "all" || (filter === "matched" ? r.status === "matched" : r.status !== "matched"));
+  const S = window.CF_STATUS.TXN;
+  const items = d.reconItems.filter((r) => filter === "all" || (filter === "matched" ? r.status === S.MATCHED : r.status !== S.MATCHED));
   const counts = {
-    matched: d.reconItems.filter((r) => r.status === "matched").length,
-    unmatched: d.reconItems.filter((r) => r.status !== "matched").length,
+    matched:   d.reconItems.filter((r) => r.status === S.MATCHED).length,
+    unmatched: d.reconItems.filter((r) => r.status !== S.MATCHED).length,
   };
 
   return (
@@ -5274,21 +5777,21 @@ function Reconciliation({ toast }) {
                 <td className="small">{r.bank?.desc || <span className="faint">—</span>}</td>
                 <td className={"num " + (r.bank?.amount > 0 ? "pos" : r.bank?.amount < 0 ? "neg" : "")}>{r.bank ? window.fmtTHB(r.bank.amount) : "—"}</td>
                 <td className="center faint">
-                  {r.status === "matched" ? <Ic name="check" size={14} style={{ color: "var(--success)" }} /> :
-                    r.status === "needs-review" ? <Ic name="alert" size={14} style={{ color: "var(--warning)" }} /> :
+                  {r.status === S.MATCHED ? <Ic name="check" size={14} style={{ color: "var(--success)" }} /> :
+                    r.status === S.REVIEW ? <Ic name="alert" size={14} style={{ color: "var(--warning)" }} /> :
                       <Ic name="arrowRight" size={14} />}
                 </td>
                 <td className="num small">{r.gl?.date.slice(5) || <span className="faint">—</span>}</td>
                 <td className="small">{r.gl?.desc || <span className="faint">ไม่พบใน GL</span>}{r.gl && <div className="tiny faint">{r.gl.account}</div>}</td>
                 <td className={"num " + (r.gl?.amount > 0 ? "pos" : r.gl?.amount < 0 ? "neg" : "")}>{r.gl ? window.fmtTHB(r.gl.amount) : "—"}</td>
                 <td>
-                  {r.status === "matched" && <span className="tag success"><span className="dot" />Matched</span>}
+                  {r.status === S.MATCHED        && <span className="tag success"><span className="dot" />Matched</span>}
                   {r.status === "unmatched-bank" && <span className="tag warning"><span className="dot" />Bank Only</span>}
-                  {r.status === "unmatched-gl" && <span className="tag warning"><span className="dot" />GL Only</span>}
-                  {r.status === "needs-review" && <span className="tag danger"><span className="dot" />Review</span>}
+                  {r.status === "unmatched-gl"   && <span className="tag warning"><span className="dot" />GL Only</span>}
+                  {r.status === S.REVIEW         && <span className="tag danger"><span className="dot" />Review</span>}
                 </td>
                 <td>
-                  {r.status === "matched"
+                  {r.status === S.MATCHED
                     ? <button className="iconbtn" title="แยกออก"><Ic name="more" size={14} /></button>
                     : <button className="btn sm" onClick={() => toast("เปิดกล่องจับคู่")}><Ic name="link" size={12} /> จับคู่</button>}
                 </td>
@@ -6637,11 +7140,13 @@ window.UploadCenter = UploadCenter;
 // ─── Module helpers ───────────────────────────────────────────────────────────
 const _q1 = arr => (arr || []).slice(3).reduce((s, v) => s + (v || 0), 0);
 
-function buildSegmentCF() {
+function buildSegmentCF(cfDataOverride) {
   const d = window.CFData;
-  const [opSec, invSec, finSec] = d.directCF.sections;
+  const cf = cfDataOverride || { direct: d.directCF };
+  const [opSec, invSec, finSec] = cf.direct.sections;
   const opItems = opSec.items.filter(i => !i.header);
   const mainLabel = "เงินสดรับจากการขายสินค้าและบริการ";
+  const cfMainCur = (opSec.items.find(i => i.label === mainLabel) || {}).current || 0;
   const totalOpOtherIn = opItems.filter(i => (i.current || 0) > 0 && i.label !== mainLabel)
     .reduce((s, i) => s + i.current, 0);
   const totalOpOut = opItems.filter(i => (i.current || 0) < 0)
@@ -6659,18 +7164,20 @@ function buildSegmentCF() {
     (d.incomeSegmentsByCo[entity] || []).forEach(seg => {
       const incQ1 = _q1((d.incomeByCoMonth[entity] || {})[seg.id] || []);
       const pct = totalIncQ1 > 0 ? incQ1 / totalIncQ1 : 0;
+      // Scale income proportionally from current-period CF main item
+      const scaledInc = Math.round(cfMainCur * pct);
       const arSeg = arSegs.find(s => s.id === seg.id);
       const arCFImpact = arSeg ? -(arSeg.change) : 0;
       const allocOtherIn = Math.round(totalOpOtherIn * pct);
       const allocOpOut = Math.round(totalOpOut * pct);
-      const operatingCF = incQ1 + arCFImpact + allocOtherIn + allocOpOut;
+      const operatingCF = scaledInc + arCFImpact + allocOtherIn + allocOpOut;
       const investingCF = Math.round(totalInvCF * pct);
       const financingCF = Math.round(totalFinCF * pct);
       segs.push({
         id: seg.id, name: seg.name, entity,
         entityColor: co?.color || '#888',
         entityShort: co?.short || entity,
-        incQ1, pct, arSeg, arCFImpact, allocOtherIn, allocOpOut,
+        incQ1: scaledInc, pct, arSeg, arCFImpact, allocOtherIn, allocOpOut,
         invItems: invSec.items.filter(i => !i.header).map(i => ({ label: i.label, amt: Math.round((i.current || 0) * pct) })),
         finItems: finSec.items.filter(i => !i.header).map(i => ({ label: i.label, amt: Math.round((i.current || 0) * pct) })),
         operatingCF, investingCF, financingCF,
@@ -6682,9 +7189,10 @@ function buildSegmentCF() {
 }
 
 // ─── Req 3.1 – Segment CF Card ────────────────────────────────────────────────
-function SegmentCFCard({ seg }) {
+function SegmentCFCard({ seg, periodLabel }) {
   const fmt = window.fmtTHB;
   const nc = v => "num" + (v > 0 ? " pos" : v < 0 ? " neg" : "");
+  const pLabel = periodLabel || "Q1/2569";
 
   return (
     <div className="card" style={{ overflow: "hidden" }}>
@@ -6695,7 +7203,7 @@ function SegmentCFCard({ seg }) {
         </div>
         <div className="grow" />
         <div style={{ textAlign: "right" }}>
-          <div className="tiny muted">Net CF Q1/2569</div>
+          <div className="tiny muted">Net CF {pLabel}</div>
           <div style={{ fontWeight: 700, fontSize: 16, color: seg.netCF >= 0 ? "var(--success)" : "var(--danger)" }}>
             {seg.netCF >= 0 ? "+" : ""}{fmt(seg.netCF)}
           </div>
@@ -6732,14 +7240,14 @@ function SegmentCFCard({ seg }) {
             <td className={nc(seg.financingCF)} style={{ fontWeight: 600 }}>{fmt(seg.financingCF)}</td>
           </tr>
           <tr className="grand">
-            <td style={{ fontWeight: 700 }}>เงินสดสุทธิ Q1/2569</td>
+            <td style={{ fontWeight: 700 }}>เงินสดสุทธิ {pLabel}</td>
             <td className={nc(seg.netCF)} style={{ fontWeight: 700 }}>{seg.netCF >= 0 ? "+" : ""}{fmt(seg.netCF)}</td>
           </tr>
         </tbody>
       </table>
       {seg.arSeg && (
         <div style={{ margin: "0 12px 10px", padding: "6px 10px", background: "var(--bg-2,#f5f5f5)", borderRadius: 6, fontSize: 12 }}>
-          <div className="tiny muted" style={{ marginBottom: 3 }}>AR Reconciliation Q1/2569</div>
+          <div className="tiny muted" style={{ marginBottom: 3 }}>AR Reconciliation (อ้างอิง Q1/2569)</div>
           <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
             <span>เปิด {fmt(seg.arSeg.opening)}</span>
             <span className="muted">+รายได้ {fmt(seg.arSeg.sales)}</span>
@@ -6755,11 +7263,34 @@ function SegmentCFCard({ seg }) {
   );
 }
 
+// ─── Daily Tab Notice (shared by all CF statement tabs when granularity = daily) ─
+function DailyTabNotice({ tabName }) {
+  return (
+    <div style={{ padding: 48, textAlign: "center", color: "var(--text-secondary)" }}>
+      <div style={{ fontSize: 36, marginBottom: 12 }}>📅</div>
+      <div style={{ fontWeight: 600, fontSize: 15, marginBottom: 6, color: "var(--text)" }}>
+        {tabName} ไม่รองรับมุมมองรายวัน
+      </div>
+      <div className="small muted" style={{ lineHeight: 1.8 }}>
+        งบกระแสเงินสดและการวิเคราะห์ต้องการงวดเดือน ไตรมาส หรือรายปี<br />
+        กรุณาเลือก Granularity เป็น รายเดือน / รายไตรมาส / รายปี ที่ Tab 0
+      </div>
+    </div>
+  );
+}
+
 // ─── Req 3.1 – Segment CF Tab ─────────────────────────────────────────────────
-function SegmentCFTab() {
+function SegmentCFTab({ period, isDaily }) {
   const d = window.CFData;
   const [filter, setFilter] = React.useState("ALL");
-  const allSegs = React.useMemo(() => buildSegmentCF(), []);
+  const periodLabel = window.getPeriodLabel ? window.getPeriodLabel(period || "2026-Q1") : "Q1/2569";
+  const allSegs = React.useMemo(() => {
+    if (isDaily) return [];
+    const cfData = d.getCFData ? d.getCFData(period) : { direct: d.directCF };
+    return buildSegmentCF(cfData);
+  }, [period, isDaily]);
+
+  if (isDaily) return <DailyTabNotice tabName="CF แยก Segment" />;
   const segs = filter === "ALL" ? allSegs : allSegs.filter(s => s.entity === filter);
 
   return (
@@ -6778,26 +7309,38 @@ function SegmentCFTab() {
         </span>
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(360px, 1fr))", gap: 14 }}>
-        {segs.map(seg => <SegmentCFCard key={seg.entity + seg.id} seg={seg} />)}
+        {segs.map(seg => <SegmentCFCard key={seg.entity + seg.id} seg={seg} periodLabel={periodLabel} />)}
       </div>
     </>
   );
 }
 
 // ─── Req 3.2 – WC Reconcile Tab ──────────────────────────────────────────────
-function WCReconcileTab() {
+function WCReconcileTab({ period, cfData, isDaily }) {
   const d = window.CFData;
   const fmt = window.fmtTHB;
   const [expandedAR, setExpandedAR] = React.useState(new Set());
   const [expandedAP, setExpandedAP] = React.useState(new Set());
   const toggleSet = (setter, id) => setter(p => { const n = new Set(p); n.has(id) ? n.delete(id) : n.add(id); return n; });
 
-  const indOp = d.indirectCF.sections[0].items;
-  const invCF = (indOp.find(i => i.label === "สินค้าคงเหลือ (เพิ่มขึ้น)/ลดลง") || {}).current || 0;
+  if (isDaily) return <DailyTabNotice tabName="กระทบยอด Working Capital" />;
+
+  const periodLabel = window.getPeriodLabel ? window.getPeriodLabel(period || "2026-Q1") : "Q1/2569";
+  const isQ1 = !period || period === "2026-Q1";
+
+  // Use period-scaled indirect CF items for WC summary
+  const effectiveCF = cfData || { indirect: d.indirectCF };
+  const indOp = effectiveCF.indirect.sections[0].items;
+  const arCFItem  = indOp.find(i => i.label === "ลูกหนี้การค้า (เพิ่มขึ้น)/ลดลง");
+  const apCFItem  = indOp.find(i => i.label === "เจ้าหนี้การค้า เพิ่มขึ้น/(ลดลง)");
+  const invCF  = (indOp.find(i => i.label === "สินค้าคงเหลือ (เพิ่มขึ้น)/ลดลง")     || {}).current || 0;
   const accrCF = (indOp.find(i => i.label === "ค่าใช้จ่ายค้างจ่าย เพิ่มขึ้น/(ลดลง)") || {}).current || 0;
+  const scaledArCF = arCFItem ? arCFItem.current : d.reconcileAR.cfImpact;
+  const scaledApCF = apCFItem ? apCFItem.current : d.reconcileAP.cfImpact;
+  // AR/AP reconcile table data always shows Q1 reference (backend will provide period-specific data)
   const ar = d.reconcileAR;
   const ap = d.reconcileAP;
-  const totalWC = ar.cfImpact + ap.cfImpact + invCF + accrCF;
+  const totalWC = scaledArCF + scaledApCF + invCF + accrCF;
 
   const thS = { background: "var(--bg-2,#f3f4f6)", fontSize: 11.5, fontWeight: 600, padding: "6px 10px", whiteSpace: "nowrap" };
   const tdS = { fontSize: 12.5, padding: "5px 10px" };
@@ -6902,9 +7445,10 @@ function WCReconcileTab() {
     </div>
   );
 
-  const invOpen = d.tbBal("2025-Q4", "1200");
-  const invClose = d.tbBal("2026-Q1", "1200");
-  const invChange = invClose - invOpen;
+  // Inventory: use Q1 TB for Q1, derive from scaled CF items for other periods
+  const invOpen  = isQ1 ? d.tbBal("2025-Q4", "1200") : 0;
+  const invClose = isQ1 ? d.tbBal("2026-Q1", "1200") : 0;
+  const invChange = isQ1 ? (invClose - invOpen) : invCF;
 
   return (
     <>
@@ -6914,7 +7458,9 @@ function WCReconcileTab() {
           <div className="small muted">ผลกระทบการเปลี่ยนแปลง AR / AP / สินค้าคงเหลือ ต่อกระแสเงินสด (Indirect Method)</div>
         </div>
         <div className="grow" />
-        <span className="tag accent">Q1 2569 • คลิกแถวบริษัทเพื่อดูแยก Segment</span>
+        <span className="tag accent">
+          {isQ1 ? "Q1/2569" : periodLabel + " (AR/AP อ้างอิง Q1/2569)"} • คลิกแถวบริษัทเพื่อดูแยก Segment
+        </span>
       </div>
 
       <ReconcileTable
@@ -6956,8 +7502,8 @@ function WCReconcileTab() {
             <table style={{ width: "100%", borderCollapse: "collapse" }}>
               <tbody>
                 {[
-                  ["ลูกหนี้การค้า (AR เพิ่ม = ใช้เงิน)", ar.cfImpact],
-                  ["เจ้าหนี้การค้า (AP เพิ่ม = ยังไม่จ่าย)", ap.cfImpact],
+                  ["ลูกหนี้การค้า (AR เพิ่ม = ใช้เงิน)", scaledArCF],
+                  ["เจ้าหนี้การค้า (AP เพิ่ม = ยังไม่จ่าย)", scaledApCF],
                   ["สินค้าคงเหลือ (Inv เพิ่ม = ซื้อมาก)", invCF],
                   ["ค่าใช้จ่ายค้างจ่าย (Accrued เพิ่ม = ยังไม่จ่าย)", accrCF],
                 ].map(([label, val], i) => (
@@ -6984,19 +7530,26 @@ function WCReconcileTab() {
 }
 
 // ─── Req 3.4 – Cash Ending Reconcile Tab ─────────────────────────────────────
-function CashEndingTab() {
+function CashEndingTab({ period, cfData, isDaily }) {
   const d = window.CFData;
   const fmt = window.fmtTHB;
 
-  const cfSections = d.directCF.sections.map(sec => {
+  if (isDaily) return <DailyTabNotice tabName="กระทบยอดเงินสดปลายงวด" />;
+
+  const periodLabel = window.getPeriodLabel ? window.getPeriodLabel(period || "2026-Q1") : "Q1/2569";
+  const isQ1 = !period || period === "2026-Q1";
+  const effectiveDirect = cfData ? cfData.direct : d.directCF;
+
+  const cfSections = effectiveDirect.sections.map(sec => {
     const sub = sec.items.filter(i => !i.header).reduce((s, i) => s + (i.current || 0), 0);
     return { ...sec, sub };
   });
   const netCF = cfSections.reduce((s, x) => s + x.sub, 0);
-  const opening = d.directCF.opening;
+  const opening = effectiveDirect.opening;
   const cfClosing = opening + netCF;
   const bankTotal = d.bankAccounts.reduce((s, b) => s + b.balance, 0);
-  const tbCash = d.tbBal("2026-Q1", "1010");
+  // TB cash: available from Trial Balance for Q1 only; otherwise use CF closing as reference
+  const tbCash = isQ1 ? d.tbBal("2026-Q1", "1010") : cfClosing;
   const diff = bankTotal - cfClosing;
   const isBalanced = Math.abs(diff) < 1_000_000;
 
@@ -7012,7 +7565,7 @@ function CashEndingTab() {
         </div>
         <div className="grow" />
         <span className={"tag " + (isBalanced ? "success" : "accent")}>
-          {isBalanced ? "✓ ยอดตรง" : "⚠ มีผลต่าง"} Q1/2569
+          {isBalanced ? "✓ ยอดตรง" : "⚠ มีผลต่าง"} {periodLabel}
         </span>
       </div>
 
@@ -7041,7 +7594,7 @@ function CashEndingTab() {
                   </td>
                 </tr>
                 <tr>
-                  <td style={{ fontSize: 12.5, padding: "5px 0", color: "var(--text-secondary)" }}>บวก: เงินสดต้นงวด (1 ม.ค. 2569)</td>
+                  <td style={{ fontSize: 12.5, padding: "5px 0", color: "var(--text-secondary)" }}>บวก: เงินสดต้นงวด ({periodLabel})</td>
                   <td style={{ textAlign: "right", fontSize: 12.5, padding: "5px 0" }}>{fmt(opening)}</td>
                 </tr>
                 <tr style={{ background: "var(--bg-2,#f5f5f5)", borderRadius: 6 }}>
@@ -7064,7 +7617,10 @@ function CashEndingTab() {
                   <td style={{ textAlign: "right", fontSize: 13, fontWeight: 600, padding: "7px 0" }}>{fmt(cfClosing)}</td>
                 </tr>
                 <tr style={{ borderBottom: "1px solid var(--border)" }}>
-                  <td style={{ fontSize: 12.5, padding: "7px 0" }}>เงินสดตาม Trial Balance (1010)</td>
+                  <td style={{ fontSize: 12.5, padding: "7px 0" }}>
+                    เงินสดตาม Trial Balance (1010)
+                    {!isQ1 && <span className="tag" style={{ marginLeft: 6, fontSize: 10 }}>อ้างอิง</span>}
+                  </td>
                   <td style={{ textAlign: "right", fontSize: 13, fontWeight: 600, padding: "7px 0" }}>{fmt(tbCash)}</td>
                 </tr>
                 <tr style={{ borderBottom: "2px solid var(--border)" }}>
@@ -7096,7 +7652,7 @@ function CashEndingTab() {
       {/* Bank accounts detail */}
       <div className="card">
         <div className="card-head">
-          <div className="card-title">รายละเอียดเงินฝากธนาคาร ณ 31 มี.ค. 2569</div>
+          <div className="card-title">รายละเอียดเงินฝากธนาคาร ({periodLabel})</div>
           <div className="grow" />
           <span className="small muted">รวม: <strong>{fmt(bankTotal)}</strong></span>
         </div>
@@ -7138,11 +7694,17 @@ function CashEndingTab() {
 }
 
 // ─── Req 3.3 – Direct vs Indirect Comparison Tab ─────────────────────────────
-function CompareMethodsTab() {
+function CompareMethodsTab({ period, cfData, isDaily }) {
   const d = window.CFData;
   const fmt = window.fmtTHB;
 
-  // ─ WC Data ─
+  if (isDaily) return <DailyTabNotice tabName="เปรียบเทียบ Direct vs Indirect" />;
+
+  const periodLabel = window.getPeriodLabel ? window.getPeriodLabel(period || "2026-Q1") : "Q1/2569";
+  const isQ1 = !period || period === "2026-Q1";
+  const effectiveCF = cfData || { direct: d.directCF, indirect: d.indirectCF };
+
+  // ─ WC Data (Q1 AR/AP reference for detail tables) ─
   const ar = (() => {
     const entities = Object.keys(d.reconcileARBySegment.byEntity || {});
     let totalOpening = 0, totalSales = 0, totalCollection = 0, totalClosing = 0, totalAdjustments = 0;
@@ -7179,23 +7741,24 @@ function CompareMethodsTab() {
     return { entities, totalOpening, totalPurchases, totalPayment, totalClosing, totalAdjustments, totalChange, cfImpact };
   })();
 
-  const invOpen = d.tbBal("2025-Q4", "1200");
-  const invClose = d.tbBal("2026-Q1", "1200");
-  const invChange = invClose - invOpen;
-  const invCF = -invChange;
-
-  const indOpItems = d.indirectCF.sections[0].items;
+  // ─ WC items from period-scaled indirect CF ─
+  const indOpItems = effectiveCF.indirect.sections[0].items;
+  const arCFItem  = indOpItems.find(i => i.label === "ลูกหนี้การค้า (เพิ่มขึ้น)/ลดลง");
+  const apCFItem  = indOpItems.find(i => i.label === "เจ้าหนี้การค้า เพิ่มขึ้น/(ลดลง)");
+  const scaledArCF = arCFItem ? arCFItem.current : ar.cfImpact;
+  const scaledApCF = apCFItem ? apCFItem.current : ap.cfImpact;
+  const invCF  = (indOpItems.find(i => i.label === "สินค้าคงเหลือ (เพิ่มขึ้น)/ลดลง")     || {}).current || 0;
   const accrCF = (indOpItems.find(i => i.label === "ค่าใช้จ่ายค้างจ่าย เพิ่มขึ้น/(ลดลง)") || {}).current || 0;
-  const totalWC = ar.cfImpact + ap.cfImpact + invCF + accrCF;
+  const totalWC = scaledArCF + scaledApCF + invCF + accrCF;
 
-  const computeSections = (cfData) => cfData.sections.map(sec => {
+  const computeSections = (cfObj) => cfObj.sections.map(sec => {
     const sub = sec.items.filter(i => !i.header).reduce((s, i) => s + (i.current || 0), 0);
     return { title: sec.title, subtotalLabel: sec.subtotalLabel, items: sec.items, sub };
   });
 
-  const directSecs = computeSections(d.directCF);
-  const indirectSecs = computeSections(d.indirectCF);
-  const directNet = directSecs.reduce((s, x) => s + x.sub, 0);
+  const directSecs   = computeSections(effectiveCF.direct);
+  const indirectSecs = computeSections(effectiveCF.indirect);
+  const directNet   = directSecs.reduce((s, x) => s + x.sub, 0);
   const indirectNet = indirectSecs.reduce((s, x) => s + x.sub, 0);
   const diff = directNet - indirectNet;
   const isMatch = Math.abs(diff) < 500_000;
@@ -7263,9 +7826,9 @@ function CompareMethodsTab() {
       <div className="card" style={{ marginBottom: 14 }}>
         <div className="card-pad">
           <div style={{ display: "flex", gap: 16 }}>
-            {renderColumn(directSecs, "direct", directNet, d.directCF.opening)}
+            {renderColumn(directSecs, "direct", directNet, effectiveCF.direct.opening)}
             <div style={{ width: 1, background: "var(--border)", flexShrink: 0 }} />
-            {renderColumn(indirectSecs, "indirect", indirectNet, d.indirectCF.opening)}
+            {renderColumn(indirectSecs, "indirect", indirectNet, effectiveCF.indirect.opening)}
           </div>
         </div>
       </div>
@@ -7303,15 +7866,15 @@ function CompareMethodsTab() {
         <div className="card-head">
           <div className="card-title">Working Capital Impact (Indirect Method Adjustments)</div>
           <div className="grow" />
-          <span className="small muted">Q1 2569 • ส่วนปรับปรุงจากการเปลี่ยนแปลง WC</span>
+          <span className="small muted">{periodLabel}{!isQ1 ? " (AR/AP อ้างอิง Q1/2569)" : ""} • ส่วนปรับปรุงจากการเปลี่ยนแปลง WC</span>
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, padding: "16px" }}>
           <div>
             <table style={{ width: "100%", borderCollapse: "collapse" }}>
               <tbody>
                 {[
-                  ["ลูกหนี้การค้า (AR เพิ่ม = ใช้เงิน)", ar.cfImpact],
-                  ["เจ้าหนี้การค้า (AP เพิ่ม = ยังไม่จ่าย)", ap.cfImpact],
+                  ["ลูกหนี้การค้า (AR เพิ่ม = ใช้เงิน)", scaledArCF],
+                  ["เจ้าหนี้การค้า (AP เพิ่ม = ยังไม่จ่าย)", scaledApCF],
                   ["สินค้าคงเหลือ (Inv เพิ่ม = ซื้อมาก)", invCF],
                   ["ค่าใช้จ่ายค้างจ่าย (Accrued เพิ่ม = ยังไม่จ่าย)", accrCF],
                 ].map(([label, val], i) => (
@@ -7346,18 +7909,23 @@ function CompareMethodsTab() {
 }
 
 // ─── Task #33 – Cross-validation Panel ───────────────────────────────────────
-function CrossValidationTab() {
+function CrossValidationTab({ period, cfData, isDaily }) {
   const d = window.CFData;
   const fmt = window.fmtTHB;
 
+  if (isDaily) return <DailyTabNotice tabName="Cross-Validation (3-Way Check)" />;
+
+  const periodLabel = window.getPeriodLabel ? window.getPeriodLabel(period || "2026-Q1") : "Q1/2569";
+  const effectiveDirect = cfData ? cfData.direct : d.directCF;
+
   // ─ Direct CF ─
-  const opItems = d.directCF.sections[0].items;
-  const cfCashFromSales = opItems.find(i => i.label.includes("ขายสินค้า"))?.current || 0;
-  const cfCashIn  = opItems.filter(i => (i.current || 0) > 0).reduce((s, i) => s + i.current, 0);
-  const cfCashOut = opItems.filter(i => (i.current || 0) < 0).reduce((s, i) => s + i.current, 0);
-  const cfNetOp   = opItems.reduce((s, i) => s + (i.current || 0), 0);
-  const cfNetAll  = d.directCF.sections.flatMap(s => s.items).filter(i => !i.header).reduce((s, i) => s + (i.current || 0), 0);
-  const cfOpening = d.directCF.opening;
+  const opItems = effectiveDirect.sections[0].items;
+  const cfCashFromSales = (opItems.find(i => i.label.includes("ขายสินค้า")) || {}).current || 0;
+  const cfCashIn  = opItems.filter(i => !i.header && (i.current || 0) > 0).reduce((s, i) => s + i.current, 0);
+  const cfCashOut = opItems.filter(i => !i.header && (i.current || 0) < 0).reduce((s, i) => s + i.current, 0);
+  const cfNetOp   = opItems.filter(i => !i.header).reduce((s, i) => s + (i.current || 0), 0);
+  const cfNetAll  = effectiveDirect.sections.flatMap(s => s.items).filter(i => !i.header).reduce((s, i) => s + (i.current || 0), 0);
+  const cfOpening = effectiveDirect.opening;
   const cfClosing = cfOpening + cfNetAll;
 
   // ─ AR ─
@@ -7437,7 +8005,7 @@ function CrossValidationTab() {
       <div className="row" style={{ marginBottom: 14, alignItems: "center" }}>
         <div>
           <div className="card-title">Cross-Validation: Direct CF vs AR vs Bank</div>
-          <div className="small muted">ตรวจสอบความสอดคล้องระหว่าง 3 แหล่งข้อมูล • Q1 2569</div>
+          <div className="small muted">ตรวจสอบความสอดคล้องระหว่าง 3 แหล่งข้อมูล • {periodLabel}</div>
         </div>
       </div>
 
@@ -7572,12 +8140,282 @@ function CrossValidationTab() {
   );
 }
 
+// ─── Granularity bar ──────────────────────────────────────────────────────────
+// Maps each granularity key → which CF_PERIODS types it includes
+const GRAN_TYPES = {
+  daily:   ["daily"],
+  month:   ["month"],
+  quarter: ["quarter"],
+  annual:  ["annual", "ytd"],
+};
+
+const GRAN_LABELS = [
+  { key: "daily",   label: "รายวัน",     icon: "📅" },
+  { key: "month",   label: "รายเดือน",   icon: "📆" },
+  { key: "quarter", label: "รายไตรมาส",  icon: "📊" },
+  { key: "annual",  label: "รายปี",      icon: "📈" },
+];
+
+function GranularityBar({ value, onChange }) {
+  return (
+    <div className="segmented" style={{ marginRight: 8 }}>
+      {GRAN_LABELS.map(g => (
+        <button key={g.key} className={value === g.key ? "active" : ""} onClick={() => onChange(g.key)}>
+          {g.icon} {g.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+// ─── Daily CF Summary (mini statement for one day) ────────────────────────────
+function DailyCFSummary({ dateCode, companyId }) {
+  const d   = window.CFData;
+  const fmt = window.fmtTHB;
+
+  const raw = React.useMemo(() => d.getDailyData ? d.getDailyData(dateCode) : { opening: 0, inflow: 0, outflow: 0, net: 0, closing: 0 }, [dateCode]);
+  const opening  = raw.opening;
+  const inflow   = raw.inflow;
+  const outflow  = raw.outflow;
+  const net      = raw.net;
+  const closing  = raw.closing;
+
+  const dateLabel = window.getPeriodLabel ? window.getPeriodLabel(dateCode) : dateCode;
+
+  return (
+    <div className="card" style={{ marginBottom: 14, background: "linear-gradient(135deg, rgba(42,111,240,0.04) 0%, rgba(31,157,85,0.04) 100%)", borderLeft: "4px solid var(--accent)" }}>
+      <div className="card-pad">
+        <div style={{ marginBottom: 12 }}>
+          <div className="small muted" style={{ marginBottom: 4 }}>Daily Cash Flow Summary</div>
+          <div style={{ fontWeight: 600, fontSize: 15, color: "var(--text)" }}>{dateLabel}</div>
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 12 }}>
+          <div>
+            <div className="tiny muted">เปิด</div>
+            <div style={{ fontSize: 16, fontWeight: 600, color: "var(--text)", marginTop: 4 }}>{fmt(opening)}</div>
+          </div>
+          <div style={{ textAlign: "center", display: "flex", flexDirection: "column", justifyContent: "flex-end" }}>
+            <div className="tiny" style={{ color: "var(--text-secondary)", marginBottom: 4 }}>+</div>
+          </div>
+          <div>
+            <div className="tiny muted">เข้า</div>
+            <div style={{ fontSize: 16, fontWeight: 600, color: "var(--success)", marginTop: 4 }}>+{fmt(inflow)}</div>
+          </div>
+          <div style={{ textAlign: "center", display: "flex", flexDirection: "column", justifyContent: "flex-end" }}>
+            <div className="tiny" style={{ color: "var(--text-secondary)", marginBottom: 4 }}>+</div>
+          </div>
+          <div>
+            <div className="tiny muted">ออก</div>
+            <div style={{ fontSize: 16, fontWeight: 600, color: "var(--danger)", marginTop: 4 }}>{fmt(outflow)}</div>
+          </div>
+        </div>
+        <div style={{ borderTop: "1px solid var(--border)", marginTop: 12, paddingTop: 12, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div>
+            <div className="small muted">Net วันนี้</div>
+            <div style={{ fontSize: 18, fontWeight: 700, color: net >= 0 ? "var(--success)" : "var(--danger)", marginTop: 2 }}>
+              {net >= 0 ? "+" : ""}{fmt(net)}
+            </div>
+          </div>
+          <div style={{ fontSize: 20, color: "var(--text-secondary)" }}>→</div>
+          <div>
+            <div className="small muted">ปิด</div>
+            <div style={{ fontSize: 18, fontWeight: 700, color: "var(--text)", marginTop: 2 }}>{fmt(closing)}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Daily Cash Treasury View ──────────────────────────────────────────────────
+function DailyCashView({ dateCode, companyId }) {
+  const d   = window.CFData;
+  const fmt = window.fmtTHB;
+  const S   = window.CF_STATUS.TXN;
+
+  const raw  = React.useMemo(() => d.getDailyData ? d.getDailyData(dateCode) : { txns:[], opening:0, inflow:0, outflow:0, net:0, closing:0, byCategory:[] }, [dateCode]);
+  const txns = companyId === "CONSO" || !companyId ? raw.txns : raw.txns.filter(t => t.entity === companyId);
+  const inflow  = txns.filter(t => t.amount > 0).reduce((s, t) => s + t.amount, 0);
+  const outflow = txns.filter(t => t.amount < 0).reduce((s, t) => s + t.amount, 0);
+  const net     = inflow + outflow;
+  const closing = raw.opening + net;
+
+  // Re-group by category after entity filter
+  const byCat = {};
+  txns.forEach(t => {
+    if (!byCat[t.category]) byCat[t.category] = { label: t.category, inflow: 0, outflow: 0 };
+    if (t.amount > 0) byCat[t.category].inflow  += t.amount;
+    else              byCat[t.category].outflow += t.amount;
+  });
+  const cats = Object.values(byCat).sort((a, b) => (b.inflow + Math.abs(b.outflow)) - (a.inflow + Math.abs(a.outflow)));
+
+  // Max for bar
+  const maxAmt = cats.reduce((m, c) => Math.max(m, c.inflow, Math.abs(c.outflow)), 1);
+
+  return (
+    <>
+      {/* KPI row */}
+      <div className="kpi-grid" style={{ marginBottom: 14 }}>
+        {[
+          { label: "ยอดเปิดวัน",              value: raw.opening, color: "var(--text)",     sign: false },
+          { label: "เงินสดรับ",               value: inflow,      color: "var(--success)",  sign: true  },
+          { label: "เงินสดจ่าย",              value: outflow,     color: "var(--danger)",   sign: true  },
+          { label: "Net วันนี้",              value: net,         color: net >= 0 ? "var(--success)" : "var(--danger)", sign: true },
+          { label: "ยอดปิดวัน (ประมาณ)",      value: closing,     color: "var(--text)",     sign: false },
+        ].map((k, i) => (
+          <div className="kpi" key={i}>
+            <div className="kpi-label">{k.label}</div>
+            <div className="kpi-value" style={{ fontSize: 19, color: k.color }}>
+              {k.sign && k.value > 0 ? "+" : ""}{fmt(k.value)}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1.6fr", gap: 14, marginBottom: 14 }}>
+        {/* Category breakdown */}
+        <div className="card">
+          <div className="card-head">
+            <div className="card-title">สรุปตามหมวด</div>
+            <div className="card-sub">{cats.length} หมวด</div>
+          </div>
+          <div style={{ padding: "8px 14px 14px" }}>
+            {cats.map((cat, i) => {
+              const barIn  = cat.inflow  > 0 ? (cat.inflow  / maxAmt) * 100 : 0;
+              const barOut = cat.outflow < 0 ? (Math.abs(cat.outflow) / maxAmt) * 100 : 0;
+              return (
+                <div key={i} style={{ marginBottom: 10 }}>
+                  <div style={{ display:"flex", justifyContent:"space-between", marginBottom: 3 }}>
+                    <span style={{ fontSize: 12.5 }}>{cat.label}</span>
+                    <span className={"num small " + ((cat.inflow + cat.outflow) >= 0 ? "pos" : "neg")} style={{ fontWeight: 600 }}>
+                      {(cat.inflow + cat.outflow) >= 0 ? "+" : ""}{fmt(cat.inflow + cat.outflow)}
+                    </span>
+                  </div>
+                  <div style={{ display:"flex", gap: 3, height: 6, borderRadius: 4, overflow:"hidden", background:"var(--bg-muted)" }}>
+                    {barIn  > 0 && <div style={{ width: barIn  + "%", background:"var(--success)", borderRadius:4 }} />}
+                    {barOut > 0 && <div style={{ width: barOut + "%", background:"var(--danger)",  borderRadius:4 }} />}
+                  </div>
+                  <div style={{ display:"flex", gap:12, marginTop: 2 }}>
+                    {cat.inflow  > 0 && <span className="tiny pos">+{fmt(cat.inflow)}</span>}
+                    {cat.outflow < 0 && <span className="tiny neg">{fmt(cat.outflow)}</span>}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Transaction list */}
+        <div className="card">
+          <div className="card-head">
+            <div className="card-title">รายการทั้งหมด</div>
+            <div className="card-sub">{txns.length} รายการ</div>
+          </div>
+          <table className="tbl">
+            <thead>
+              <tr>
+                <th style={{ width: 56 }}>เวลา</th>
+                <th>รายละเอียด</th>
+                <th style={{ width: 90 }}>แหล่ง</th>
+                <th className="num" style={{ width: 140 }}>จำนวน (THB)</th>
+                <th style={{ width: 90 }}>สถานะ</th>
+              </tr>
+            </thead>
+            <tbody>
+              {txns.map(t => (
+                <tr key={t.id}>
+                  <td className="num small muted">{t.time}</td>
+                  <td>
+                    <div style={{ fontSize: 13 }}>{t.desc}</div>
+                    <div className="tiny muted">{t.category}</div>
+                  </td>
+                  <td><span className="tag">{t.source}</span></td>
+                  <td className={"num " + (t.amount > 0 ? "pos" : "neg")} style={{ fontWeight: 500 }}>
+                    {t.amount > 0 ? "+" : ""}{fmt(t.amount)}
+                  </td>
+                  <td>
+                    {t.status === S.MATCHED && <span className="tag success"><span className="dot" />Matched</span>}
+                    {t.status === S.PENDING && <span className="tag warning"><span className="dot" />Pending</span>}
+                    {t.status === S.REVIEW  && <span className="tag danger"><span className="dot"  />Review</span>}
+                    {t.status === S.VOID    && <span className="tag"><span className="dot" />Void</span>}
+                  </td>
+                </tr>
+              ))}
+              {txns.length === 0 && (
+                <tr><td colSpan={5} style={{ textAlign:"center", padding:24, color:"var(--text-secondary)" }}>ไม่มีรายการในวันที่เลือก</td></tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </>
+  );
+}
+
 // ─── Main Report Page ─────────────────────────────────────────────────────────
-function ReportPage({ method, onExport, companyId = "CONSO", chartStyle }) {
+function ReportPage({ method, onExport, companyId = "CONSO", chartStyle, period: periodProp }) {
   const d = window.CFData;
-  const report = method === "direct" ? d.directCF : d.indirectCF;
+
+  // ── Period & granularity state ─────────────────────────────────────────────
+  const initMeta = window.getPeriodMeta(periodProp || window.CF_PERIOD_DEFAULT) || { type: "quarter" };
+  const initGran = initMeta.type === "daily" ? "daily"
+    : initMeta.type === "month"   ? "month"
+    : initMeta.type === "annual" || initMeta.type === "ytd" ? "annual"
+    : "quarter";
+
+  const [granularity, setGranularity] = React.useState(initGran);
+  const [localPeriod, setLocalPeriod] = React.useState(periodProp || window.CF_PERIOD_DEFAULT);
+
+  // Sync when the topbar period prop changes
+  React.useEffect(() => {
+    if (!periodProp) return;
+    const m = window.getPeriodMeta(periodProp);
+    if (!m) return;
+    const g = m.type === "daily" ? "daily"
+            : m.type === "month" ? "month"
+            : m.type === "annual" || m.type === "ytd" ? "annual"
+            : "quarter";
+    setGranularity(g);
+    setLocalPeriod(periodProp);
+  }, [periodProp]);
+
+  // When granularity changes, pick first matching period
+  const handleGranChange = (g) => {
+    setGranularity(g);
+    const first = window.CF_PERIODS.find(p => GRAN_TYPES[g].includes(p.type));
+    if (first) setLocalPeriod(first.code);
+  };
+
+  const availablePeriods = window.CF_PERIODS.filter(p => GRAN_TYPES[granularity].includes(p.type));
+  const periodMeta = window.getPeriodMeta(localPeriod) || initMeta;
+  const isDaily    = periodMeta.type === "daily";
+
+  // ── CF data for selected period ────────────────────────────────────────────
+  const cfData = React.useMemo(() => {
+    if (isDaily) return null;
+    return d.getCFData ? d.getCFData(localPeriod) : { direct: d.directCF, indirect: d.indirectCF };
+  }, [localPeriod, isDaily]);
+
+  const report = cfData ? (method === "direct" ? cfData.direct : cfData.indirect) : null;
+
+  // ── Prior-period column label ──────────────────────────────────────────────
+  const priorLabel = React.useMemo(() => {
+    if (!periodMeta) return "งวดก่อนหน้า";
+    if (periodMeta.type === "month") {
+      const m = periodMeta.month, y = periodMeta.year;
+      const prev = window.CF_PERIODS.find(p =>
+        p.type === "month" &&
+        p.year  === (m === 1 ? y - 1 : y) &&
+        p.month === (m === 1 ? 12 : m - 1)
+      );
+      return prev ? prev.label : "เดือนก่อน";
+    }
+    if (periodMeta.type === "quarter") return "ไตรมาสก่อน";
+    if (periodMeta.type === "annual" || periodMeta.type === "ytd") return `ปีก่อนหน้า`;
+    return "งวดก่อนหน้า";
+  }, [periodMeta]);
+
   const [activeTab, setActiveTab] = React.useState(0);
-  const [period, setPeriod] = React.useState("Q1 2569");
   const [showCompare, setShowCompare] = React.useState(true);
   const [showFormulas, setShowFormulas] = React.useState(false);
   const [expandedRows, setExpandedRows] = React.useState(new Set());
@@ -7588,24 +8426,27 @@ function ReportPage({ method, onExport, companyId = "CONSO", chartStyle }) {
   const sumQ1 = arr => (arr || []).slice(3).reduce((s, v) => s + (v || 0), 0);
   const sumQ0 = arr => (arr || []).slice(0, 3).reduce((s, v) => s + (v || 0), 0);
 
-  const incomeSegRows = incMatrix.segments.map(s => ({ id: s.id, name: s.name, current: sumQ1(incMatrix.data[s.id]), prior: sumQ0(incMatrix.data[s.id]) }));
+  const incomeSegRows  = incMatrix.segments.map(s => ({ id: s.id, name: s.name, current: sumQ1(incMatrix.data[s.id]), prior: sumQ0(incMatrix.data[s.id]) }));
   const expenseSegRows = expMatrix.segments.map(s => ({ id: s.id, name: s.name, current: sumQ1(expMatrix.data[s.id]), prior: sumQ0(expMatrix.data[s.id]) }));
 
   const toggleRow = key => setExpandedRows(prev => { const n = new Set(prev); n.has(key) ? n.delete(key) : n.add(key); return n; });
 
-  const sections = report.sections.map(sec => {
+  const sections = report ? report.sections.map(sec => {
     const cur = sec.items.filter(i => !i.header).reduce((s, i) => s + (i.current || 0), 0);
     const pri = sec.items.filter(i => !i.header).reduce((s, i) => s + (i.prior || 0), 0);
     return { ...sec, subtotalCurrent: cur, subtotalPrior: pri };
-  });
-  const netCurrent = sections.reduce((s, x) => s + x.subtotalCurrent, 0);
-  const netPrior = sections.reduce((s, x) => s + x.subtotalPrior, 0);
-  const closing = report.opening + netCurrent;
-  const priorClosing = report.priorOpening + netPrior;
+  }) : [];
+  const netCurrent  = sections.reduce((s, x) => s + x.subtotalCurrent, 0);
+  const netPrior    = sections.reduce((s, x) => s + x.subtotalPrior, 0);
+  const opening     = report ? report.opening      : 0;
+  const priorOpening= report ? report.priorOpening : 0;
+  const closing     = opening + netCurrent;
+  const priorClosing= priorOpening + netPrior;
 
   const tabs = [
     method === "direct" ? "งบ Direct CF" : "งบ Indirect CF",
     "CF แยก Segment",
+    "Working Capital",
     "กระทบยอด Cash",
     "Direct vs Indirect",
     "Cross-Check",
@@ -7633,62 +8474,93 @@ function ReportPage({ method, onExport, companyId = "CONSO", chartStyle }) {
 
       {/* Tab navigation */}
       <div className="row" style={{ gap: 3, marginBottom: 16, borderBottom: "2px solid var(--border)", paddingBottom: 0 }}>
-        {tabs.map((label, i) => (
-          <button
-            key={i}
-            onClick={() => setActiveTab(i)}
-            style={{
-              padding: "7px 14px", fontSize: 13, fontWeight: activeTab === i ? 600 : 400, border: "none",
-              background: activeTab === i ? "var(--accent)" : "transparent",
-              color: activeTab === i ? "var(--accent-text,#fff)" : "var(--text-secondary)",
-              borderRadius: "6px 6px 0 0", cursor: "pointer", marginBottom: -2,
-              borderBottom: activeTab === i ? "2px solid var(--accent)" : "2px solid transparent",
-            }}
-          >
-            {label}
-          </button>
-        ))}
+        {tabs.map((label, i) => {
+          const cfTabDisabled = isDaily && i > 0;
+          return (
+            <button
+              key={i}
+              onClick={() => !cfTabDisabled && setActiveTab(i)}
+              title={cfTabDisabled ? "ไม่รองรับมุมมองรายวัน" : undefined}
+              style={{
+                padding: "7px 14px", fontSize: 13, fontWeight: activeTab === i ? 600 : 400, border: "none",
+                background: activeTab === i ? "var(--accent)" : "transparent",
+                color: activeTab === i ? "var(--accent-text,#fff)" : cfTabDisabled ? "var(--text-tertiary,#bbb)" : "var(--text-secondary)",
+                borderRadius: "6px 6px 0 0", cursor: cfTabDisabled ? "not-allowed" : "pointer", marginBottom: -2,
+                borderBottom: activeTab === i ? "2px solid var(--accent)" : "2px solid transparent",
+                opacity: cfTabDisabled ? 0.5 : 1,
+              }}
+            >
+              {label}
+            </button>
+          );
+        })}
       </div>
 
-      {/* Tab 0: CF Statement */}
+      {/* Tab 0: CF Statement / Daily View */}
       {activeTab === 0 && (
         <>
-          <div className="row" style={{ marginBottom: 14, gap: 10 }}>
-            <select className="select" value={period} onChange={e => setPeriod(e.target.value)}>
-              <option>Q1 2569</option><option>ม.ค. 2569</option><option>ก.พ. 2569</option>
-              <option>มี.ค. 2569</option><option>YTD 2569</option><option>ปี 2568 (เต็มปี)</option>
+          {/* ── Toolbar: Granularity + Period + Options ── */}
+          <div style={{ marginBottom: 14, display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
+            <GranularityBar value={granularity} onChange={handleGranChange} />
+
+            <select className="select" value={localPeriod} onChange={e => setLocalPeriod(e.target.value)}>
+              {availablePeriods.map(p => (
+                <option key={p.code} value={p.code}>{p.label}</option>
+              ))}
             </select>
-            <select className="select"><option>หน่วย: บาท</option><option>หน่วย: พันบาท</option><option>หน่วย: ล้านบาท</option></select>
-            <label className="row small" style={{ gap: 6, marginLeft: 6 }}>
-              <input type="checkbox" checked={showCompare} onChange={e => setShowCompare(e.target.checked)} />
-              เปรียบเทียบกับงวดก่อน
-            </label>
-            {method === "indirect" && (
-              <label className="row small" style={{ gap: 6, marginLeft: 6 }}>
-                <input type="checkbox" checked={showFormulas} onChange={e => setShowFormulas(e.target.checked)} />
-                แสดงสูตรคำนวณ
-              </label>
+
+            {!isDaily && (
+              <>
+                <select className="select">
+                  <option>หน่วย: บาท</option>
+                  <option>หน่วย: พันบาท</option>
+                  <option>หน่วย: ล้านบาท</option>
+                </select>
+                <label className="row small" style={{ gap: 6, marginLeft: 4 }}>
+                  <input type="checkbox" checked={showCompare} onChange={e => setShowCompare(e.target.checked)} />
+                  เปรียบเทียบกับ{priorLabel}
+                </label>
+                {method === "indirect" && (
+                  <label className="row small" style={{ gap: 6 }}>
+                    <input type="checkbox" checked={showFormulas} onChange={e => setShowFormulas(e.target.checked)} />
+                    แสดงสูตรคำนวณ
+                  </label>
+                )}
+              </>
             )}
+
             <div className="grow" />
-            <span className="small muted" style={{ alignSelf: "center" }}>
-              <Ic name="chevronDown" size={11} style={{ marginRight: 4 }} />คลิกแถวเพื่อดู Segment breakdown
-            </span>
-            <span className="tag accent"><Ic name="check" size={11} /> ยืนยันแล้ว • โดย K. ปริญญา ส. • 31 มี.ค. 2026</span>
+            {!isDaily && (
+              <span className="small muted" style={{ alignSelf:"center" }}>
+                <Ic name="chevronDown" size={11} style={{ marginRight: 4 }} />คลิกแถวเพื่อดู Segment breakdown
+              </span>
+            )}
           </div>
 
+          {/* ── Daily treasury view ── */}
+          {isDaily && (
+            <>
+              <DailyCFSummary dateCode={localPeriod} companyId={companyId} />
+              <DailyCashView dateCode={localPeriod} companyId={companyId} />
+            </>
+          )}
+
+          {/* ── CF Statement (monthly / quarterly / annual) ── */}
+          {!isDaily && (
+          <>
           <div className="card">
             <div className="card-head">
               <div className="card-title">{window.CFData.company.name}</div>
               <div className="grow" />
-              <div className="small muted">งบกระแสเงินสด • สำหรับงวด {period} • (หน่วย: บาท)</div>
+              <div className="small muted">งบกระแสเงินสด • {window.getPeriodLabel(localPeriod)} • (หน่วย: บาท)</div>
             </div>
             <div style={{ padding: "8px 0 18px" }}>
               <table className="report-tbl">
                 <thead>
                   <tr>
                     <th style={{ width: "auto" }}>รายการ</th>
-                    <th style={{ width: 180 }}>งวดปัจจุบัน</th>
-                    {showCompare && <th style={{ width: 180 }}>งวดก่อนหน้า</th>}
+                    <th style={{ width: 180 }}>{window.getPeriodLabel(localPeriod)}</th>
+                    {showCompare && <th style={{ width: 180 }}>{priorLabel}</th>}
                     {showCompare && <th style={{ width: 130 }}>เปลี่ยนแปลง</th>}
                   </tr>
                 </thead>
@@ -7796,8 +8668,8 @@ function ReportPage({ method, onExport, companyId = "CONSO", chartStyle }) {
                   </tr>
                   <tr>
                     <td className="label">เงินสดและรายการเทียบเท่าเงินสด ณ ต้นงวด</td>
-                    <td className="num">{window.fmtTHB(report.opening)}</td>
-                    {showCompare && <td className="num muted">{window.fmtTHB(report.priorOpening)}</td>}
+                    <td className="num">{window.fmtTHB(opening)}</td>
+                    {showCompare && <td className="num muted">{window.fmtTHB(priorOpening)}</td>}
                     {showCompare && <td className="num"></td>}
                   </tr>
                   <tr className="grand">
@@ -7819,34 +8691,402 @@ function ReportPage({ method, onExport, companyId = "CONSO", chartStyle }) {
             </div>
           </div>
 
+          {/* Summary KPI cards per activity */}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 14, marginTop: 14 }}>
-            {sections.map((sec, i) => (
-              <div className="card" key={i}>
-                <div className="card-pad">
-                  <div className="small muted">{sec.title.replace("กระแสเงินสดจาก", "")}</div>
-                  <div className="kpi-value" style={{ fontSize: 22, marginTop: 6, color: sec.subtotalCurrent >= 0 ? "var(--success)" : "var(--danger)" }}>
-                    {sec.subtotalCurrent >= 0 ? "+" : ""}{window.fmtTHB(sec.subtotalCurrent)}
+            {sections.map((sec, i) => {
+              const chg = sec.subtotalCurrent - sec.subtotalPrior;
+              const pct = sec.subtotalPrior !== 0 ? ((chg / Math.abs(sec.subtotalPrior)) * 100).toFixed(1) : null;
+              return (
+                <div className="card" key={i}>
+                  <div className="card-pad">
+                    <div className="small muted">{sec.title.replace("กระแสเงินสดจาก", "")}</div>
+                    <div className="kpi-value" style={{ fontSize: 22, marginTop: 6, color: sec.subtotalCurrent >= 0 ? "var(--success)" : "var(--danger)" }}>
+                      {sec.subtotalCurrent >= 0 ? "+" : ""}{window.fmtTHB(sec.subtotalCurrent)}
+                    </div>
+                    <div className="tiny muted" style={{ marginTop: 4 }}>
+                      {priorLabel}: {window.fmtTHB(sec.subtotalPrior)}
+                      {pct !== null && (
+                        <span style={{ marginLeft: 6, color: chg >= 0 ? "var(--success)" : "var(--danger)" }}>
+                          {chg >= 0 ? "▲" : "▼"}{Math.abs(pct)}%
+                        </span>
+                      )}
+                    </div>
                   </div>
-                  <div className="tiny muted" style={{ marginTop: 4 }}>งวดก่อน: {window.fmtTHB(sec.subtotalPrior)}</div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
+          </>
+          )}
         </>
       )}
 
-      {activeTab === 1 && <SegmentCFTab />}
-      {activeTab === 2 && <CashEndingTab />}
-      {activeTab === 3 && <CompareMethodsTab />}
-      {activeTab === 4 && <CrossValidationTab />}
+      {activeTab === 1 && <SegmentCFTab   period={localPeriod} cfData={cfData} isDaily={isDaily} />}
+      {activeTab === 2 && <WCReconcileTab  period={localPeriod} cfData={cfData} isDaily={isDaily} />}
+      {activeTab === 3 && <CashEndingTab   period={localPeriod} cfData={cfData} isDaily={isDaily} />}
+      {activeTab === 4 && <CompareMethodsTab period={localPeriod} cfData={cfData} isDaily={isDaily} />}
+      {activeTab === 5 && <CrossValidationTab period={localPeriod} cfData={cfData} isDaily={isDaily} />}
     </>
   );
 }
 
 window.ReportPage = ReportPage;
 
+</script>
 
+<script type="text/babel">
+/* Group Pay — Upload + Parse + CF Segment Mapping */
 
+const CF_SEG_META = {
+  O1: { bg: "#EAF1FE", text: "#1F5BD8", label: "O1 บุคลากร" },
+  O2: { bg: "#E6F5EC", text: "#178044", label: "O2 สินค้า/อะไหล่" },
+  O3: { bg: "#EFE9FB", text: "#5F36D9", label: "O3 Subcontract" },
+  O4: { bg: "#FBF1DD", text: "#C97A00", label: "O4 สาธารณูปโภค/เช่า" },
+  O5: { bg: "#FBEAEA", text: "#D03434", label: "O5 ภาษี" },
+  O6: { bg: "#F1F2F4", text: "#5C6470", label: "O6 อื่นๆ" },
+  I1: { bg: "#E8F4FD", text: "#0969DA", label: "I1 สินทรัพย์ถาวร" },
+  EXCLUDE: { bg: "#F6F7F9", text: "#8B95A1", label: "⊘ ตัดออก (BR-014)" },
+};
+
+const GP_BANKS = ["BBL", "KBANK", "TTB", "KTB", "SCB"];
+
+function gpGetCFSeg(group, subGroup) {
+  if (!group) return "O6";
+  const g = String(group).trim();
+  if (/^7[.\s]/.test(g) || g === "7") return "EXCLUDE";
+  if (/^1[.\s]/.test(g)) return "O1";
+  if (/^2[.\s]/.test(g)) return "O2";
+  if (/^3[.\s]/.test(g)) return "O3";
+  if (/^4[.\s]/.test(g)) return "O4";
+  if (/^5[.\s]/.test(g)) {
+    const sg = String(subGroup || "").trim();
+    if (/^5\.1/.test(sg)) return "O5";
+    if (/^5\.2/.test(sg)) return "O4";
+    return "O6";
+  }
+  if (/^6[.\s]/.test(g)) return "I1";
+  return "O6";
+}
+
+function parseGroupPayExcel(data) {
+  const wb = XLSX.read(data, { type: "array" });
+  const ws = wb.Sheets[wb.SheetNames[0]];
+  const allRows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: null });
+
+  const result = [];
+  let currentBank = null;
+
+  for (let i = 0; i < allRows.length; i++) {
+    const row = allRows[i];
+    if (!row || row.every(v => v === null || v === "")) continue;
+
+    // Columns: [0]=A, [1]=B(Company), [2]=C(Group), [3]=D(SubGroup), [4]=E(Vendor), [5]=F(Txn), [7]=H(Amount)
+    const b1 = String(row[1] || "").trim();
+    const b2 = String(row[2] || "").trim();
+    const b3 = String(row[3] || "").trim();
+    const b5 = String(row[5] || "").trim();
+    const amt = typeof row[7] === "number" ? row[7] : null;
+
+    // Bank section header: col B = bank name, rest empty
+    if (GP_BANKS.includes(b1.toUpperCase()) && !b2 && !b3) {
+      currentBank = b1.toUpperCase();
+      continue;
+    }
+
+    // Skip header / total rows
+    if (b1 === "Company" || b1 === "COMPANY") continue;
+    if (b5 === "Total" || b5 === "GrandTotal") continue;
+
+    // Valid transaction: entity is ACG/HMW/CLIK and group looks like "N. text"
+    if (["ACG", "HMW", "CLIK"].includes(b1) && /^\d+[.\s]/.test(b2)) {
+      const cfSeg = gpGetCFSeg(b2, b3);
+      result.push({
+        id: "gp-" + i,
+        entity: b1,
+        bank: currentBank || "—",
+        group: b2,
+        subGroup: b3,
+        vendor: String(row[4] || "").trim(),
+        txn: b5,
+        amount: amt,
+        cfSeg,
+      });
+    }
+  }
+  return result;
+}
+
+function CFSegTag({ seg }) {
+  const s = CF_SEG_META[seg] || CF_SEG_META.O6;
+  return (
+    <span style={{
+      display: "inline-flex", alignItems: "center",
+      padding: "2px 7px", borderRadius: 4, fontSize: 11.5, fontWeight: 600,
+      background: s.bg, color: s.text, whiteSpace: "nowrap",
+    }}>
+      {seg === "EXCLUDE" ? "⊘ ตัดออก" : seg}
+    </span>
+  );
+}
+
+function GroupPayPage({ toast, companyId = "CONSO", embedded = false }) {
+  const [rows, setRows] = React.useState([]);
+  const [fileName, setFileName] = React.useState(null);
+  const [dragging, setDragging] = React.useState(false);
+  const [filterSeg, setFilterSeg] = React.useState("ALL");
+  const [filterEntity, setFilterEntity] = React.useState("ALL");
+  const [filterBank, setFilterBank] = React.useState("ALL");
+  const [search, setSearch] = React.useState("");
+  const [showExcluded, setShowExcluded] = React.useState(false);
+  const fileRef = React.useRef(null);
+
+  React.useEffect(() => {
+    setFilterEntity(companyId !== "CONSO" ? companyId : "ALL");
+  }, [companyId]);
+
+  function handleFile(file) {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const parsed = parseGroupPayExcel(new Uint8Array(e.target.result));
+        setRows(parsed);
+        setFileName(file.name);
+        toast("นำเข้า Group Pay สำเร็จ — " + parsed.length + " รายการ");
+      } catch (err) {
+        toast("ไม่สามารถอ่านไฟล์ได้: " + err.message);
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  }
+
+  function onDrop(e) {
+    e.preventDefault();
+    setDragging(false);
+    handleFile(e.dataTransfer.files[0]);
+  }
+
+  const operating = rows.filter(r => r.cfSeg !== "EXCLUDE");
+  const excluded = rows.filter(r => r.cfSeg === "EXCLUDE");
+  const hasAmounts = rows.some(r => r.amount !== null);
+
+  const segTotals = {};
+  for (const seg of ["O1","O2","O3","O4","O5","O6","I1"]) {
+    segTotals[seg] = operating.filter(r => r.cfSeg === seg).reduce((s, r) => s + (r.amount || 0), 0);
+  }
+  const totalOp = Object.values(segTotals).reduce((s, v) => s + v, 0);
+
+  const entityTotals = { ACG: 0, HMW: 0, CLIK: 0 };
+  for (const r of operating) { if (entityTotals[r.entity] !== undefined) entityTotals[r.entity] += (r.amount || 0); }
+
+  const filtered = rows.filter(r => {
+    if (!showExcluded && r.cfSeg === "EXCLUDE") return false;
+    if (filterSeg !== "ALL" && r.cfSeg !== filterSeg) return false;
+    if (filterEntity !== "ALL" && r.entity !== filterEntity) return false;
+    if (filterBank !== "ALL" && r.bank !== filterBank) return false;
+    if (search) {
+      const q = search.toLowerCase();
+      if (!r.txn.toLowerCase().includes(q) && !r.group.toLowerCase().includes(q) && !r.subGroup.toLowerCase().includes(q) && !r.vendor.toLowerCase().includes(q)) return false;
+    }
+    return true;
+  });
+
+  const activeCo = window.CFData.companies.find(c => c.id === companyId) || window.CFData.companies[0];
+  const availableBanks = [...new Set(rows.map(r => r.bank))].filter(b => b && b !== "—");
+
+  return (
+    <>
+      {!embedded && (
+        <div className="page-head">
+          <div>
+            <h1 className="page-title">
+              Group Pay
+              <span className="co-chip" style={{ background: activeCo.color }}>{activeCo.short}</span>
+            </h1>
+            <p className="page-sub">นำเข้าและวิเคราะห์รายจ่าย Group Pay — จัดกลุ่มตาม CF Segment อัตโนมัติ</p>
+          </div>
+          <div className="page-actions">
+            {rows.length > 0 && (
+              <button className="btn" onClick={() => { setRows([]); setFileName(null); }}>
+                <Ic name="close" size={14} /> ล้างข้อมูล
+              </button>
+            )}
+            <button className="btn primary" onClick={() => fileRef.current && fileRef.current.click()}>
+              <Ic name="upload" size={14} /> นำเข้า Group Pay Excel
+            </button>
+            <input ref={fileRef} type="file" accept=".xlsx,.xls" style={{ display: "none" }}
+              onChange={e => handleFile(e.target.files[0])} />
+          </div>
+        </div>
+      )}
+
+      {rows.length === 0 ? (
+        <div
+          className="card"
+          style={{
+            border: "2px dashed " + (dragging ? "var(--accent)" : "var(--border-strong)"),
+            background: dragging ? "var(--accent-soft)" : "var(--bg-subtle)",
+            padding: 48, textAlign: "center", cursor: "pointer",
+          }}
+          onDragOver={e => { e.preventDefault(); setDragging(true); }}
+          onDragLeave={() => setDragging(false)}
+          onDrop={onDrop}
+          onClick={() => fileRef.current && fileRef.current.click()}
+        >
+          <div style={{ fontSize: 32, marginBottom: 12 }}>📂</div>
+          <div style={{ fontWeight: 600, marginBottom: 6 }}>ลาก Group Pay Excel มาวางที่นี่</div>
+          <div className="small muted">หรือคลิกเพื่อเลือกไฟล์ • รองรับ .xlsx — รูปแบบ GROUP_Payment Report</div>
+          <div style={{ marginTop: 24, display: "inline-block", textAlign: "left", background: "var(--bg-muted)", borderRadius: 8, padding: "12px 20px" }}>
+            <div className="small" style={{ fontWeight: 600, marginBottom: 8 }}>CF Segment Mapping อัตโนมัติ</div>
+            {[
+              ["Group 1", "รายจ่ายบุคลากร", "O1"],
+              ["Group 2", "รายจ่ายรถยนต์และอะไหล่ (CLIK)", "O2"],
+              ["Group 3", "รายจ่าย Subcontract", "O3"],
+              ["Group 4", "รายจ่ายสาธารณูปโภค", "O4"],
+              ["Group 5.1", "ค่าภาษี", "O5"],
+              ["Group 5.2", "ค่าเช่า", "O4"],
+              ["Group 5.x", "ค่าใช้จ่ายอื่นๆ", "O6"],
+              ["Group 6", "Fixed Assets / Capex", "I1"],
+              ["Group 7", "รายการย้ายเงิน — ตัดออก (BR-014)", "EXCLUDE"],
+            ].map(([g, name, seg]) => (
+              <div key={g} style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
+                <span className="mono small" style={{ width: 72, fontWeight: 500 }}>{g}</span>
+                <span className="small muted" style={{ flex: 1, minWidth: 220 }}>{name}</span>
+                <CFSegTag seg={seg} />
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : (
+        <>
+          {/* KPI Summary */}
+          <div className="kpi-row" style={{ marginBottom: 16 }}>
+            <div className="kpi-card">
+              <div className="kpi-label">Operating รวม</div>
+              <div className="kpi-value">{hasAmounts ? window.fmtTHB(totalOp) : operating.length + " รายการ"}</div>
+              <div className="tiny muted">{operating.length} รายการ • ไม่รวม Group 7</div>
+            </div>
+            {["O1","O2","O3","O4","O5","O6","I1"].map(seg => {
+              const cnt = operating.filter(r => r.cfSeg === seg).length;
+              if (cnt === 0) return null;
+              const s = CF_SEG_META[seg];
+              return (
+                <div key={seg} className="kpi-card" style={{ borderTop: "3px solid " + s.text }}>
+                  <div className="kpi-label" style={{ color: s.text }}>{s.label}</div>
+                  <div className="kpi-value">{hasAmounts ? window.fmtTHB(segTotals[seg]) : cnt + " รายการ"}</div>
+                  <div className="tiny muted">{cnt} รายการ</div>
+                </div>
+              );
+            })}
+            <div className="kpi-card" style={{ opacity: 0.55, borderTop: "3px solid #8B95A1" }}>
+              <div className="kpi-label">⊘ Group 7 (ตัดออก)</div>
+              <div className="kpi-value">{excluded.length} รายการ</div>
+              <div className="tiny muted">BR-014: Inter-transfer</div>
+            </div>
+          </div>
+
+          {/* Entity Breakdown */}
+          <div className="card" style={{ marginBottom: 16, padding: "12px 20px" }}>
+            <div className="small" style={{ fontWeight: 600, marginBottom: 10 }}>สรุปตามบริษัท (Operating)</div>
+            <div style={{ display: "flex", gap: 28 }}>
+              {["ACG","HMW","CLIK"].map(e => {
+                const cnt = operating.filter(r => r.entity === e).length;
+                if (cnt === 0) return null;
+                const co = window.CFData.companies.find(c => c.id === e);
+                return (
+                  <div key={e} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <span className="co-chip" style={{ background: co?.color || "#ccc" }}>{e}</span>
+                    <span style={{ fontWeight: 600 }}>
+                      {hasAmounts ? window.fmtTHB(entityTotals[e]) : cnt + " รายการ"}
+                    </span>
+                    <span className="tiny muted">{cnt} รายการ</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Filters */}
+          <div className="row" style={{ marginBottom: 14, gap: 10, flexWrap: "wrap" }}>
+            <div className="search-wrap">
+              <Ic name="search" size={14} className="search-ic" />
+              <input className="input search" placeholder="ค้นหา รายการ / Group / Vendor…" style={{ width: 280 }}
+                value={search} onChange={e => setSearch(e.target.value)} />
+            </div>
+            <select className="select" value={filterEntity} onChange={e => setFilterEntity(e.target.value)}>
+              <option value="ALL">ทุก Entity</option>
+              {["ACG","HMW","CLIK"].map(e => <option key={e} value={e}>{e}</option>)}
+            </select>
+            <select className="select" value={filterBank} onChange={e => setFilterBank(e.target.value)}>
+              <option value="ALL">ทุกธนาคาร</option>
+              {availableBanks.map(b => <option key={b} value={b}>{b}</option>)}
+            </select>
+            <select className="select" value={filterSeg} onChange={e => setFilterSeg(e.target.value)}>
+              <option value="ALL">ทุก CF Segment</option>
+              {["O1","O2","O3","O4","O5","O6","I1"].map(s => <option key={s} value={s}>{CF_SEG_META[s].label}</option>)}
+            </select>
+            <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, cursor: "pointer" }}>
+              <input type="checkbox" checked={showExcluded} onChange={e => setShowExcluded(e.target.checked)} />
+              แสดง Group 7
+            </label>
+            <div style={{ flex: 1 }} />
+            <span className="small muted">{filtered.length} รายการ</span>
+            <span className="small muted" style={{ maxWidth: 200, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{fileName}</span>
+          </div>
+
+          {/* Table */}
+          <div className="card" style={{ padding: 0, overflow: "hidden" }}>
+            <table className="tbl">
+              <thead>
+                <tr>
+                  <th>Entity</th>
+                  <th>ธนาคาร</th>
+                  <th>Group</th>
+                  <th>Sub_Group</th>
+                  <th>รายการ / Vendor</th>
+                  <th>CF Segment</th>
+                  {hasAmounts && <th className="num">จำนวน (บาท)</th>}
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.length === 0 && (
+                  <tr>
+                    <td colSpan={hasAmounts ? 7 : 6} style={{ textAlign: "center", padding: 32, color: "var(--text-tertiary)" }}>
+                      ไม่มีรายการที่ตรงกับการค้นหา
+                    </td>
+                  </tr>
+                )}
+                {filtered.map(r => (
+                  <tr key={r.id} style={{ opacity: r.cfSeg === "EXCLUDE" ? 0.45 : 1 }}>
+                    <td><EntityChip entity={r.entity} /></td>
+                    <td><span className="tag">{r.bank}</span></td>
+                    <td className="small">{r.group}</td>
+                    <td className="small muted">{r.subGroup || "—"}</td>
+                    <td style={{ maxWidth: 300 }}>
+                      <div style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                        {r.txn || r.vendor || "—"}
+                      </div>
+                      {r.vendor && r.txn && (
+                        <div className="tiny muted" style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{r.vendor}</div>
+                      )}
+                    </td>
+                    <td><CFSegTag seg={r.cfSeg} /></td>
+                    {hasAmounts && (
+                      <td className="num mono">{r.amount !== null ? window.fmtTHB(r.amount) : "—"}</td>
+                    )}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
+      )}
+    </>
+  );
+}
+
+window.GroupPayPage = GroupPayPage;
+window.CFSegTag = CFSegTag;
 
 </script>
 
@@ -7870,7 +9110,9 @@ const ACCENT_PRESETS = {
 
 function App() {
   const [active, setActive] = React.useState("dashboard");
-  const [period, setPeriod] = React.useState("ไตรมาส 1/2569");
+  // period stores the API code (e.g. "2026-Q1"), NOT the Thai display label.
+  // Use window.getPeriodLabel(period) for display, window.getPeriodMeta(period) for API params.
+  const [period, setPeriod] = React.useState(window.CF_PERIOD_DEFAULT);
   const [companyId, setCompanyId] = React.useState("CONSO");
   const [toasts, setToasts] = React.useState([]);
   const [showExport, setShowExport] = React.useState(false);
@@ -7914,19 +9156,19 @@ function App() {
         <window.Topbar crumbs={crumbs[active]} period={period} setPeriod={setPeriod} companyId={companyId} setCompanyId={setCompanyId} />
         <div className="scroll-area">
           <div className="page">
-            {active === "dashboard" && <window.Dashboard chartStyle={tweaks.chartStyle} companyId={companyId} />}
-            {active === "finance" && <window.FinanceInput toast={toast} companyId={companyId} />}
-            {active === "accounting" && <window.AccountingInput toast={toast} companyId={companyId} />}
-            {active === "direct" && <window.ReportPage method="direct" companyId={companyId} chartStyle={tweaks.chartStyle} onExport={() => setShowExport(true)} />}
-            {active === "indirect" && <window.ReportPage method="indirect" companyId={companyId} chartStyle={tweaks.chartStyle} onExport={() => setShowExport(true)} />}
-            {active === "forecast" && <window.Forecast chartStyle={tweaks.chartStyle} />}
-            {active === "export" && <window.ExportCenter toast={toast} onShowExport={() => setShowExport(true)} />}
-            {active === "settings" && <window.Settings toast={toast} />}
+            {active === "dashboard"  && <window.Dashboard   chartStyle={tweaks.chartStyle} companyId={companyId} period={period} />}
+            {active === "finance"   && <window.FinanceInput  toast={toast}                 companyId={companyId} period={period} />}
+            {active === "accounting"&& <window.AccountingInput toast={toast}              companyId={companyId} period={period} />}
+            {active === "direct"    && <window.ReportPage method="direct"   companyId={companyId} period={period} chartStyle={tweaks.chartStyle} onExport={() => setShowExport(true)} />}
+            {active === "indirect"  && <window.ReportPage method="indirect" companyId={companyId} period={period} chartStyle={tweaks.chartStyle} onExport={() => setShowExport(true)} />}
+            {active === "forecast"  && <window.Forecast chartStyle={tweaks.chartStyle} period={period} />}
+            {active === "export"    && <window.ExportCenter toast={toast} onShowExport={() => setShowExport(true)} period={period} />}
+            {active === "settings"  && <window.Settings toast={toast} />}
           </div>
         </div>
       </main>
 
-      {showExport && <ExportModal onClose={() => setShowExport(false)} onDone={(name) => { setShowExport(false); toast("ดาวน์โหลด " + name + " เรียบร้อย"); }} initialReport={active === "direct" ? "direct" : active === "indirect" ? "indirect" : "indirect"} />}
+      {showExport && <ExportModal onClose={() => setShowExport(false)} onDone={(name) => { setShowExport(false); toast("ดาวน์โหลด " + name + " เรียบร้อย"); }} initialReport={active === "direct" ? "direct" : active === "indirect" ? "indirect" : "indirect"} period={period} />}
 
       {/* Toasts */}
       <div className="toast-host">
@@ -7990,11 +9232,12 @@ function App() {
 }
 
 /* ----- Export Modal (simulate Excel export) ----- */
-function ExportModal({ onClose, onDone, initialReport }) {
+function ExportModal({ onClose, onDone, initialReport, period: initialPeriod }) {
   const [step, setStep] = React.useState(1);
   const [progress, setProgress] = React.useState(0);
   const [report, setReport] = React.useState(initialReport || "indirect");
-  const [period, setPeriod] = React.useState("Q1 2026");
+  // period stores API code; label derived via getPeriodLabel
+  const [period, setPeriod] = React.useState(initialPeriod || window.CF_PERIOD_DEFAULT);
   const [includes, setIncludes] = React.useState({
     summary: true, sections: true, notes: true, supporting: false, charts: true,
   });
@@ -8018,7 +9261,9 @@ function ExportModal({ onClose, onDone, initialReport }) {
     ar: "AR Aging",
     ap: "AP Aging",
   }[report];
-  const fileName = `${reportName} ${period}.xlsx`;
+  // Display label for filename; API calls should use period code directly
+  const periodLabel = window.getPeriodLabel(period);
+  const fileName = `${reportName} ${periodLabel}.xlsx`;
 
   return (
     <div className="modal-backdrop" onClick={onClose}>
@@ -8044,7 +9289,9 @@ function ExportModal({ onClose, onDone, initialReport }) {
                 </label>
                 <label className="field">งวด
                   <select className="select" value={period} onChange={(e) => setPeriod(e.target.value)}>
-                    <option>Q1 2026</option><option>ม.ค. 2026</option><option>ก.พ. 2026</option><option>มี.ค. 2026</option><option>YTD 2026</option><option>ปี 2025</option>
+                    {window.CF_PERIODS.map(p => (
+                      <option key={p.code} value={p.code}>{p.label}</option>
+                    ))}
                   </select>
                 </label>
                 <label className="field">รูปแบบ
@@ -8077,7 +9324,7 @@ function ExportModal({ onClose, onDone, initialReport }) {
                 <div className="row" style={{ gap: 8 }}>
                   <Ic name="fileExcel" size={14} style={{ color: "#1F9D55" }} />
                   <span style={{ fontWeight: 500 }}>{fileName}</span>
-                  <span className="faint" style={{ marginLeft: "auto" }}>~ 220 KB</span>
+                  <span className="faint mono" style={{ marginLeft: "auto", fontSize: 11 }}>{period}</span>
                 </div>
               </div>
             </>

@@ -1,0 +1,24 @@
+﻿vendor_code,vendor_name_th,vendor_name_en,company,vendor_type,credit_term_days,is_related_party,note
+VEND-HMW-001,บจ. ฮอนด้าออโตโมบิล (ประเทศไทย),Honda Automobile Thailand,HMW,VEHICLE_SUPPLIER,30,N,Primary vehicle supplier
+VEND-HMW-002,บจ. ฮอนด้า อาร์แอนด์ดี เอเชียแปซิฟิก,Honda R&D Asia Pacific,HMW,PARTS_SUPPLIER,30,N,Parts supplier
+VEND-HMW-003,บจ. เด็นโซ่ ประเทศไทย,Denso Thailand,HMW,PARTS_SUPPLIER,45,N,Components
+VEND-HMW-004,บจ. ทิพย์โลจิสติกส์,Thip Logistics,HMW,LOGISTICS,30,N,Vehicle delivery
+VEND-HMW-005,บจ. ปั้มน้ำมัน,Fuel Co,HMW,FUEL,15,N,Showroom fuel
+VEND-HMW-006,บจ. โฆษณาดิจิตอล,Digital Ad Agency,HMW,MARKETING,30,N,
+VEND-HMW-007,บจ. ทำความสะอาด,Cleaning Co,HMW,SERVICE,30,N,
+VEND-HMW-008,การไฟฟ้าและประปา,Utilities,HMW,UTILITIES,15,N,
+VEND-HMW-009,บจ. รักษาความปลอดภัย,Security Co,HMW,SECURITY,30,N,
+VEND-HMW-010,กรมสรรพากร,Revenue Department,HMW,TAX,0,N,Tax authority
+VEND-HMW-099,ออโตคอร์ป โฮลดิ้ง,Autocorp Holding,HMW,RELATED_PARTY,30,Y,Mgmt fee payable to parent
+VEND-CLIK-001,บจ. ฮอนด้าไทย - อะไหล่,Honda Thailand - Parts,CLIK,PARTS_SUPPLIER,30,N,
+VEND-CLIK-002,บจ. เด็นโซ่ ประเทศไทย,Denso Thailand,CLIK,PARTS_SUPPLIER,45,N,
+VEND-CLIK-003,บจ. น้ำมันเครื่องเชลล์,Shell Lubricants,CLIK,LUBRICANTS,30,N,
+VEND-CLIK-004,บจ. ตัวแทนประกันภัย,Insurance Broker,CLIK,INSURANCE,30,N,
+VEND-CLIK-005,บจ. ทำความสะอาด,Cleaning Co,CLIK,SERVICE,30,N,
+VEND-CLIK-006,การไฟฟ้าและประปา,Utilities,CLIK,UTILITIES,15,N,
+VEND-CLIK-099,ออโตคอร์ป โฮลดิ้ง,Autocorp Holding,CLIK,RELATED_PARTY,30,Y,Mgmt fee payable to parent
+VEND-ACG-001,บจ. ที่ปรึกษากฎหมาย,Legal Advisor Co,ACG,PROFESSIONAL,30,N,
+VEND-ACG-002,บจ. ผู้สอบบัญชี,Audit Firm,ACG,PROFESSIONAL,30,N,
+VEND-ACG-003,บจ. ที่ปรึกษาด้านภาษี,Tax Advisor,ACG,PROFESSIONAL,30,N,
+VEND-ACG-004,การไฟฟ้าและประปา,Utilities,ACG,UTILITIES,15,N,
+VEND-ACG-005,ตลาดหลักทรัพย์ฯ,SET Listing,ACG,REGULATORY,30,N,Listing fees

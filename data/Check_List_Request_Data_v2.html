@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>CHECK LIST ขอข้อมูล - ระบบ Cashflow Management v2</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .title {
+            text-align: center;
+            font-size: 16px;
+            font-weight: bold;
+            color: white;
+            background-color: #203864;
+            padding: 12px;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            text-align: center;
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: white;
+            margin-bottom: 30px;
+        }
+        th {
+            background-color: #366092;
+            color: white;
+            font-weight: bold;
+            border: 1px solid #ccc;
+            padding: 10px;
+            text-align: center;
+            font-size: 13px;
+        }
+        td {
+            border: 1px solid #ccc;
+            padding: 8px;
+            text-align: left;
+            font-size: 12px;
+        }
+        .section-header {
+            background-color: #D9E1F2;
+            font-weight: bold;
+            text-align: left;
+            font-size: 13px;
+        }
+        .item-num {
+            text-align: center;
+            width: 30px;
+            font-weight: bold;
+        }
+        .checkbox {
+            text-align: center;
+            font-size: 14px;
+            width: 40px;
+        }
+        .summary-table {
+            width: 70%;
+            margin: 20px auto;
+        }
+        .summary-title {
+            text-align: center;
+            font-size: 14px;
+            font-weight: bold;
+            background-color: #203864;
+            color: white;
+            padding: 8px;
+        }
+        .dept-header {
+            background-color: #4472C4;
+            color: white;
+            font-weight: bold;
+            font-size: 14px;
+            padding: 10px;
+            margin-top: 30px;
+            margin-bottom: 5px;
+        }
+        .notes {
+            background-color: #FFF8DC;
+            padding: 10px;
+            border-left: 4px solid #FFD700;
+            margin: 15px 0;
+            font-size: 12px;
+        }
+        .info-box {
+            background-color: #E8F4F8;
+            padding: 10px;
+            border-left: 4px solid #0099CC;
+            margin: 10px 0;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="title">CHECK LIST ขอข้อมูล - ระบบ Cashflow Management</div>
+<div class="subtitle">Version 2 (ตัด Forecast, เพิ่ม Assets/Cost/Loan) | 38 รายการ | 4 แผนก</div>
+
+<!-- Summary Table -->
+<div class="summary-title">📊 สรุปข้อมูลทั้งหมด</div>
+<table class="summary-table">
+    <tr>
+        <th>แผนก</th>
+        <th>จำนวนรายการ</th>
+        <th>ลำดับที่</th>
+        <th>สถานะ</th>
+    </tr>
+    <tr>
+        <td>💰 Finance</td>
+        <td style="text-align: center;">14</td>
+        <td style="text-align: center;">1-14</td>
+        <td class="checkbox">☐</td>
+    </tr>
+    <tr>
+        <td>💳 AR (Account Receivable)</td>
+        <td style="text-align: center;">10</td>
+        <td style="text-align: center;">15-24</td>
+        <td class="checkbox">☐</td>
+    </tr>
+    <tr>
+        <td>📈 Accounting</td>
+        <td style="text-align: center;">8</td>
+        <td style="text-align: center;">25-32</td>
+        <td class="checkbox">☐</td>
+    </tr>
+    <tr>
+        <td>🏦 Treasury</td>
+        <td style="text-align: center;">6</td>
+        <td style="text-align: center;">33-38</td>
+        <td class="checkbox">☐</td>
+    </tr>
+    <tr style="font-weight: bold; background-color: #f0f0f0;">
+        <td>รวมทั้งหมด</td>
+        <td style="text-align: center;">38</td>
+        <td colspan="2"></td>
+    </tr>
+</table>
+
+<div class="info-box">
+<strong>ℹ️ การเปลี่ยนแปลง:</strong><br>
+✓ ตัด Forecast Cash ออก (-4 รายการ)<br>
+✓ เพิ่ม Fixed Assets, Cost Structure, Loan & Debt (+9 รายการ)<br>
+✓ เพิ่ม Treasury Department (สำหรับจัดการ Loan & Asset)
+</div>
+
+<!-- FINANCE -->
+<div class="dept-header">💰 FINANCE (จำนวน 14 รายการ)</div>
+<table>
+    <tr>
+        <th>#</th>
+        <th>ชื่อข้อมูล</th>
+        <th>ชื่ออื่นๆ</th>
+        <th>วัตถุประสงค์</th>
+        <th>รูปแบบ</th>
+        <th>ความถี่</th>
+        <th>หมายเหตุ</th>
+        <th>ได้รับ</th>
+    </tr>
+    <tr>
+        <td colspan="8" class="section-header">เงินเข้า (Cash In)</td>
+    </tr>
+    <tr>
+        <td class="item-num">1</td>
+        <td>ใบเสร็จรับเงิน</td>
+        <td>Cash Receipt, Payment Receipt</td>
+        <td>บันทึกเงินที่เข้ามาจากลูกค้า</td>
+        <td>Excel/CSV</td>
+        <td>รายวัน</td>
+        <td>ต้องมี: วันที่, จำนวนเงิน, ผู้จ่าย, หมายเหตุ</td>
+        <td class="checkbox">☐</td>
+    </tr>
+    <tr>
+        <td class="item-num">2</td>
+        <td>ใบโอนเงินเข้าบัญชี</td>
+        <td>Fund Transfer In, Bank Transfer</td>
+        <td>บันทึกเงินโอนเข้าจากบัญชีอื่น</td>
+        <td>Excel/CSV</td>
+        <td>รายวัน</td>
+        <td>ต้องมี: วันที่, จำนวนเงิน, บัญชีต้นทาง</td>
+        <td class="checkbox">☐</td>
+    </tr>
+    <tr>
+        <td class="item-num">3</td>
+        <td>เงินลงทุน/ยืมเงิน</td>
+        <td>Loan Receipt, Capital Injection</td>
+        <td>บันทึกเงินทุน/เงินกู้ที่เข้ามา</td>
+        <td>Excel/CSV</td>
+        <td>ตามเหตุการณ์</td>
+        <td>ต้องมี: วันที่, จำนวนเงิน, แหล่งที่มา</td>
+        <td class="checkbox">☐</td>
+    </tr>
+    <tr>
+        <td class="item-num">4</td>
+        <td>ค่าประกันภัยคืน/อื่นๆ</td>
+        <td>Other Income, Refund</td>
+        <td>บันทึกเงินอื่นๆที่เข้ามา</td>
+        <td>Excel/CSV</td>
+        <td>ตามเหตุการณ์</td>
+        <td>ต้องมี: วันที่, จำนวนเงิน, ประเภท</td>
+        <td class="checkbox">☐</td>
+    </tr>
+    <tr>
+        <td colspan="8" class="section-header">เงินออก (Cash Out)</td>
+    </tr>
+    <tr>
+        <td class="item-num">5</td>
+        <td>ใบเบิกจ่าย</td>
+        <td>Check Register, Expense Voucher</td>
+        <td>บันทึกเงินที่จ่ายออกไป</td>
+        <td>Excel/CSV</td>
+        <td>รายวัน</td>
+        <td>ต้องมี: วันที่, จำนวนเงิน, ผู้รับ, ประเภท</td>
+        <td class="checkbox">☐</td>
+    </tr>
+    <tr>
+        <td class="item-num">6</td>
+        <td>ใบโอนเงินออก</td>
+        <td>Fund Transfer Out</td>
+        <td>บันทึกเงินโอนออกไปบัญชีอื่น</td>
+        <td>Excel/CSV</td>
+        <td>รายวัน</td>
+        <td>ต้องมี: วันที่, จำนวนเงิน, บัญชีปลายทาง</td>
+        <td class="checkbox">☐</td>
+    </tr>
+    <tr>
+        <td class="item-num">7</td>
+        <td>เงินจ่ายเจ้าหนี้</td>
+        <td>AP Payment, Payable Payment</td>
+        <td>บันทึกการจ่ายเงินให้เจ้าหนี้</td>
+        <td>Excel/CSV</td>
+        <td>รายวัน</td>
+        <td>ต้องมี: วันที่, จำนวนเงิน, เจ้าหนี้, Invoice No.</td>
+        <td class="checkbox">☐</td>
+    </tr>
+    <tr>
+        <td class="item-num">8</td>
+        <td>เงินจ่ายเงินเดือน/ค่าจ้าง</td>
+        <td>Salary, Wages, Payroll</td>
+        <td>บันทึกค่าจ้างพนักงาน</td>
+        <td>Excel/CSV</td>
+        <td>รายเดือน</td>
+        <td>ต้องมี: วันที่, จำนวนเงินรวม, ตัวแยกตามประเภท</td>
+        <td class="checkbox">☐</td>
+    </tr>
+    <tr>
+        <td class="item-num">9</td>
+        <td>ค่าใช้จ่ายอื่นๆ</td>
+        <td>Expense, Operating Expense</td>
+        <td>บันทึกค่าใช้จ่ายต่างๆ</td>
+        <td>Excel/CSV</td>
+        <td>รายวัน</td>
+        <td>ต้องมี: วันที่, จำนวนเงิน, ประเภท, หมายเหตุ</td>
+        <td class="checkbox">☐</td>
+    </tr>
+    <tr>
+        <td colspan="8" class="section-header">ยอดเงินในบัญชี (Bank Balance)</td>
+    </tr>
+    <tr>
+        <td class="item-num">10</td>
+        <td>ยอดคงเหลือในธนาคาร</td>
+        <td>Bank Balance, Cash in Bank</td>
+        <td>ติดตามเงินคงเหลือในบัญชี Opening/Closing Balance</td>
+        <td>Excel/CSV</td>
+        <td>รายวัน (ท้ายวัน)</td>
+        <td>ต้องมี: วันที่, บัญชี, ยอดคงเหลือ</td>
+        <td class="checkbox">☐</td>
+    </tr>
+    <tr>
+        <td class="item-num">11</td>
+        <td>Statement ธนาคาร</td>
+        <td>Bank Statement, Monthly Statement</td>
+        <td>รับข้อมูลจากธนาคารเพื่อ Reconcile</td>
+        <td>PDF/Excel</td>
+        <td>รายเดือน</td>
+        <td>ต้องมี: ชื่อบัญชี, งวด, เงินเข้า, เงินออก, คงเหลือ</td>
+        <td class="checkbox">☐</td>
+    </tr>
+    <tr>
+        <td colspan="8" class="section-header">Cost Structure (โครงสร้างต้นทุน) ⭐ NEW</td>
+    </tr>
+    <tr>
+        <td class="item-num">12</td>
+        <td>Fixed Cost List</td>
+        <td>Recurring Expenses, Monthly Overhead</td>
+        <td>บันทึก Cost ที่ไม่เปลี่ยน (เช่า, เงินเดือน, โทร)</td>
+        <td>Excel/CSV</td>
+        <td>รายครั้งที่เปลี่ยน</td>
+        <td>ต้องมี: รายการ, จำนวนเงิน, ระยะเวลา</td>
+        <td class="checkbox">☐</td>
+    </tr>
+    <tr>
+        <td class="item-num">13</td>
+        <td>Variable Cost Ratio</td>
+        <td>Cost as % of Revenue, Cost Structure</td>
+        <td>อัตราส่วน Cost ต่อ Revenue สำหรับคำนวณ Margin</td>
+        <td>Excel/CSV</td>
+        <td>รายเดือน/รายครั้งที่เปลี่ยน</td>
+        <td>ต้องมี: ประเภท Cost, %, ใช้สำหรับคำนวณ</td>
+        <td class="checkbox">☐</td>
+    </tr>
+    <tr>
+        <td class="item-num">14</td>
+        <td>COGS (Cost of Goods Sold)</td>
+        <td>Cost of Sales, Production Cost</td>
+        <td>ต้นทุนขายต่อ Revenue เพื่อคำนวณ Gross Profit</td>
+        <td>Excel/CSV</td>
+        <td>รายเดือน</td>
+        <td>ต้องมี: COGS ยอด หรือ % ของ Revenue</td>
+        <td class="checkbox">☐</td>
+    </tr>
+</table>
+
+<!-- AR -->
+<div class="dept-header">💳 AR - ACCOUNT RECEIVABLE (จำนวน 10 รายการ)</div>
+<table>
+    <tr>
+        <th>#</th>
+        <th>ชื่อข้อมูล</th>
+        <th>ชื่ออื่นๆ</th>
+        <th>วัตถุประสงค์</th>
+        <th>รูปแบบ</th>
+        <th>ความถี่</th>
+        <th>หมายเหตุ</th>
+        <th>ได้รับ</th>
+    </tr>
+    <tr>
+        <td colspan="8" class="section-header">ข้อมูลใบแจ้งหนี้ (Invoice)</td>
+    </tr>
+    <tr>
+        <td class="item-num">15</td>
+        <td>ใบแจ้งหนี้ทั้งหมด</td>
+        <td>Invoice, Sales Invoice, Debit Note</td>
+        <td>ติดตามรายได้ที่เกิดขึ้น (Revenue Performance)</td>
+        <td>Excel/CSV</td>
+        <td>รายเดือน</td>
+        <td>ต้องมี: Invoice No., วันที่, ลูกค้า, จำนวนเงิน, Credit Term, Due Date</td>
+        <td class="checkbox">☐</td>
+    </tr>
+    <tr>
+        <td class="item-num">16</td>
+        <td>ใบแจ้งหนี้แยกตามลูกค้า</td>
+        <td>Customer Invoice List, Sales by Customer</td>
+        <td>แยกรายได้ตามลูกค้า เพื่อวิเคราะห์</td>
+        <td>Excel/CSV</td>
+        <td>รายเดือน</td>
+        <td>ต้องมี: ลูกค้า, Invoice No., จำนวนเงิน</td>
+        <td class="checkbox">☐</td>
+    </tr>
+    <tr>
+        <td colspan="8" class="section-header">ข้อมูลเงื่อนไขการชำระ (Credit Term)</td>
+    </tr>
+    <tr>
+        <td class="item-num">17</td>
+        <td>Credit Term ของแต่ละลูกค้า</td>
+        <td>Customer Credit Terms, Terms of Payment</td>
+        <td>ระบุเงื่อนไขชำระเงิน (Net 30/60/90, COD) สำหรับประมาณ Cash Timing</td>
+        <td>Excel/CSV</td>
+        <td>รายครั้งที่มีการเปลี่ยน</td>
+        <td>ต้องมี: ลูกค้า, Term (Net 30/60/90, COD), วันที่มีผล</td>
+        <td class="checkbox">☐</td>
+    </tr>
+    <tr>
+        <td class="item-num">18</td>
+        <td>Default Credit Term</td>
+        <td>Standard Payment Terms</td>
+        <td>เงื่อนไขชำระเงินมาตรฐานของบริษัท</td>
+        <td>Excel/CSV</td>
+        <td>รายครั้งที่มีการเปลี่ยน</td>
+        <td>ต้องมี: ประเภทลูกค้า, Credit Term ที่กำหนด</td>
+        <td class="checkbox">☐</td>
+    </tr>
+    <tr>
+        <td colspan="8" class="section-header">ข้อมูลการชำระเงินจากลูกค้า (Customer Payment)</td>
+    </tr>
+    <tr>
+        <td class="item-num">19</td>
+        <td>การชำระเงินจากลูกค้า</td>
+        <td>Customer Payment, Collection, Receipt</td>
+        <td>บันทึกเงินจริงที่ลูกค้าชำระเข้ามา (Cash Performance)</td>
+        <td>Excel/CSV</td>
+        <td>รายวัน</td>
+        <td>ต้องมี: ลูกค้า, วันที่, จำนวนเงิน, Invoice No., Payment Method</td>
+        <td class="checkbox">☐</td>
+    </tr>
+    <tr>
+        <td class="item-num">20</td>
+        <td>ใบเสร็จรับเงินจากลูกค้า</td>
+        <td>Sales Receipt, Collection Receipt</td>
+        <td>บันทึกการรับเงินจากลูกค้า (สำหรับ Matching Invoice)</td>
+        <td>Excel/CSV</td>
+        <td>รายวัน</td>
+        <td>ต้องมี: ลูกค้า, วันที่, จำนวนเงิน, ประเภท (ตรงสอบ/บางส่วน)</td>
+        <td class="checkbox">☐</td>
+    </tr>
+    <tr>
+        <td colspan="8" class="section-header">ข้อมูลลูกหนี้ (Receivables Analysis)</td>
+    </tr>
+    <tr>
+        <td class="item-num">21</td>
+        <td>ลูกหนี้ค้างชำระ / Aging Report</td>
+        <td>Outstanding Receivables, AR Aging, Overdue List</td>
+        <td>ทราบว่าลูกหนี้ใครค้างเท่าไร, ค้างมานานเท่าไร (Current/30/60/90+ days)</td>
+        <td>Excel/CSV</td>
+        <td>รายเดือน (สิ้นเดือน)</td>
+        <td>ต้องมี: ลูกค้า, Invoice No., จำนวนค้าง, วันที่ค้าง, Aging Bucket</td>
+        <td class="checkbox">☐</td>
+    </tr>
+    <tr>
+        <td class="item-num">22</td>
+        <td>รายการ Credit Limit</td>
+        <td>Credit Limit, Credit Facility</td>
+        <td>ทราบขีดเครดิตของแต่ละลูกค้า (สำหรับควบคุม Risk)</td>
+        <td>Excel/CSV</td>
+        <td>รายครั้งที่มีการเปลี่ยน</td>
+        <td>ต้องมี: ลูกค้า, Credit Limit, วันมีผล</td>
+        <td class="checkbox">☐</td>
+    </tr>
+    <tr>
+        <td colspan="8" class="section-header">ข้อมูลลูกค้า (Customer Master Data)</td>
+    </tr>
+    <tr>
+        <td class="item-num">23</td>
+        <td>ข้อมูลลูกค้า</td>
+        <td>Customer Master, Customer List</td>
+        <td>เก็บข้อมูลพื้นฐานของลูกค้า</td>
+        <td>Excel/CSV</td>
+        <td>รายครั้งที่มีลูกค้าใหม่</td>
+        <td>ต้องมี: Customer Code, ชื่อ, ประเภท, Contact, Address</td>
+        <td class="checkbox">☐</td>
+    </tr>
+    <tr>
+        <td class="item-num">24</td>
+        <td>การแบ่งประเภทลูกค้า</td>
+        <td>Customer Segmentation, Customer Category</td>
+        <td>แยกว่าลูกค้าไหนจ่ายสด, ไหนเครดิต, ไหนพิเศษ</td>
+        <td>Excel/CSV</td>
+        <td>รายครั้งที่มีการเปลี่ยน</td>
+        <td>ต้องมี: ลูกค้า, ประเภท (Cash Customer, Credit Customer, VIP)</td>
+        <td class="checkbox">☐</td>
+    </tr>
+</table>
+
+<!-- ACCOUNTING -->
+<div class="dept-header">📈 ACCOUNTING (จำนวน 8 รายการ)</div>
+<table>
+    <tr>
+        <th>#</th>
+        <th>ชื่อข้อมูล</th>
+        <th>ชื่ออื่นๆ</th>
+        <th>วัตถุประสงค์</th>
+        <th>รูปแบบ</th>
+        <th>ความถี่</th>
+        <th>หมายเหตุ</th>
+        <th>ได้รับ</th>
+    </tr>
+    <tr>
+        <td colspan="8" class="section-header">ข้อมูลบัญชี (General Ledger)</td>
+    </tr>
+    <tr>
+        <td class="item-num">25</td>
+        <td>GL / General Ledger</td>
+        <td>Chart of Accounts, Account Ledger</td>
+        <td>ได้รายการบัญชีทั้งหมด สำหรับ Indirect Method</td>
+        <td>Excel/CSV</td>
+        <td>รายเดือน</td>
+        <td>ต้องมี: Account Code, Account Name, Debit, Credit, Balance</td>
+        <td class="checkbox">☐</td>
+    </tr>
+    <tr>
+        <td class="item-num">26</td>
+        <td>Trial Balance</td>
+        <td>TB, Trial Balance Report</td>
+        <td>ยอดบัญชีทั้งหมดเพื่อ Reconcile</td>
+        <td>Excel/CSV</td>
+        <td>รายเดือน</td>
+        <td>ต้องมี: Account, Debit, Credit, Balance</td>
+        <td class="checkbox">☐</td>
+    </tr>
+    <tr>
+        <td class="item-num">27</td>
+        <td>Net Profit/Loss</td>
+        <td>P&L, Income Statement</td>
+        <td>ได้กำไรสุทธิ สำหรับ Indirect Method (Starting point)</td>
+        <td>Excel/CSV</td>
+        <td>รายเดือน</td>
+        <td>ต้องมี: Revenue, Expenses, Net Profit</td>
+        <td class="checkbox">☐</td>
+    </tr>
+    <tr>
+        <td colspan="8" class="section-header">ข้อมูลค่าเสื่อมราคา (Depreciation)</td>
+    </tr>
+    <tr>
+        <td class="item-num">28</td>
+        <td>ค่าเสื่อมราคา</td>
+        <td>Depreciation Expense, Amortization</td>
+        <td>ปรับในการคำนวณ Cash Flow (Indirect Method) เพราะไม่ใช่ Cash Out</td>
+        <td>Excel/CSV</td>
+        <td>รายเดือน</td>
+        <td>ต้องมี: ประเภทสินทรัพย์, จำนวน, วิธีคำนวณ</td>
+        <td class="checkbox">☐</td>
+    </tr>
+    <tr>
+        <td colspan="8" class="section-header">ข้อมูลเจ้าหนี้ (Account Payable)</td>
+    </tr>
+    <tr>
+        <td class="item-num">29</td>
+        <td>เจ้าหนี้ค้างชำระ</td>
+        <td>AP Aging, Outstanding Payable</td>
+        <td>ทราบว่าต้องจ่ายใครเท่าไร สำหรับคำนวณ Working Capital</td>
+        <td>Excel/CSV</td>
+        <td>รายเดือน</td>
+        <td>ต้องมี: เจ้าหนี้, Invoice No., จำนวนค้าง, Due Date</td>
+        <td class="checkbox">☐</td>
+    </tr>
+    <tr>
+        <td class="item-num">30</td>
+        <td>ใบแจ้งหนี้จากเจ้าหนี้</td>
+        <td>Vendor Invoice, PO Invoice</td>
+        <td>บันทึกใบแจ้งหนี้ที่ได้รับจากเจ้าหนี้</td>
+        <td>Excel/CSV</td>
+        <td>รายวัน</td>
+        <td>ต้องมี: เจ้าหนี้, Invoice No., วันที่, จำนวนเงิน, Due Date</td>
+        <td class="checkbox">☐</td>
+    </tr>
+    <tr>
+        <td colspan="8" class="section-header">ข้อมูลลูกหนี้บัญชี (Account Receivable GL)</td>
+    </tr>
+    <tr>
+        <td class="item-num">31</td>
+        <td>ลูกหนี้บัญชี</td>
+        <td>AR GL, Receivable Ledger</td>
+        <td>ทราบยอดลูกหนี้ทั้งหมดในบัญชี สำหรับ Reconcile</td>
+        <td>Excel/CSV</td>
+        <td>รายเดือน</td>
+        <td>ต้องมี: ลูกค้า, Invoice, Debit, Credit, Balance</td>
+        <td class="checkbox">☐</td>
+    </tr>
+    <tr>
+        <td colspan="8" class="section-header">ข้อมูลสินค้า (Inventory)</td>
+    </tr>
+    <tr>
+        <td class="item-num">32</td>
+        <td>ยอดสินค้าคงคลัง</td>
+        <td>Inventory Balance, Stock Level</td>
+        <td>ปรับในการคำนวณ Working Capital (Indirect Method)</td>
+        <td>Excel/CSV</td>
+        <td>รายเดือน</td>
+        <td>ต้องมี: SKU, ชื่อ, จำนวน, มูลค่า</td>
+        <td class="checkbox">☐</td>
+    </tr>
+</table>
+
+<!-- TREASURY -->
+<div class="dept-header">🏦 TREASURY (จำนวน 6 รายการ) ⭐ NEW</div>
+<table>
+    <tr>
+        <th>#</th>
+        <th>ชื่อข้อมูล</th>
+        <th>ชื่ออื่นๆ</th>
+        <th>วัตถุประสงค์</th>
+        <th>รูปแบบ</th>
+        <th>ความถี่</th>
+        <th>หมายเหตุ</th>
+        <th>ได้รับ</th>
+    </tr>
+    <tr>
+        <td colspan="8" class="section-header">สินทรัพย์ถาวร (Fixed Assets)</td>
+    </tr>
+    <tr>
+        <td class="item-num">33</td>
+        <td>Asset Master List</td>
+        <td>Fixed Asset Register</td>
+        <td>บันทึกสินทรัพย์ถาวรทั้งหมด (เครื่องจักร, ยานพาหนะ, สิ่งปลูกสร้าง)</td>
+        <td>Excel/CSV</td>
+        <td>รายครั้งที่มี Asset ใหม่</td>
+        <td>ต้องมี: Asset Code, ชื่อ, ประเภท, ยอดเบิกจ่าย, วันซื้อ</td>
+        <td class="checkbox">☐</td>
+    </tr>
+    <tr>
+        <td class="item-num">34</td>
+        <td>Asset Book Value</td>
+        <td>Accumulated Depreciation, Net Book Value</td>
+        <td>ยอดสุทธิสินทรัพย์หลังหักค่าเสื่อมสะสม สำหรับ Balance Sheet</td>
+        <td>Excel/CSV</td>
+        <td>รายเดือน</td>
+        <td>ต้องมี: Asset, Cost, วันซื้อ, Useful Life, Accumulated Depreciation</td>
+        <td class="checkbox">☐</td>
+    </tr>
+    <tr>
+        <td class="item-num">35</td>
+        <td>Depreciation Schedule</td>
+        <td>Depreciation Expense by Asset</td>
+        <td>วางแผนค่าเสื่อมในแต่ละปี สำหรับ Indirect Method</td>
+        <td>Excel/CSV</td>
+        <td>รายเดือน</td>
+        <td>ต้องมี: Asset, ยอด, % หรือ Amount per Month</td>
+        <td class="checkbox">☐</td>
+    </tr>
+    <tr>
+        <td colspan="8" class="section-header">หนี้สิน (Loan & Debt)</td>
+    </tr>
+    <tr>
+        <td class="item-num">36</td>
+        <td>Loan/Debt Schedule</td>
+        <td>Liabilities, Debt Register</td>
+        <td>บันทึก Loan ทั้งหมด (ยอด, ดอก, ระยะเวลา, ผู้ให้กู้) สำหรับหนี้สิน</td>
+        <td>Excel/CSV</td>
+        <td>รายครั้งที่เปลี่ยน</td>
+        <td>ต้องมี: Loan ID, ยอด, Interest Rate, Term, ผู้ให้กู้, Payment Start</td>
+        <td class="checkbox">☐</td>
+    </tr>
+    <tr>
+        <td class="item-num">37</td>
+        <td>Interest Expense</td>
+        <td>Accrued Interest</td>
+        <td>ค่าดอกเบี้ยรายเดือน (Non-Cash) สำหรับ Indirect Method</td>
+        <td>Excel/CSV</td>
+        <td>รายเดือน</td>
+        <td>ต้องมี: Loan, ยอด, Interest Rate, Interest/Month</td>
+        <td class="checkbox">☐</td>
+    </tr>
+    <tr>
+        <td class="item-num">38</td>
+        <td>Loan Payment Schedule</td>
+        <td>Debt Repayment, Principal Payment</td>
+        <td>วางแผนการจ่ายหนี้เงินต้น + ดอก สำหรับ Cash Flow Planning</td>
+        <td>Excel/CSV</td>
+        <td>รายเดือน</td>
+        <td>ต้องมี: Loan, Principal Payment, Interest Payment, Due Date</td>
+        <td class="checkbox">☐</td>
+    </tr>
+</table>
+
+<div class="notes">
+<strong>📌 หมายเหตุสำคัญ:</strong><br>
+✓ Check list นี้แยกตามแผนก (Finance, AR, Accounting, Treasury)<br>
+✓ ตัด Forecast Cash ออกแล้ว (-4 รายการ)<br>
+✓ เพิ่ม Fixed Assets, Cost Structure, Loan & Debt (+9 รายการ)<br>
+✓ รวม 38 รายการสำหรับ MVP ใหม่<br>
+✓ ยังคงต้อง Indirect Method สำหรับคำนวณ Cash Flow
+</div>
+
+<hr>
+<p style="text-align: center; font-size: 11px; color: #666;">
+    Version 2 - Updated: ตัด Forecast Cash, เพิ่ม Assets/Cost/Loan<br>
+    ✓ สามารถเปิดได้ด้วย Excel, Google Sheets, หรือ Browser<br>
+    ✓ ติดตามความคืบหน้าโดยใส่ ☐ → ☑ ในคอลัมน์ "ได้รับ"<br>
+    ✓ ส่งให้ Finance, AR, Accounting, Treasury ตามที่เกี่ยวข้อง
+</p>
+
+</body>
+</html>

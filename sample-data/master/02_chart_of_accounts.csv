@@ -1,0 +1,97 @@
+﻿account_code,account_name_th,account_name_en,account_type,statement,normal_balance,parent_code,used_by
+1000,สินทรัพย์,Assets,HEADER,BS,DR,,ALL
+1100,สินทรัพย์หมุนเวียน,Current Assets,HEADER,BS,DR,1000,ALL
+1110,เงินสดและรายการเทียบเท่าเงินสด,Cash and Cash Equivalents,HEADER,BS,DR,1100,ALL
+1111,เงินสดย่อย,Petty Cash,ASSET,BS,DR,1110,ALL
+1112,เงินฝากธนาคาร - กระแสรายวัน,Bank - Current Account,ASSET,BS,DR,1110,ALL
+1113,เงินฝากธนาคาร - ออมทรัพย์,Bank - Savings Account,ASSET,BS,DR,1110,ALL
+1114,เงินฝากประจำ,Bank - Fixed Deposit,ASSET,BS,DR,1110,ALL
+1120,ลูกหนี้การค้ากิจการอื่น,Trade AR - Third Parties,HEADER,BS,DR,1100,ALL
+1121,ลูกหนี้การค้า - ลูกค้าเงินสด,Trade AR - Cash Customer,ASSET,BS,DR,1120,HMW;CLIK
+1122,ลูกหนี้การค้า - ไฟแนนซ์,Trade AR - Finance Co,ASSET,BS,DR,1120,HMW
+1123,ลูกหนี้การค้า - องค์กร/ฟลีท,Trade AR - Corporate/Fleet,ASSET,BS,DR,1120,HMW;CLIK
+1124,ค่าเผื่อหนี้สงสัยจะสูญ,Allowance for Doubtful Accounts,CONTRA_ASSET,BS,CR,1120,HMW;CLIK
+1125,ลูกหนี้การค้า - กิจการที่เกี่ยวข้องกัน,Trade AR - Related Parties,ASSET,BS,DR,1120,ACG;HMW;CLIK
+1130,ลูกหนี้หมุนเวียนอื่น,Other Current Receivables,ASSET,BS,DR,1100,ALL
+1140,สินค้าคงเหลือ,Inventory,HEADER,BS,DR,1100,HMW;CLIK
+1141,สินค้าคงเหลือ - รถใหม่,Inventory - New Vehicles,ASSET,BS,DR,1140,HMW
+1142,สินค้าคงเหลือ - อะไหล่,Inventory - Spare Parts,ASSET,BS,DR,1140,HMW;CLIK
+1143,สินค้าคงเหลือ - รถมือสอง,Inventory - Used Vehicles,ASSET,BS,DR,1140,HMW
+1144,ค่าเผื่อการลดมูลค่าสินค้า,Allowance for Inventory Write-down,CONTRA_ASSET,BS,CR,1140,HMW;CLIK
+1150,สินทรัพย์หมุนเวียนอื่น,Other Current Assets,ASSET,BS,DR,1100,ALL
+1160,สินทรัพย์ภาษีเงินได้ของงวดปัจจุบัน,Current Tax Asset,ASSET,BS,DR,1100,ALL
+1200,สินทรัพย์ไม่หมุนเวียน,Non-Current Assets,HEADER,BS,DR,1000,ALL
+1210,เงินลงทุนในบริษัทย่อย,Investment in Subsidiary,ASSET,BS,DR,1200,ACG
+1215,เงินให้กู้ยืมระยะยาวแก่บริษัทย่อย,LT Loan to Subsidiary,ASSET,BS,DR,1200,ACG
+1220,ลูกหนี้ไม่หมุนเวียนอื่น,Other Non-Current Receivables,ASSET,BS,DR,1200,ALL
+1230,อสังหาริมทรัพย์เพื่อการลงทุน,Investment Property,ASSET,BS,DR,1200,HMW
+1310,ที่ดิน อาคารและอุปกรณ์,Property Plant and Equipment,HEADER,BS,DR,1200,ALL
+1311,ที่ดิน,Land,ASSET,BS,DR,1310,HMW;CLIK
+1312,อาคารและสิ่งปลูกสร้าง,Buildings,ASSET,BS,DR,1310,HMW;CLIK
+1313,ยานพาหนะ,Vehicles,ASSET,BS,DR,1310,HMW;CLIK
+1314,เครื่องตกแต่งและอุปกรณ์สำนักงาน,Furniture and Office Equipment,ASSET,BS,DR,1310,ALL
+1319,ค่าเสื่อมราคาสะสม,Accumulated Depreciation,CONTRA_ASSET,BS,CR,1310,ALL
+1320,สินทรัพย์สิทธิการใช้,Right-of-Use Assets,ASSET,BS,DR,1200,HMW;CLIK
+1325,ค่าเสื่อมราคาสะสม - สิทธิการใช้,Accum Depreciation - ROU,CONTRA_ASSET,BS,CR,1320,HMW;CLIK
+1330,สินทรัพย์ไม่มีตัวตน,Intangible Assets,ASSET,BS,DR,1200,ALL
+1335,ค่าตัดจำหน่ายสะสม - สินทรัพย์ไม่มีตัวตน,Accum Amortization - Intangibles,CONTRA_ASSET,BS,CR,1330,ALL
+1340,สินทรัพย์ภาษีเงินได้รอการตัดบัญชี,Deferred Tax Assets,ASSET,BS,DR,1200,ALL
+1350,สินทรัพย์ไม่หมุนเวียนอื่น,Other Non-Current Assets,ASSET,BS,DR,1200,ALL
+2000,หนี้สิน,Liabilities,HEADER,BS,CR,,ALL
+2100,หนี้สินหมุนเวียน,Current Liabilities,HEADER,BS,CR,2000,ALL
+2110,เงินกู้ยืมระยะสั้นจากสถาบันการเงิน,Short-term Loan from FI,LIABILITY,BS,CR,2100,ACG;HMW;CLIK
+2120,เจ้าหนี้การค้า,Trade AP,HEADER,BS,CR,2100,HMW;CLIK
+2121,เจ้าหนี้การค้า - ฮอนด้า,AP - Honda,LIABILITY,BS,CR,2120,HMW
+2122,เจ้าหนี้การค้า - อะไหล่,AP - Spare Parts Vendors,LIABILITY,BS,CR,2120,HMW;CLIK
+2123,เจ้าหนี้การค้า - บริการ,AP - Service Vendors,LIABILITY,BS,CR,2120,HMW;CLIK
+2125,เจ้าหนี้การค้า - กิจการที่เกี่ยวข้องกัน,Trade AP - Related Parties,LIABILITY,BS,CR,2120,ACG;HMW;CLIK
+2130,เจ้าหนี้หมุนเวียนอื่น,Other Current Payables,LIABILITY,BS,CR,2100,ALL
+2140,ส่วนของเงินกู้ยืมระยะยาวที่ถึงกำหนดภายในหนึ่งปี,Current Portion of LT Loan,LIABILITY,BS,CR,2100,HMW;CLIK
+2150,ส่วนของหนี้สินตามสัญญาเช่าที่ถึงกำหนดภายในหนึ่งปี,Current Portion of Lease Liability,LIABILITY,BS,CR,2100,HMW;CLIK
+2160,ภาษีเงินได้นิติบุคคลค้างจ่าย,Accrued Income Tax,LIABILITY,BS,CR,2100,ALL
+2170,หนี้สินหมุนเวียนอื่น,Other Current Liabilities,LIABILITY,BS,CR,2100,ALL
+2200,หนี้สินไม่หมุนเวียน,Non-Current Liabilities,HEADER,BS,CR,2000,ALL
+2210,เงินกู้ยืมระยะยาวจากสถาบันการเงิน,LT Loan from FI,LIABILITY,BS,CR,2200,HMW;CLIK
+2215,เงินกู้ยืมระยะยาวจากกิจการที่เกี่ยวข้องกัน,LT Loan from Related Parties,LIABILITY,BS,CR,2200,CLIK
+2220,หนี้สินตามสัญญาเช่า,Lease Liability,LIABILITY,BS,CR,2200,HMW;CLIK
+2230,ประมาณการหนี้สินผลประโยชน์พนักงาน,Provision for Employee Benefits,LIABILITY,BS,CR,2200,ALL
+2240,หนี้สินไม่หมุนเวียนอื่น,Other Non-Current Liabilities,LIABILITY,BS,CR,2200,ALL
+3000,ส่วนของผู้ถือหุ้น,Equity,HEADER,BS,CR,,ALL
+3110,ทุนจดทะเบียนและชำระแล้ว,Share Capital - Paid-up,EQUITY,BS,CR,3000,ALL
+3120,ส่วนเกินมูลค่าหุ้นสามัญ,Share Premium,EQUITY,BS,CR,3000,ACG
+3130,ส่วนเกินทุนจากการจัดโครงสร้างทางธุรกิจ,Premium from Business Restructure,EQUITY,BS,CR,3000,ACG
+3140,ใบสำคัญแสดงสิทธิที่จะซื้อหุ้น,Warrants,EQUITY,BS,CR,3000,ACG
+3150,กำไรสะสม - จัดสรรแล้ว - สำรองตามกฎหมาย,Retained Earnings - Legal Reserve,EQUITY,BS,CR,3000,ALL
+3160,กำไรสะสม - ยังไม่ได้จัดสรร,Retained Earnings - Unappropriated,EQUITY,BS,CR,3000,ALL
+3170,ส่วนของผู้ถือหุ้นส่วนน้อย,Non-Controlling Interest,EQUITY,BS,CR,3000,CONSO
+4000,รายได้,Revenue,HEADER,PL,CR,,ALL
+4110,รายได้จากการขายรถยนต์,Revenue - Vehicle Sales,REVENUE,PL,CR,4000,HMW
+4120,รายได้จากการบริการ (ศูนย์บริการ),Revenue - Service Center,REVENUE,PL,CR,4000,HMW;CLIK
+4130,รายได้จากการขายอะไหล่,Revenue - Spare Parts,REVENUE,PL,CR,4000,HMW;CLIK
+4140,รายได้ค่าก่อสร้าง / งานตัวถัง,Revenue - Body Shop/Construction,REVENUE,PL,CR,4000,HMW;CLIK
+4150,เงินปันผลรับ,Dividend Income,REVENUE,PL,CR,4000,ACG
+4160,รายได้ค่าคอมมิชชั่น / นายหน้า,Commission Income,REVENUE,PL,CR,4000,HMW
+4170,รายได้ค่าบริหารจัดการ - บริษัทในเครือ,Management Fee Income - Related,REVENUE,PL,CR,4000,ACG
+4180,กำไรจากการจำหน่ายอุปกรณ์,Gain on Disposal of Equipment,REVENUE,PL,CR,4000,ALL
+4190,รายได้อื่น,Other Income,REVENUE,PL,CR,4000,ALL
+5000,ค่าใช้จ่าย,Expenses,HEADER,PL,DR,,ALL
+5110,ต้นทุนขาย - รถยนต์,COGS - Vehicles,EXPENSE,PL,DR,5000,HMW
+5120,ต้นทุนขาย - อะไหล่,COGS - Spare Parts,EXPENSE,PL,DR,5000,HMW;CLIK
+5130,ต้นทุนการให้บริการ,Cost of Services,EXPENSE,PL,DR,5000,HMW;CLIK
+5135,ต้นทุนค่าบริหารจัดการ,Cost of Management Services,EXPENSE,PL,DR,5000,ACG
+5210,ต้นทุนในการจัดจำหน่าย,Cost of Distribution,EXPENSE,PL,DR,5000,HMW
+5310,ค่าใช้จ่ายในการขาย,Selling Expenses,EXPENSE,PL,DR,5000,HMW;CLIK
+5410,ค่าใช้จ่ายในการบริหาร,Administrative Expenses,HEADER,PL,DR,5000,ALL
+5411,เงินเดือนและสวัสดิการ,Salaries and Benefits,EXPENSE,PL,DR,5410,ALL
+5412,ค่าเช่า,Rent,EXPENSE,PL,DR,5410,HMW;CLIK
+5413,ค่าสาธารณูปโภค,Utilities,EXPENSE,PL,DR,5410,HMW;CLIK
+5414,ค่าเสื่อมราคา - ที่ดินอาคารและอุปกรณ์,Depreciation - PPE,EXPENSE,PL,DR,5410,ALL
+5415,ค่าเสื่อมราคา - สิทธิการใช้,Depreciation - ROU Assets,EXPENSE,PL,DR,5410,HMW;CLIK
+5416,ค่าเสื่อมราคา - อสังหาริมทรัพย์เพื่อการลงทุน,Depreciation - Investment Property,EXPENSE,PL,DR,5410,HMW
+5417,ค่าตัดจำหน่ายสินทรัพย์ไม่มีตัวตน,Amortization - Intangibles,EXPENSE,PL,DR,5410,ALL
+5418,ค่าธรรมเนียมและบริการวิชาชีพ,Professional Fees,EXPENSE,PL,DR,5410,ALL
+5419,ค่าใช้จ่ายในการบริหารอื่น,Other Admin Expenses,EXPENSE,PL,DR,5410,ALL
+5420,หนี้สูญและหนี้สงสัยจะสูญ,Bad Debt Expense,EXPENSE,PL,DR,5410,HMW;CLIK
+5421,ค่าเผื่อการลดมูลค่าสินค้า,Inventory Write-down,EXPENSE,PL,DR,5410,HMW;CLIK
+5510,ต้นทุนทางการเงิน,Finance Cost,EXPENSE,PL,DR,5000,HMW;CLIK
+5610,ค่าใช้จ่ายภาษีเงินได้,Income Tax Expense,EXPENSE,PL,DR,5000,ALL

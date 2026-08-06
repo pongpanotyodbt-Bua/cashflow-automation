@@ -5,7 +5,8 @@
       "name": "cashflow",
       "runtimeExecutable": "powershell.exe",
       "runtimeArgs": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "C:\\Users\\pongpanotyod.b\\Desktop\\Cashflow Management\\scripts\\server-local.ps1"],
-      "port": 8000
+      "port": 8000,
+      "url": "http://localhost:8000/bundle.html"
     }
   ]
 }

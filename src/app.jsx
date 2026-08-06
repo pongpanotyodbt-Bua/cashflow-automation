@@ -17,7 +17,9 @@ const ACCENT_PRESETS = {
 
 function App() {
   const [active, setActive] = React.useState("dashboard");
-  const [period, setPeriod] = React.useState("ไตรมาส 1/2569");
+  // period stores the API code (e.g. "2026-Q1"), NOT the Thai display label.
+  // Use window.getPeriodLabel(period) for display, window.getPeriodMeta(period) for API params.
+  const [period, setPeriod] = React.useState(window.CF_PERIOD_DEFAULT);
   const [companyId, setCompanyId] = React.useState("CONSO");
   const [toasts, setToasts] = React.useState([]);
   const [showExport, setShowExport] = React.useState(false);
@@ -61,19 +63,19 @@ function App() {
         <window.Topbar crumbs={crumbs[active]} period={period} setPeriod={setPeriod} companyId={companyId} setCompanyId={setCompanyId} />
         <div className="scroll-area">
           <div className="page">
-            {active === "dashboard" && <window.Dashboard chartStyle={tweaks.chartStyle} companyId={companyId} />}
-            {active === "finance" && <window.FinanceInput toast={toast} companyId={companyId} />}
-            {active === "accounting" && <window.AccountingInput toast={toast} companyId={companyId} />}
-            {active === "direct" && <window.ReportPage method="direct" companyId={companyId} chartStyle={tweaks.chartStyle} onExport={() => setShowExport(true)} />}
-            {active === "indirect" && <window.ReportPage method="indirect" companyId={companyId} chartStyle={tweaks.chartStyle} onExport={() => setShowExport(true)} />}
-            {active === "forecast" && <window.Forecast chartStyle={tweaks.chartStyle} />}
-            {active === "export" && <window.ExportCenter toast={toast} onShowExport={() => setShowExport(true)} />}
-            {active === "settings" && <window.Settings toast={toast} />}
+            {active === "dashboard"  && <window.Dashboard   chartStyle={tweaks.chartStyle} companyId={companyId} period={period} />}
+            {active === "finance"   && <window.FinanceInput  toast={toast}                 companyId={companyId} period={period} />}
+            {active === "accounting"&& <window.AccountingInput toast={toast}              companyId={companyId} period={period} />}
+            {active === "direct"    && <window.ReportPage method="direct"   companyId={companyId} period={period} chartStyle={tweaks.chartStyle} onExport={() => setShowExport(true)} />}
+            {active === "indirect"  && <window.ReportPage method="indirect" companyId={companyId} period={period} chartStyle={tweaks.chartStyle} onExport={() => setShowExport(true)} />}
+            {active === "forecast"  && <window.Forecast chartStyle={tweaks.chartStyle} period={period} />}
+            {active === "export"    && <window.ExportCenter toast={toast} onShowExport={() => setShowExport(true)} period={period} />}
+            {active === "settings"  && <window.Settings toast={toast} />}
           </div>
         </div>
       </main>
 
-      {showExport && <ExportModal onClose={() => setShowExport(false)} onDone={(name) => { setShowExport(false); toast("ดาวน์โหลด " + name + " เรียบร้อย"); }} initialReport={active === "direct" ? "direct" : active === "indirect" ? "indirect" : "indirect"} />}
+      {showExport && <ExportModal onClose={() => setShowExport(false)} onDone={(name) => { setShowExport(false); toast("ดาวน์โหลด " + name + " เรียบร้อย"); }} initialReport={active === "direct" ? "direct" : active === "indirect" ? "indirect" : "indirect"} period={period} />}
 
       {/* Toasts */}
       <div className="toast-host">
@@ -137,11 +139,12 @@ function App() {
 }
 
 /* ----- Export Modal (simulate Excel export) ----- */
-function ExportModal({ onClose, onDone, initialReport }) {
+function ExportModal({ onClose, onDone, initialReport, period: initialPeriod }) {
   const [step, setStep] = React.useState(1);
   const [progress, setProgress] = React.useState(0);
   const [report, setReport] = React.useState(initialReport || "indirect");
-  const [period, setPeriod] = React.useState("Q1 2026");
+  // period stores API code; label derived via getPeriodLabel
+  const [period, setPeriod] = React.useState(initialPeriod || window.CF_PERIOD_DEFAULT);
   const [includes, setIncludes] = React.useState({
     summary: true, sections: true, notes: true, supporting: false, charts: true,
   });
@@ -165,7 +168,9 @@ function ExportModal({ onClose, onDone, initialReport }) {
     ar: "AR Aging",
     ap: "AP Aging",
   }[report];
-  const fileName = `${reportName} ${period}.xlsx`;
+  // Display label for filename; API calls should use period code directly
+  const periodLabel = window.getPeriodLabel(period);
+  const fileName = `${reportName} ${periodLabel}.xlsx`;
 
   return (
     <div className="modal-backdrop" onClick={onClose}>
@@ -191,7 +196,9 @@ function ExportModal({ onClose, onDone, initialReport }) {
                 </label>
                 <label className="field">งวด
                   <select className="select" value={period} onChange={(e) => setPeriod(e.target.value)}>
-                    <option>Q1 2026</option><option>ม.ค. 2026</option><option>ก.พ. 2026</option><option>มี.ค. 2026</option><option>YTD 2026</option><option>ปี 2025</option>
+                    {window.CF_PERIODS.map(p => (
+                      <option key={p.code} value={p.code}>{p.label}</option>
+                    ))}
                   </select>
                 </label>
                 <label className="field">รูปแบบ
@@ -224,7 +231,7 @@ function ExportModal({ onClose, onDone, initialReport }) {
                 <div className="row" style={{ gap: 8 }}>
                   <Ic name="fileExcel" size={14} style={{ color: "#1F9D55" }} />
                   <span style={{ fontWeight: 500 }}>{fileName}</span>
-                  <span className="faint" style={{ marginLeft: "auto" }}>~ 220 KB</span>
+                  <span className="faint mono" style={{ marginLeft: "auto", fontSize: 11 }}>{period}</span>
                 </div>
               </div>
             </>

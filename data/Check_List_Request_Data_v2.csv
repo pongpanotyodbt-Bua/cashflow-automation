@@ -1,0 +1,55 @@
+แผนก,#,ชื่อข้อมูล,ชื่ออื่นๆ,วัตถุประสงค์,รูปแบบ,ความถี่,หมายเหตุ,ได้รับ
+Finance,,เงินเข้า (Cash In),,,,,
+Finance,1,ใบเสร็จรับเงิน,Cash Receipt/Payment Receipt,บันทึกเงินที่เข้ามาจากลูกค้า,Excel/CSV,รายวัน,ต้องมี: วันที่ จำนวนเงิน ผู้จ่าย,☐
+Finance,2,ใบโอนเงินเข้าบัญชี,Fund Transfer In/Bank Transfer,บันทึกเงินโอนเข้าจากบัญชีอื่น,Excel/CSV,รายวัน,ต้องมี: วันที่ จำนวนเงิน บัญชีต้นทาง,☐
+Finance,3,เงินลงทุน/ยืมเงิน,Loan Receipt/Capital Injection,บันทึกเงินทุน/เงินกู้ที่เข้ามา,Excel/CSV,ตามเหตุการณ์,ต้องมี: วันที่ จำนวนเงิน,☐
+Finance,4,ค่าประกันภัยคืน/อื่นๆ,Other Income/Refund,บันทึกเงินอื่นๆที่เข้ามา,Excel/CSV,ตามเหตุการณ์,ต้องมี: วันที่ จำนวนเงิน ประเภท,☐
+Finance,,เงินออก (Cash Out),,,,,
+Finance,5,ใบเบิกจ่าย,Check Register/Expense Voucher,บันทึกเงินที่จ่ายออกไป,Excel/CSV,รายวัน,ต้องมี: วันที่ จำนวนเงิน ผู้รับ ประเภท,☐
+Finance,6,ใบโอนเงินออก,Fund Transfer Out,บันทึกเงินโอนออกไป,Excel/CSV,รายวัน,ต้องมี: วันที่ จำนวนเงิน บัญชี,☐
+Finance,7,เงินจ่ายเจ้าหนี้,AP Payment/Payable Payment,บันทึกการจ่ายเงินให้เจ้าหนี้,Excel/CSV,รายวัน,ต้องมี: วันที่ จำนวนเงิน เจ้าหนี้ Invoice No.,☐
+Finance,8,เงินจ่ายเงินเดือน/ค่าจ้าง,Salary/Wages/Payroll,บันทึกค่าจ้างพนักงาน,Excel/CSV,รายเดือน,ต้องมี: วันที่ จำนวนเงินรวม,☐
+Finance,9,ค่าใช้จ่ายอื่นๆ,Expense/Operating Expense,บันทึกค่าใช้จ่ายต่างๆ,Excel/CSV,รายวัน,ต้องมี: วันที่ จำนวนเงิน ประเภท,☐
+Finance,,ยอดเงินในบัญชี (Bank Balance),,,,,
+Finance,10,ยอดคงเหลือในธนาคาร,Bank Balance/Cash in Bank,ติดตามเงินคงเหลือในบัญชี,Excel/CSV,รายวัน (ท้ายวัน),ต้องมี: วันที่ บัญชี ยอดคงเหลือ,☐
+Finance,11,Statement ธนาคาร,Bank Statement,รับข้อมูลจากธนาคารเพื่อ Reconcile,PDF/Excel,รายเดือน,ต้องมี: ชื่อบัญชี งวด เงินเข้า เงินออก,☐
+Finance,,Cost Structure (โครงสร้างต้นทุน),,,,,
+Finance,12,Fixed Cost List,Recurring Expenses/Monthly Overhead,บันทึก Cost ที่ไม่เปลี่ยน (เช่า เงินเดือน โทร),Excel/CSV,รายครั้งที่เปลี่ยน,ต้องมี: รายการ/Item จำนวนเงิน ระยะเวลา,☐
+Finance,13,Variable Cost Ratio,Cost as % of Revenue/Cost Structure,อัตราส่วน Cost ต่อ Revenue,Excel/CSV,รายเดือน/รายครั้งที่เปลี่ยน,ต้องมี: ประเภท Cost %, ใช้สำหรับคำนวณ,☐
+Finance,14,COGS (Cost of Goods Sold),Cost of Sales/Production Cost,ต้นทุนขายต่อ Revenue เพื่อคำนวณ Gross Profit,Excel/CSV,รายเดือน,ต้องมี: COGS ยอด หรือ % ของ Revenue,☐
+AR,,ข้อมูลใบแจ้งหนี้ (Invoice),,,,,
+AR,15,ใบแจ้งหนี้ทั้งหมด,Invoice/Sales Invoice,ติดตามรายได้ที่เกิดขึ้น (Revenue Performance),Excel/CSV,รายเดือน,ต้องมี: Invoice No. วันที่ ลูกค้า จำนวนเงิน Credit Term Due Date,☐
+AR,16,ใบแจ้งหนี้แยกตามลูกค้า,Customer Invoice List,แยกรายได้ตามลูกค้า เพื่อวิเคราะห์,Excel/CSV,รายเดือน,ต้องมี: ลูกค้า Invoice No. จำนวนเงิน,☐
+AR,,ข้อมูลเงื่อนไขการชำระ (Credit Term),,,,,
+AR,17,Credit Term ของแต่ละลูกค้า,Customer Credit Terms/Terms of Payment,ระบุเงื่อนไขชำระเงิน (Net 30/60/90 COD),Excel/CSV,รายครั้งที่มีการเปลี่ยน,ต้องมี: ลูกค้า Term วันที่มีผล,☐
+AR,18,Default Credit Term,Standard Payment Terms,เงื่อนไขชำระเงินมาตรฐาน,Excel/CSV,รายครั้งที่มีการเปลี่ยน,ต้องมี: ประเภทลูกค้า Credit Term,☐
+AR,,ข้อมูลการชำระเงินจากลูกค้า (Customer Payment),,,,,
+AR,19,การชำระเงินจากลูกค้า,Customer Payment/Collection,บันทึกเงินจริงที่ลูกค้าชำระเข้ามา (Cash Performance),Excel/CSV,รายวัน,ต้องมี: ลูกค้า วันที่ จำนวนเงิน Invoice No. Payment Method,☐
+AR,20,ใบเสร็จรับเงินจากลูกค้า,Sales Receipt/Collection Receipt,บันทึกการรับเงินจากลูกค้า (สำหรับ Matching),Excel/CSV,รายวัน,ต้องมี: ลูกค้า วันที่ จำนวนเงิน ประเภท,☐
+AR,,ข้อมูลลูกหนี้ (Receivables Analysis),,,,,
+AR,21,ลูกหนี้ค้างชำระ / Aging Report,Outstanding Receivables/AR Aging,ทราบว่าลูกหนี้ใครค้างเท่าไร ค้างมานานเท่าไร,Excel/CSV,รายเดือน (สิ้นเดือน),ต้องมี: ลูกค้า Invoice No. จำนวนค้าง Aging Bucket,☐
+AR,22,รายการ Credit Limit,Credit Limit/Credit Facility,ทราบขีดเครดิตของแต่ละลูกค้า,Excel/CSV,รายครั้งที่มีการเปลี่ยน,ต้องมี: ลูกค้า Credit Limit,☐
+AR,,ข้อมูลลูกค้า (Customer Master Data),,,,,
+AR,23,ข้อมูลลูกค้า,Customer Master/Customer List,เก็บข้อมูลพื้นฐานของลูกค้า,Excel/CSV,รายครั้งที่มีลูกค้าใหม่,ต้องมี: Customer Code ชื่อ ประเภท Contact Address,☐
+AR,24,การแบ่งประเภทลูกค้า,Customer Segmentation,แยกว่าลูกค้าไหนจ่ายสด ไหนเครดิต ไหนพิเศษ,Excel/CSV,รายครั้งที่มีการเปลี่ยน,ต้องมี: ลูกค้า ประเภท (Cash/Credit/VIP),☐
+Accounting,,ข้อมูลบัญชี (General Ledger),,,,,
+Accounting,25,GL / General Ledger,Chart of Accounts/Account Ledger,ได้รายการบัญชีทั้งหมด สำหรับ Indirect Method,Excel/CSV,รายเดือน,ต้องมี: Account Code Account Name Debit Credit Balance,☐
+Accounting,26,Trial Balance,TB/Trial Balance Report,ยอดบัญชีทั้งหมดเพื่อ Reconcile,Excel/CSV,รายเดือน,ต้องมี: Account Debit Credit Balance,☐
+Accounting,27,Net Profit/Loss,P&L/Income Statement,ได้กำไรสุทธิ สำหรับ Indirect Method,Excel/CSV,รายเดือน,ต้องมี: Revenue Expenses Net Profit,☐
+Accounting,,ข้อมูลค่าเสื่อมราคา (Depreciation),,,,,
+Accounting,28,ค่าเสื่อมราคา,Depreciation Expense/Amortization,ปรับในการคำนวณ Cash Flow (Indirect Method) เพราะไม่ใช่ Cash Out,Excel/CSV,รายเดือน,ต้องมี: ประเภทสินทรัพย์ จำนวน วิธีคำนวณ,☐
+Accounting,,ข้อมูลเจ้าหนี้ (Account Payable),,,,,
+Accounting,29,เจ้าหนี้ค้างชำระ,AP Aging/Outstanding Payable,ทราบว่าต้องจ่ายใครเท่าไร สำหรับคำนวณ Working Capital,Excel/CSV,รายเดือน,ต้องมี: เจ้าหนี้ Invoice No. จำนวนค้าง Due Date,☐
+Accounting,30,ใบแจ้งหนี้จากเจ้าหนี้,Vendor Invoice/PO Invoice,บันทึกใบแจ้งหนี้ที่ได้รับจากเจ้าหนี้,Excel/CSV,รายวัน,ต้องมี: เจ้าหนี้ Invoice No. วันที่ จำนวนเงิน Due Date,☐
+Accounting,,ข้อมูลลูกหนี้บัญชี (Account Receivable GL),,,,,
+Accounting,31,ลูกหนี้บัญชี,AR GL/Receivable Ledger,ทราบยอดลูกหนี้ทั้งหมดในบัญชี,Excel/CSV,รายเดือน,ต้องมี: ลูกค้า Invoice Debit Credit Balance,☐
+Accounting,,ข้อมูลสินค้า (Inventory),,,,,
+Accounting,32,ยอดสินค้าคงคลัง,Inventory Balance/Stock Level,ปรับในการคำนวณ Working Capital (Indirect Method),Excel/CSV,รายเดือน,ต้องมี: SKU ชื่อ จำนวน มูลค่า,☐
+Treasury,,สินทรัพย์ถาวร (Fixed Assets),,,,,
+Treasury,33,Asset Master List,Fixed Asset Register,บันทึกสินทรัพย์ถาวรทั้งหมด (เครื่องจักร ยานพาหนะ สิ่งปลูกสร้าง),Excel/CSV,รายครั้งที่มี Asset ใหม่,ต้องมี: Asset Code ชื่อ ประเภท ยอดเบิกจ่าย วันซื้อ,☐
+Treasury,34,Asset Book Value,Accumulated Depreciation/Net Book Value,ยอดสุทธิสินทรัพย์หลังหักค่าเสื่อมสะสม,Excel/CSV,รายเดือน,ต้องมี: Asset Cost วันซื้อ Useful Life Accumulated Deprec,☐
+Treasury,35,Depreciation Schedule,Depreciation Expense by Asset,วางแผนค่าเสื่อมในแต่ละปี สำหรับ Indirect Method,Excel/CSV,รายเดือน,ต้องมี: Asset ยอด % หรือ Amount per Month,☐
+Treasury,,หนี้สิน (Loan & Debt),,,,,
+Treasury,36,Loan/Debt Schedule,Liabilities/Debt Register,บันทึก Loan ทั้งหมด (ยอด ดอก ระยะเวลา ผู้ให้กู้),Excel/CSV,รายครั้งที่เปลี่ยน,ต้องมี: Loan ID ยอด Interest Rate Term ผู้ให้กู้ Payment Start,☐
+Treasury,37,Interest Expense,Accrued Interest,ค่าดอกเบี้ยรายเดือน (Non-Cash) สำหรับ Indirect Method,Excel/CSV,รายเดือน,ต้องมี: Loan ยอด Interest Rate Interest/Month,☐
+Treasury,38,Loan Payment Schedule,Debt Repayment/Principal Payment,วางแผนการจ่ายหนี้เงินต้น + ดอก สำหรับ Cash Flow,Excel/CSV,รายเดือน,ต้องมี: Loan Principal Payment Interest Payment Due Date,☐

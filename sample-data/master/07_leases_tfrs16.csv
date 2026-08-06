@@ -1,0 +1,5 @@
+﻿lease_code,company,lease_object,start_date,end_date,monthly_payment,rou_asset_opening,rou_asset_closing,lease_liab_opening,lease_liab_closing,annual_depreciation,annual_interest,annual_cash_paid,note
+LEASE-HMW-001,HMW,ที่ดินและอาคารโชว์รูม,2022-01-01,2031-12-31,950000,135000000,121500000,150000000,141000000,13500000,8500000,11400000,Honda dealership lease
+LEASE-HMW-002,HMW,ที่ดินสำหรับโชว์รูมรอง,2023-01-01,2032-12-31,250000,18000000,16200000,20000000,18500000,1800000,1100000,3000000,Secondary location
+LEASE-CLIK-001,CLIK,ศูนย์บริการเพิ่มเติม,2023-01-01,2030-12-31,150000,4000000,3600000,7000000,6200000,400000,300000,1800000,Additional service center
+LEASE-HMW-003,HMW,รถยนต์สำนักงาน Fleet,2024-06-01,2027-05-31,80000,856043,612725,1085852,930452,243318,69200,461489,Operating fleet TFRS16

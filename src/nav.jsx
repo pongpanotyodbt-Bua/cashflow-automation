@@ -74,9 +74,12 @@ function Sidebar({ active, setActive }) {
 }
 
 function Topbar({ crumbs, period, setPeriod, onSearch, companyId, setCompanyId }) {
-  const periods = ["รายสัปดาห์", "เดือนนี้", "ไตรมาส 1/2569", "YTD 2569", "ปี 2568"];
+  // period = API code (e.g. "2026-Q1") — display label derived from CF_PERIODS
+  const periods = window.CF_PERIODS;
   const companies = window.CFData.companies;
   const activeCo = companies.find(c => c.id === companyId) || companies[0];
+  const activePeriod = periods.find(p => p.code === period) || periods[0];
+
   return (
     <header className="topbar">
       <div className="crumbs">
@@ -107,8 +110,16 @@ function Topbar({ crumbs, period, setPeriod, onSearch, companyId, setCompanyId }
         </select>
       </div>
 
-      <select className="select" value={period} onChange={(e) => setPeriod(e.target.value)}>
-        {periods.map((p) => <option key={p}>{p}</option>)}
+      {/* Period selector — stores code, displays Thai label */}
+      <select
+        className="select"
+        value={period}
+        onChange={(e) => setPeriod(e.target.value)}
+        title={`งวด: ${activePeriod.label} (code: ${activePeriod.code})`}
+      >
+        {periods.map((p) => (
+          <option key={p.code} value={p.code}>{p.label}</option>
+        ))}
       </select>
       <button className="iconbtn" title="แจ้งเตือน"><Ic name="bell" size={16} /></button>
     </header>

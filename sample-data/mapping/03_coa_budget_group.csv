@@ -1,0 +1,35 @@
+﻿account_code,account_name_en,budget_group,budget_group_th,owner_role,note
+4110,Vehicle Sales,REV_VEHICLE,รายได้รถยนต์,SALES_MGR,
+4120,Service Revenue,REV_SERVICE,รายได้บริการ,SERVICE_MGR,
+4130,Parts Revenue,REV_PARTS,รายได้อะไหล่,PARTS_MGR,
+4140,Body Shop Revenue,REV_BODY,รายได้งานตัวถัง,BODY_MGR,
+4150,Dividend Income,FIN_INVESTMENT,รายได้ลงทุน,CFO,
+4160,Commission Income,REV_COMMISSION,รายได้คอมมิชชั่น,SALES_MGR,
+4170,Mgmt Fee Income,REV_MGMT_FEE,รายได้บริหารจัดการ,CEO,
+4180,Gain on Disposal,FIN_OTHER,รายได้อื่น,CFO,
+4190,Other Income,FIN_OTHER,รายได้อื่น,CFO,
+5110,COGS Vehicles,COGS_VEHICLE,ต้นทุนรถยนต์,SALES_MGR,
+5120,COGS Parts,COGS_PARTS,ต้นทุนอะไหล่,PARTS_MGR,
+5130,Cost of Services,COGS_SERVICE,ต้นทุนบริการ,SERVICE_MGR,
+5135,Cost of Mgmt Service,COST_MGMT,ต้นทุนบริหารจัดการ,CEO,
+5210,Distribution Cost,OPEX_DISTRIBUTION,ค่าใช้จ่ายจัดจำหน่าย,SALES_MGR,
+5310,Selling Expenses,OPEX_SELLING,ค่าใช้จ่ายขาย,SALES_MGR,
+5411,Salaries,OPEX_PAYROLL,เงินเดือนพนักงาน,HR_MGR,
+5412,Rent,OPEX_FACILITIES,ค่าเช่าและสาธารณูปโภค,ADMIN_MGR,
+5413,Utilities,OPEX_FACILITIES,ค่าเช่าและสาธารณูปโภค,ADMIN_MGR,
+5414,Depr PPE,OPEX_DA,ค่าเสื่อมราคา,ACCOUNTING_MGR,Non-cash
+5415,Depr ROU,OPEX_DA,ค่าเสื่อมราคา,ACCOUNTING_MGR,Non-cash
+5416,Depr Inv Property,OPEX_DA,ค่าเสื่อมราคา,ACCOUNTING_MGR,Non-cash
+5417,Amortization,OPEX_DA,ค่าเสื่อมราคา,ACCOUNTING_MGR,Non-cash
+5418,Professional Fees,OPEX_PROFESSIONAL,ค่าวิชาชีพ,ADMIN_MGR,
+5419,Other Admin,OPEX_OTHER,ค่าใช้จ่ายอื่น,ADMIN_MGR,
+5420,Bad Debt,OPEX_BAD_DEBT,หนี้สูญ,FINANCE_MGR,Non-cash
+5421,Inventory Write-down,OPEX_INV_WRITEDOWN,ค่าเผื่อสินค้า,FINANCE_MGR,Non-cash
+5510,Finance Cost,FIN_INTEREST,ดอกเบี้ยจ่าย,CFO,
+5610,Income Tax,FIN_TAX,ภาษีเงินได้,CFO,
+1311,Land,CAPEX_LAND,ที่ดิน,CFO,Capex
+1312,Buildings,CAPEX_BUILDING,อาคาร,CFO,Capex
+1313,Vehicles,CAPEX_VEHICLE,ยานพาหนะ,CFO,Capex
+1314,F&E,CAPEX_OTHER,อุปกรณ์สำนักงาน,ADMIN_MGR,Capex
+1320,ROU,NONCASH_LEASE,สิทธิการใช้,CFO,TFRS16
+1330,Intangible,CAPEX_INTANGIBLE,สินทรัพย์ไม่มีตัวตน,IT_MGR,Capex

@@ -1,0 +1,8 @@
+﻿ic_code,description,company_from,company_to,type,frequency,annual_amount_2568,note
+IC-001,Management fee from HMW to ACG,HMW,ACG,MGMT_FEE,MONTHLY,55000000,Major intercompany revenue stream
+IC-002,Management fee from CLIK to ACG,CLIK,ACG,MGMT_FEE,MONTHLY,10097119,Smaller co
+IC-003,Dividend from HMW to ACG,HMW,ACG,DIVIDEND,SEMI_ANNUAL,15959273,2025 dividend payment
+IC-004,Dividend from CLIK to ACG,CLIK,ACG,DIVIDEND,NONE,0,No dividend - loss-making
+IC-005,Intercompany loan interest CLIK -> ACG,CLIK,ACG,INTEREST,MONTHLY,7000000,3.5% on 200M loan
+IC-006,Parts sale from HMW to CLIK,HMW,CLIK,SALES,MONTHLY,12000000,HMW supplies parts to CLIK
+IC-007,Service from CLIK to HMW,CLIK,HMW,SERVICE,MONTHLY,3500000,CLIK services HMW fleet
