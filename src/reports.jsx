@@ -929,7 +929,7 @@ function CrossValidationTab({ period, cfData, isDaily }) {
         <div className="card-head">
           <div className="card-title">ผลการตรวจสอบ</div>
           <div className="grow" />
-          <span className="small muted">Tolerance: ±5M = ตรง, ±30M = ต่างเล็กน้อย, >30M = ต้องตรวจสอบ</span>
+          <span className="small muted">Tolerance: ±5M = ตรง, ±30M = ต่างเล็กน้อย, &gt;30M = ต้องตรวจสอบ</span>
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, padding: "16px" }}>
           {[
